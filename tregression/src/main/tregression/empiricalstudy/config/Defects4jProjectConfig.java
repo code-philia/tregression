@@ -4,7 +4,14 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jdt.ui.actions.RemoveFromClasspathAction;
+
 public class Defects4jProjectConfig extends ProjectConfig{
+	
+	private static final String TARGET_DIR = "target";
+	private static final String DEFAULT_JAVA_DIR = "src:java";
+	private static final String MAIN_JAVA_DIR = "src:main:java";
+	private static final String DEFAULT_MAVEN_TEST = "src:test";
 	
 	private Defects4jProjectConfig(String srcTestFolder, String srcSourceFolder, String bytecodeTestFolder,
 			String bytecodeSourceFolder, String buildFolder, String projectName, String bugID) {
@@ -13,9 +20,9 @@ public class Defects4jProjectConfig extends ProjectConfig{
 	
 	public String rootPath = ""+File.separator+"home"+File.separator+"linyun"+File.separator+"doc"+File.separator+"git_space"+File.separator+"defects4j"+File.separator+"framework"+File.separator+"bin"+File.separator+"defects4j";
 
-	public static Defects4jProjectConfig getConfig(String projectName, String regressionID) {
+	public static ProjectConfig getConfig(String projectName, String regressionID) {
 		int bugID = Integer.valueOf(regressionID);
-		Defects4jProjectConfig config = null;
+		ProjectConfig config = null;
 		if(projectName.equals("Chart")) {
 			config = new Defects4jProjectConfig("tests", "source", "build-tests", "build", "build", projectName, regressionID);
 		}
@@ -68,9 +75,36 @@ public class Defects4jProjectConfig extends ProjectConfig{
 			else{
 				config = new Defects4jProjectConfig("src"+File.separator+"test"+File.separator+"java", "src"+File.separator+"main"+File.separator+"java", "build"+File.separator+"tests", "build"+File.separator+"classes", "build", projectName, regressionID);
 			}
+		} else if (projectName.equals("Codec")) {
+			config = new MavenProjectConfig("src"+File.separator+"test", "src"+File.separator+"java", "target"+File.separator+"tests", "target"+File.separator+"classes", "target", projectName, regressionID);
+		} else if (projectName.equals("Collections")) {
+			config = generateMaventProjectConfig("src:test", "src:main:java", "target", "tests", projectName, regressionID);
+		} else if (projectName.equals("Compress")) {
+			config = generateMaventProjectConfig(
+					DEFAULT_MAVEN_TEST, MAIN_JAVA_DIR, TARGET_DIR, "test-classes", 
+					projectName, regressionID);
+		} else if (projectName.equals("Csv")) {
+			config = generateMaventProjectConfig(
+					DEFAULT_MAVEN_TEST, MAIN_JAVA_DIR, TARGET_DIR, "test-classes", 
+					projectName, regressionID);
 		}
 		
 		return config;
+	}
+	
+	private static String fromColonSeparatorString(String path) {
+		String[] dirs = path.split(":");
+		return String.join(File.separator, dirs);
+	}
+	
+	private static MavenProjectConfig generateMaventProjectConfig(String testDir, String javaDir, String buildOutput, String testClasses, String projName, String projId) {
+		String testSrcDirString = fromColonSeparatorString(testDir);
+		String javaDirString = fromColonSeparatorString(javaDir);
+		return new MavenProjectConfig(testSrcDirString, 
+				javaDirString, 
+				buildOutput +File.separator + testClasses, 
+				buildOutput + File.separator + "classes", 
+				buildOutput, projName, projId);
 	}
 	
 }
