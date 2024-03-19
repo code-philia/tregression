@@ -84,6 +84,13 @@
             name="Step Properties"
             restorable="true">
       </view>
+      <view
+            category="tregression.category"
+            class="tregression.views.ConcurrentBuggyTraceView"
+            id="tregression.evalView.buggyConcTraceView"
+            name="Concurrent Buggy Trace"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">

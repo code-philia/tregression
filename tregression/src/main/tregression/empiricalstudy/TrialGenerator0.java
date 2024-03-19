@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 
 import microbat.model.trace.Trace;
@@ -27,6 +28,8 @@ import tregression.separatesnapshots.DiffMatcher;
 import tregression.separatesnapshots.RunningResult;
 import tregression.separatesnapshots.TraceCollector0;
 import tregression.tracematch.ControlPathBasedTraceMatcher;
+import tregression.util.ConcurrentTraceMatcher;
+import tregression.views.ConcurrentVisualiser;
 import tregression.views.Visualizer;
 
 public class TrialGenerator0 {
@@ -44,6 +47,7 @@ public class TrialGenerator0 {
 
 	private DiffMatcher cachedDiffMatcher;
 	private PairList cachedPairList;
+	private List<PairList> cachedPairLists;
 
 	public static String getProblemType(int type) {
 		switch (type) {
@@ -186,9 +190,10 @@ public class TrialGenerator0 {
 
 		DiffMatcher diffMatcher = null;
 		PairList pairList = null;
-
+		
+		List<PairList> basePairLists = null;
 		int matchTime = -1;
-		if (cachedBuggyRS != null && cachedCorrectRS != null && isReuse) {
+		if (cachedBuggyRS != null && cachedCorrectRS != null && basePairLists != null && isReuse) {
 			buggyRS = cachedBuggyRS;
 			correctRs = cachedCorrectRS;
 
@@ -209,7 +214,7 @@ public class TrialGenerator0 {
 
 			diffMatcher = cachedDiffMatcher;
 			pairList = cachedPairList;
-			
+			basePairLists = cachedPairLists;
 			EmpiricalTrial trial = simulateDebuggingWithCatchedObjects(buggyRS.getRunningTrace(), 
 					correctRs.getRunningTrace(), pairList, diffMatcher, requireVisualization,
 					useSliceBreaker, enableRandom, breakLimit);
@@ -242,6 +247,9 @@ public class TrialGenerator0 {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(correctRs.getRunningType()));
 					return trial;
 				}
+
+				List<Trace> buggyTraces = buggyRS.getRunningInfo().getTraceList();
+				List<Trace> correctTraces = correctRs.getRunningInfo().getTraceList();
 				
 				if (buggyRS != null && correctRs != null) {
 					cachedBuggyRS = buggyRS;
@@ -259,7 +267,11 @@ public class TrialGenerator0 {
 					time2 = System.currentTimeMillis();
 					matchTime = (int) (time2 - time1);
 					System.out.println("finish matching trace, taking " + matchTime + "ms");
-
+					
+					Map<Long, Long> traceMap = new ConcurrentTraceMatcher(diffMatcher).matchTraces(buggyTraces, correctTraces);
+					basePairLists = traceMatcher.matchConcurrentTraceNodePair(buggyTraces, correctTraces, diffMatcher, traceMap);
+					System.out.println("Finish matching concurrent trace");
+					cachedPairLists = basePairLists;
 					cachedDiffMatcher = diffMatcher;
 					cachedPairList = pairList;
 				}
@@ -270,6 +282,12 @@ public class TrialGenerator0 {
 				if (requireVisualization) {
 					Visualizer visualizer = new Visualizer();
 					visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
+				}
+				if (buggyTraces.size() > 1 && requireVisualization) {
+					// TODO(Gab): update the trace map
+					ConcurrentVisualiser vizConcurrentVisualiser = 
+							new ConcurrentVisualiser(buggyTraces, correctTraces, null, diffMatcher);
+					vizConcurrentVisualiser.visualise();
 				}
 				
 				RootCauseFinder rootcauseFinder = new RootCauseFinder();

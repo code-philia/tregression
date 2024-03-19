@@ -17,6 +17,17 @@ public class TregressionViews {
 		return view;
 	}
 	
+	public static ConcurrentBuggyTraceView getConcBuggyTraceView() {
+		ConcurrentBuggyTraceView view = null;
+		try {
+			view = (ConcurrentBuggyTraceView) PlatformUI.getWorkbench().
+					getActiveWorkbenchWindow().getActivePage().showView(ConcurrentBuggyTraceView.ID);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		return view;
+	}
+	
 	public static BuggyTraceView getBuggyTraceView(){
 		BuggyTraceView view = null;
 		try {

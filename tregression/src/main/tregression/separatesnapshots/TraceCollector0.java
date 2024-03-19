@@ -80,7 +80,7 @@ public class TraceCollector0 {
 //			rs.setFailureType(TrialGenerator0.EXPECTED_STEP_NOT_MET);
 //			return rs;
 //		}
-		
+		List<Trace> traces = info.getTraceList();
 		Trace trace = info.getMainTrace();
 		trace.constructLoopParentRelation();
 		trace.setSourceVersion(isBuggy);
