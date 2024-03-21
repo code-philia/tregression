@@ -123,6 +123,29 @@ public class RootCauseFinder {
 		return null;
 	}
 	
+	public void setRootCauseBasedOnDefects4JConc(List<PairList> pairLists, DiffMatcher matcher, List<Trace> buggyTrace, List<Trace> correctTrace) {
+		List<RootCauseNode> list = new ArrayList<>();
+		for (Trace bTrace : buggyTrace) {
+			for(int i=bTrace.size()-1; i>=0; i--) {
+				TraceNode buggyNode = bTrace.getExecutionList().get(i);
+				if(matcher.checkSourceDiff(buggyNode.getBreakPoint(), true)) {
+					list.add(new RootCauseNode(buggyNode, true));
+				}
+			}
+		}
+		
+		for (Trace cTrace: correctTrace) {
+			for(int i=cTrace.size()-1; i>=0; i--) {
+				TraceNode correctTraceNode = cTrace.getExecutionList().get(i);
+				if(matcher.checkSourceDiff(correctTraceNode.getBreakPoint(), false)) {
+					list.add(new RootCauseNode(correctTraceNode, false));
+				}
+			}
+		}
+
+		this.setRealRootCaseList(list);
+	}
+	
 	public void setRootCauseBasedOnDefects4J(PairList pairList, DiffMatcher matcher, Trace buggyTrace, Trace correctTrace) {
 		List<RootCauseNode> list = new ArrayList<>();
 		for(int i=buggyTrace.size()-1; i>=0; i--) {

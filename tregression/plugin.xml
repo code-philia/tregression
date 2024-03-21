@@ -53,6 +53,11 @@
              id="traceagent.command.runSingleDefects4jBugs"
              name="Run Single Defect4j Bug">
        </command>
+       <command
+             defaultHandler="tregression.handler.SeperateVersionConcHandler"
+             id="tregression.command.runSeparateVersionsConc"
+             name="Run for separate versions concurrent">
+       </command>
  </extension>	
  <extension
          point="org.eclipse.ui.views">
@@ -87,8 +92,17 @@
       <view
             category="tregression.category"
             class="tregression.views.ConcurrentBuggyTraceView"
+            icon="icons/cross_mark.png"
             id="tregression.evalView.buggyConcTraceView"
             name="Concurrent Buggy Trace"
+            restorable="true">
+      </view>
+      <view
+            category="tregression.category"
+            class="tregression.views.ConcurrentCorrectTraceView"
+            icon="icons/check_mark.png"
+            id="tregression.evalView.concurrentCorrectTraceView"
+            name="Concurrent Correct Trace"
             restorable="true">
       </view>
    </extension>
@@ -144,6 +158,11 @@
             <command
                   commandId="tregression.command.retrieveAllDefect4jRegression"
                   label="Retrieve All Defect4j Regressions"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.command.runSeparateVersionsConc"
+                  label="Run separate versions conc"
                   style="push">
             </command>
          </menu>

@@ -2,7 +2,9 @@ package tregression.empiricalstudy;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
@@ -19,6 +21,8 @@ import tregression.StepChangeTypeChecker;
 import tregression.empiricalstudy.recommendation.BreakerRecommender;
 import tregression.empiricalstudy.training.DED;
 import tregression.empiricalstudy.training.TrainingDataTransfer;
+import tregression.model.ConcurrentTrace;
+import tregression.model.ConcurrentTraceNode;
 import tregression.model.PairList;
 import tregression.model.StepOperationTuple;
 import tregression.model.TraceNodePair;
@@ -35,9 +39,9 @@ public class Simulator  {
 
 	protected PairList pairList;
 	protected DiffMatcher matcher;
-	private List<TraceNode> observedFaultList = new ArrayList<>();
+	protected List<TraceNode> observedFaultList = new ArrayList<>();
+	protected boolean useSliceBreaker;
 	
-	private boolean useSliceBreaker;
 	private boolean enableRandom;
 	private int breakerTrialLimit;
 	
@@ -169,7 +173,7 @@ public class Simulator  {
 		
 		return false;
 	}
-	
+		
 //	List<TraceNode> rootCauseNodes;
 	public void prepare(Trace buggyTrace, Trace correctTrace, PairList pairList, DiffMatcher matcher) {
 		this.pairList = pairList;
@@ -177,7 +181,7 @@ public class Simulator  {
 		TraceNode initialStep = buggyTrace.getLatestNode();
 		TraceNode lastObservableFault = findObservedFault(initialStep, buggyTrace, correctTrace);
 		
-		if(lastObservableFault!=null){
+		if(lastObservableFault!=null) {
 			observedFaultList.add(lastObservableFault);
 
 			StepChangeTypeChecker checker = new StepChangeTypeChecker(buggyTrace, correctTrace);
@@ -189,8 +193,7 @@ public class Simulator  {
 				StepChangeType changeType = checker.getType(node, true, pairList, matcher);
 				if(changeType.getType()!=StepChangeType.IDT){
 					observedFaultList.add(node);
-				}
-				
+				}		
 				node = node.getStepOverPrevious();
 			}
 		}
@@ -234,6 +237,8 @@ public class Simulator  {
 
 		return trials;
 	}
+	
+	
 
 	private List<EmpiricalTrial> startSimulationWithCachedState(TraceNode observedFaultNode, Trace buggyTrace, Trace correctTrace,
 			PairList pairList, DiffMatcher matcher, RootCauseFinder rootCauseFinder) {
@@ -293,7 +298,7 @@ public class Simulator  {
 	 * @param state
 	 * @return
 	 */
-	private EmpiricalTrial workSingleTrial(Trace buggyTrace, Trace correctTrace, PairList pairList, DiffMatcher matcher,
+	protected EmpiricalTrial workSingleTrial(Trace buggyTrace, Trace correctTrace, PairList pairList, DiffMatcher matcher,
 			RootCauseFinder rootCauseFinder, StepChangeTypeChecker typeChecker,
 			TraceNode currentNode) {
 		
@@ -445,7 +450,7 @@ public class Simulator  {
 	 * @param state
 	 * @return
 	 */
-	private EmpiricalTrial workSingleTrialWithCachedState(Trace buggyTrace, Trace correctTrace, 
+	protected EmpiricalTrial workSingleTrialWithCachedState(Trace buggyTrace, Trace correctTrace, 
 			PairList pairList, DiffMatcher matcher,
 			RootCauseFinder rootCauseFinder, StepChangeTypeChecker typeChecker,
 			TraceNode currentNode, Stack<DebuggingState> stack, Set<DebuggingState> visitedStates,

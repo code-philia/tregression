@@ -39,6 +39,10 @@ public class ConcurrentVisualiser implements Runnable {
 		view.setTraceList(bugTraces);
 		view.updateData();
 		
+		ConcurrentTregressionTraceView correctView = TregressionViews.getConcCorrectTraceView();
+		correctView.setTraceList(correctTraces);
+		correctView.updateData();
+		
 	}
 
 }
