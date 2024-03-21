@@ -54,9 +54,14 @@
              name="Run Single Defect4j Bug">
        </command>
        <command
-             defaultHandler="tregression.handler.SeperateVersionConcHandler"
+             defaultHandler="tregression.handler.SeparateVersionConcHandler"
              id="tregression.command.runSeparateVersionsConc"
              name="Run for separate versions concurrent">
+       </command>
+       <command
+             defaultHandler="tregression.handler.AllDefects4jConcHandler"
+             id="tregression.command.runAllDefects4jConcurrent"
+             name="Run all defects 4j concurrent">
        </command>
  </extension>	
  <extension

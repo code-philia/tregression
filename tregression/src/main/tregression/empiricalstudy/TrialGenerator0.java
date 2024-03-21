@@ -42,6 +42,7 @@ public class TrialGenerator0 {
 	public static final int OVER_LONG_INSTRUMENTATION_METHOD = 5;
 	public static final int EXPECTED_STEP_NOT_MET = 6;
 	public static final int UNDETERMINISTIC = 7;
+	public static final int NOT_MULTI_THREAD = 8;
 
 	private RunningResult cachedBuggyRS;
 	private RunningResult cachedCorrectRS;
@@ -66,6 +67,8 @@ public class TrialGenerator0 {
 			return "expected steps are not met";
 		case UNDETERMINISTIC:
 			return "this is undeterministic testcase";
+		case NOT_MULTI_THREAD:
+			return "this is not multi threaded";
 		default:
 			break;
 		}
@@ -273,8 +276,7 @@ public class TrialGenerator0 {
 				
 				Settings.compilationUnitMap.clear();
 				Settings.iCompilationUnitMap.clear();
-				buggyRS = buggyCollector.run(buggyPath, tc, config, isRunInTestCaseMode, 
-						true, includedClassNames, excludedClassNames);
+				buggyRS = buggyCollector.runForceMultithreaded(buggyPath, tc, config, isRunInTestCaseMode, includedClassNames, excludedClassNames);
 				if (buggyRS.getRunningType() != NORMAL) {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(buggyRS.getRunningType()));
 					return trial;
@@ -282,8 +284,7 @@ public class TrialGenerator0 {
 
 				Settings.compilationUnitMap.clear();
 				Settings.iCompilationUnitMap.clear();
-				correctRs = correctCollector.run(fixPath, tc, config, isRunInTestCaseMode, 
-						true, includedClassNames, excludedClassNames);
+				correctRs = correctCollector.runForceMultithreaded(fixPath, tc, config, isRunInTestCaseMode, includedClassNames, excludedClassNames);
 				if (correctRs.getRunningType() != NORMAL) {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(correctRs.getRunningType()));
 					return trial;

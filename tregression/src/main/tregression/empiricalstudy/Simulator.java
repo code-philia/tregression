@@ -179,6 +179,7 @@ public class Simulator  {
 		this.pairList = pairList;
 		this.matcher = matcher;
 		TraceNode initialStep = buggyTrace.getLatestNode();
+		if (initialStep == null) return;
 		TraceNode lastObservableFault = findObservedFault(initialStep, buggyTrace, correctTrace);
 		
 		if(lastObservableFault!=null) {

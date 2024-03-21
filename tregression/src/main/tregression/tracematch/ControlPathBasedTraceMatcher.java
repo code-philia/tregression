@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
@@ -37,8 +38,14 @@ public class ControlPathBasedTraceMatcher{
 			trace2Map.put(trace.getThreadId(), trace);
 		}
 		for (Trace trace: trace1) {
+			for (TraceNode traceNode : trace.getExecutionList()) {
+				if (traceNode.getBreakPoint().getFullJavaFilePath() == null) {
+					throw new RuntimeException("NO full java path");
+				}
+			}
 			if (threadIdMap.containsKey(trace.getThreadId())) {
 				Long nextThreadId = threadIdMap.get(trace.getThreadId());
+				Objects.requireNonNull(trace2Map.get(nextThreadId));
 				resultLinkedList.add(matchTraceNodePair(trace, trace2Map.get(nextThreadId), diffMatcher));
 			}
 		}

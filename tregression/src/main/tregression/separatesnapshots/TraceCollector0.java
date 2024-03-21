@@ -20,8 +20,10 @@ public class TraceCollector0 {
 		this.isBuggy = buggy;
 	}
 	
-	public RunningResult run(String workingDir, TestCase tc, 
-			ProjectConfig config, boolean isRunInTestCaseMode, boolean allowMultiThread, 
+
+	public RunningResult runInner(String workingDir, TestCase tc, 
+			ProjectConfig config, boolean isRunInTestCaseMode, boolean mustBeMultiThread,
+			boolean allowMultiThread,
 			List<String> includeLibs, List<String> excludeLibs){
 		
 		AppJavaClassPath appClassPath = AppClassPathInitializer.initialize(workingDir, tc, config);
@@ -67,6 +69,13 @@ public class TraceCollector0 {
 		
 		
 		boolean isMultiThread = precheckInfo.getThreadNum()!=1;
+		if(!isMultiThread && mustBeMultiThread) {
+			System.out.println("It is multi-thread program!");
+			RunningResult rs = new RunningResult();
+			rs.setFailureType(TrialGenerator0.NOT_MULTI_THREAD);
+			return rs;
+		}
+		
 		if(isMultiThread && !allowMultiThread) {
 			System.out.println("It is multi-thread program!");
 			RunningResult rs = new RunningResult();
@@ -89,6 +98,19 @@ public class TraceCollector0 {
 		rs.setRunningTrace(trace);
 		rs.setRunningInfo(info);
 		return rs;
+	}
+	
+	
+	public RunningResult runForceMultithreaded(String workingDir, TestCase tc, 
+			ProjectConfig config, boolean isRunInTestCaseMode,
+			List<String> includeLibs, List<String> excludeLibs) {
+		return runInner(workingDir, tc, config, isRunInTestCaseMode, true, true, includeLibs, excludeLibs);
+	}
+	
+	public RunningResult run(String workingDir, TestCase tc, 
+			ProjectConfig config, boolean isRunInTestCaseMode, boolean allowMultiThread, 
+			List<String> includeLibs, List<String> excludeLibs){
+		return runInner(workingDir, tc, config, isRunInTestCaseMode, false, allowMultiThread, includeLibs, excludeLibs);
 	}
 	
 }

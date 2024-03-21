@@ -27,10 +27,7 @@ import tregression.empiricalstudy.training.DED;
 import tregression.empiricalstudy.training.DeadEndData;
 import tregression.preference.TregressionPreference;
 
-public class SeperateVersionConcHandler extends AbstractHandler {
-	TrialGenerator generator = new TrialGenerator();
-	TrialGenerator0 generator0 = new TrialGenerator0();
-	
+public class SeparateVersionConcHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		
@@ -39,6 +36,8 @@ public class SeperateVersionConcHandler extends AbstractHandler {
 		Job job = new Job("Do evaluation") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+
+				TrialGenerator0 generator0 = new TrialGenerator0();
 				String projectPath = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.PROJECT_NAME);
 				String bugID = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.BUG_ID);
 				
