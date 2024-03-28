@@ -153,7 +153,7 @@ public class ConcurrentCorrectTraceView extends ConcurrentTregressionTraceView {
 				}
 			}
 			
-			stepPropertyView.refresh(correctNode, buggyNode, diffMatcher, pairList);
+			stepPropertyView.refreshConc(correctNode, buggyNode, diffMatcher, pairList);
 		}
 
 		markJavaEditor(correctNode);

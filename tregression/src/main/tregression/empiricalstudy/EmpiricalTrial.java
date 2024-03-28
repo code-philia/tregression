@@ -109,7 +109,7 @@ public class EmpiricalTrial {
 		else{
 			for(RootCauseNode node: this.rootCauseFinder.getRealRootCaseList()){
 				realcauseOrders += node.toString() + ", ";
-			}			
+			}
 		}
 		
 		buffer.append("error message: " + exceptionExplanation + "\n");

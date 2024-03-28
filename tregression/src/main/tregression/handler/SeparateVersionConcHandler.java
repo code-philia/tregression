@@ -15,6 +15,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import microbat.Activator;
 import microbat.model.trace.Trace;
 import microbat.util.JavaUtil;
+import traceagent.handler.PlayRegressionLocalizationHandlerConc;
 import tregression.empiricalstudy.DeadEndCSVWriter;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
@@ -66,7 +67,7 @@ public class SeparateVersionConcHandler extends AbstractHandler {
 						false, false, false, 3, true, config, testcase);
 				
 				if(trials.size() != 0) {
-					PlayRegressionLocalizationHandler.finder = trials.get(0).getRootCauseFinder();					
+					PlayRegressionLocalizationHandlerConc.finder = trials.get(0).getRootCauseFinder();					
 				}
 				
 				System.out.println("all the trials");

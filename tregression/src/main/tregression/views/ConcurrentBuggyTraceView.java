@@ -4,11 +4,14 @@ import java.util.Map;
 
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 
 import microbat.model.ClassLocation;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import tregression.empiricalstudy.RootCauseFinder;
+import tregression.model.TraceNodePair;
 
 public class ConcurrentBuggyTraceView extends ConcurrentTregressionTraceView {
 	public static final String ID = "tregression.evalView.buggyConcTraceView";
@@ -45,6 +48,35 @@ public class ConcurrentBuggyTraceView extends ConcurrentTregressionTraceView {
 		};
 		
 		return action;
+	}
+	
+	@Override
+	public void otherViewsBehavior(TraceNode buggyNode) {
+		if (this.refreshProgramState) {
+			
+			StepPropertyView stepPropertyView = null;
+			try {
+				stepPropertyView = (StepPropertyView)PlatformUI.getWorkbench().
+						getActiveWorkbenchWindow().getActivePage().showView(StepPropertyView.ID);
+			} catch (PartInitException e) {
+				e.printStackTrace();
+			}
+			
+			TraceNodePair pair = pairList.findByAfterNode(buggyNode);
+			buggyNode.toString();
+			TraceNode correctNode = null;
+			if(pair != null){
+				correctNode = pair.getAfterNode();
+				if (correctNode != null) {
+					ConcurrentCorrectTraceView concurrentCorrectTraceView = TregressionViews.getConcCorrectTraceView();
+					concurrentCorrectTraceView.jumpToNode(correctNode.getTrace(), correctNode.getOrder(), false);
+				}
+			}
+			
+			stepPropertyView.refreshConc(buggyNode, correctNode, diffMatcher, pairList);
+		}
+
+		markJavaEditor(buggyNode);
 	}
 	
 }

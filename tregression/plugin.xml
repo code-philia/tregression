@@ -63,6 +63,11 @@
              id="tregression.command.runAllDefects4jConcurrent"
              name="Run all defects 4j concurrent">
        </command>
+       <command
+             defaultHandler="traceagent.handler.PlayRegressionLocalizationHandlerConc"
+             id="tregression.command.regressionLocalConc"
+             name="Play the process of regession localisation (Concurrent)">
+       </command>
  </extension>	
  <extension
          point="org.eclipse.ui.views">

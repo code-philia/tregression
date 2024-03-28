@@ -109,12 +109,18 @@ public class ConcurrentTraceNode extends TraceNode {
 
 
 
-
+	/**
+	 * Returns the order this node is in in the global order.
+	 */
 	@Override
 	public int getOrder() {
 		return concurrentOrder;
 	}
 	
+	/**
+	 * Returns the order of this trace node within the trace
+	 * @return
+	 */
 	public int getInitialOrder() {
 		return initialTraceNode.getOrder();
 	}

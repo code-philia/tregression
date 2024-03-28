@@ -9,9 +9,20 @@ import microbat.model.trace.TraceNode;
 
 public class PairList {
 	private List<TraceNodePair> pairList = new ArrayList<>();
-	private Map<Integer, TraceNodePair> beforeNodeToPairMap = new HashMap<>();
-	private Map<Integer, TraceNodePair> afterNodeToPairMap = new HashMap<>();
-
+	
+	// map from before node thread + order -> trace node
+	private Map<Long, Map<Integer, TraceNodePair>> beforeNodeToThreadPairMap = new HashMap<>();
+	private Map<Long, Map<Integer, TraceNodePair>> afterNodeToThreadPairMap = new HashMap<>();
+	
+	private Map<Integer, TraceNodePair> assertThreadExists(Map<Long, Map<Integer, TraceNodePair>> map, long threadId) {
+		if (map.containsKey(threadId)) {
+			return map.get(threadId);
+		}
+		Map<Integer, TraceNodePair> result = new HashMap<>();
+		map.put(threadId, result);
+		return result;
+	}
+	
 	public PairList(List<TraceNodePair> pairList) {
 		super();
 		this.pairList = pairList;
@@ -20,10 +31,14 @@ public class PairList {
 			TraceNode afterNode = pair.getAfterNode();
 			
 			if(beforeNode!=null){
+				Map<Integer, TraceNodePair> beforeNodeToPairMap = 
+						assertThreadExists(beforeNodeToThreadPairMap, beforeNode.getTrace().getThreadId());
 				beforeNodeToPairMap.put(beforeNode.getOrder(), pair);
 			}
 			
 			if(afterNode!=null){
+				Map<Integer, TraceNodePair> afterNodeToPairMap = 
+						assertThreadExists(afterNodeToThreadPairMap, afterNode.getTrace().getThreadId());
 				afterNodeToPairMap.put(afterNode.getOrder(), pair);
 			}
 		}
@@ -41,6 +56,10 @@ public class PairList {
 		this.pairList.add(pair);
 	}
 
+	private TraceNodePair getFromThreadTraceNodePairMap(Map<Long, Map<Integer, TraceNodePair>> map, TraceNode node) {
+		return map.getOrDefault(node.getTrace().getThreadId(), new HashMap<>()).get(node.getOrder());
+	}
+	
 	public TraceNodePair findByAfterNode(TraceNode node) {
 //		for(TraceNodePair pair: pairList){
 //			if(pair.getAfterNode().equals(node)){
@@ -50,8 +69,7 @@ public class PairList {
 		if(node==null){
 			return null;
 		}
-		TraceNodePair pair = afterNodeToPairMap.get(node.getOrder());
-		return pair;
+		return getFromThreadTraceNodePairMap(afterNodeToThreadPairMap, node);
 	}
 	
 	public TraceNodePair findByBeforeNode(TraceNode node) {
@@ -63,8 +81,7 @@ public class PairList {
 		if(node==null){
 			return null;
 		}
-		TraceNodePair pair = beforeNodeToPairMap.get(node.getOrder());
-		return pair;
+		return getFromThreadTraceNodePairMap(beforeNodeToThreadPairMap, node);
 	}
 	
 	public int size(){
@@ -89,7 +106,8 @@ public class PairList {
 		if(pair!=null) {
 			TraceNode n = pair.getAfterNode();
 			if(n != null) {
-				return n.getOrder()==afterNode.getOrder();
+				return n.getOrder()==afterNode.getOrder() 
+						&& n.getTrace().getThreadId() == afterNode.getTrace().getThreadId();
 			}
 		}
 		

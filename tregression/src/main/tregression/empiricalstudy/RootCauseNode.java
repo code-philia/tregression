@@ -1,6 +1,7 @@
 package tregression.empiricalstudy;
 
 import microbat.model.trace.TraceNode;
+import tregression.model.ConcurrentTraceNode;
 
 public class RootCauseNode {
 
@@ -31,10 +32,17 @@ public class RootCauseNode {
 	
 	@Override
 	public String toString(){
+		int order = root.getOrder();
+		if (root instanceof ConcurrentTraceNode) {
+			order = ((ConcurrentTraceNode) root).getInitialOrder(); 
+		}
+		
 		StringBuffer buffer = new StringBuffer();
 		String trace = isOnBefore?"buggy":"correct";
 		buffer.append("On " + trace + " trace, order: ");
-		buffer.append(root.getOrder());
+		buffer.append(order);
+		buffer.append(" On thread: ");
+		buffer.append(root.getTrace().getThreadName());
 		return buffer.toString();
 	}
 
