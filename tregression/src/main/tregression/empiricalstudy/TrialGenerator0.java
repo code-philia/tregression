@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
@@ -24,6 +25,7 @@ import tregression.io.RegressionRecorder;
 import tregression.model.ConcurrentTrace;
 import tregression.model.PairList;
 import tregression.model.StepOperationTuple;
+import tregression.model.TraceNodePair;
 import tregression.separatesnapshots.AppClassPathInitializer;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.separatesnapshots.RunningResult;
@@ -292,6 +294,20 @@ public class TrialGenerator0 {
 
 				List<Trace> buggyTraces = buggyRS.getRunningInfo().getTraceList();
 				List<Trace> correctTraces = correctRs.getRunningInfo().getTraceList();
+				
+				AppJavaClassPath buggyAppJavaClassPath = buggyRS.getRunningInfo().getMainTrace().getAppJavaClassPath();
+				AppJavaClassPath correctAppJavaClassPath = correctRs.getRunningInfo().getMainTrace().getAppJavaClassPath();
+				for (Trace buggyTrace : buggyTraces) {
+					if (buggyTrace.getAppJavaClassPath() == null) {
+						buggyTrace.setAppJavaClassPath(buggyAppJavaClassPath);
+					}
+				}
+				for (Trace correctTrace : correctTraces) {
+					if (correctTrace.getAppJavaClassPath() == null) {
+						correctTrace.setAppJavaClassPath(correctAppJavaClassPath);
+					}
+				}
+				
 
 				Map<Long, Long> threadIdMap = new ConcurrentTraceMatcher(diffMatcher).matchTraces(buggyTraces, correctTraces);
 				if (buggyRS != null && correctRs != null) {
@@ -305,9 +321,12 @@ public class TrialGenerator0 {
 					diffMatcher.matchCode();
 
 					ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
-					pairList = traceMatcher.matchTraceNodePair(buggyRS.getRunningTrace(), correctRs.getRunningTrace(),
-							diffMatcher);
 					basePairLists = traceMatcher.matchConcurrentTraceNodePair(buggyTraces, correctTraces, diffMatcher, threadIdMap);
+					LinkedList<TraceNodePair> pairs = new LinkedList<>();
+					for (PairList pList : basePairLists) {
+						pairs.addAll(pList.getPairList());
+					}
+					pairList = new PairList(pairs);
 					
 					time2 = System.currentTimeMillis();
 					matchTime = (int) (time2 - time1);
@@ -318,8 +337,10 @@ public class TrialGenerator0 {
 					cachedPairList = pairList;
 				}
 				
+				
+				
 				if (requireVisualization) {
-					ConcurrentVisualiser visualizer = new ConcurrentVisualiser(correctTraces, buggyTraces, basePairLists, diffMatcher);
+					ConcurrentVisualiser visualizer = new ConcurrentVisualiser(correctTraces, buggyTraces, pairList, diffMatcher);
 					visualizer.visualise();
 				}
 				

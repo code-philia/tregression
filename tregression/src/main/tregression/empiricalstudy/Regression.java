@@ -21,6 +21,8 @@ public class Regression {
 	private String testMethod;
 	private Trace buggyTrace;
 	private Trace correctTrace;
+	private List<Trace> buggyTraces;
+	private List<Trace> correctTraces;
 	private PairList pairList;
 
 	public Regression(Trace buggyTrace, Trace correctTrace, PairList pairList) {
@@ -29,6 +31,7 @@ public class Regression {
 		this.correctTrace = correctTrace;
 		this.pairList = pairList;
 	}
+	
 
 	public Trace getBuggyTrace() {
 		return buggyTrace;
@@ -38,6 +41,11 @@ public class Regression {
 		this.buggyTrace = buggyTrace;
 	}
 
+	public void setBuggyAndCorrectTraces(List<Trace> buggyTraces, List<Trace> correctTraces) {
+		this.buggyTraces = buggyTraces;
+		this.correctTraces = correctTraces;
+	}
+	
 	public Trace getCorrectTrace() {
 		return correctTrace;
 	}
@@ -55,10 +63,23 @@ public class Regression {
 	}
 
 	public void fillMissingInfo(ProjectConfig config, String buggyPath, String fixPath) {
-		fillMissingInfo(buggyTrace, AppClassPathInitializer.initialize(buggyPath, new TestCase(testClass, testMethod), config));
-		fillMissingInfo(correctTrace, AppClassPathInitializer.initialize(fixPath, new TestCase(testClass, testMethod), config));
+		AppJavaClassPath buggyAppJavaClassPath = AppClassPathInitializer.initialize(buggyPath, new TestCase(testClass, testMethod), config);
+		AppJavaClassPath correctAppJavaClassPath = AppClassPathInitializer.initialize(fixPath, new TestCase(testClass, testMethod), config);
+		if (buggyTraces != null) {
+			for (Trace buggyTrace : buggyTraces) {
+				fillMissingInfo(buggyTrace, buggyAppJavaClassPath);
+			}
+			for (Trace correctTrace: correctTraces) {
+				fillMissingInfo(correctTrace, correctAppJavaClassPath);
+			}
+		} else {
+			fillMissingInfo(buggyTrace, buggyAppJavaClassPath);
+			fillMissingInfo(correctTrace, correctAppJavaClassPath);
+				
+		}
 	}
 
+	
 	public static void fillMissingInfo(Trace trace, AppJavaClassPath appClassPath) {
 		trace.setAppJavaClassPath(appClassPath);
 		

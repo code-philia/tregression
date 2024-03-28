@@ -786,6 +786,10 @@ public class Simulator  {
 
 	private List<DeadEndRecord> createControlRecord(TraceNode currentNode, TraceNode latestBugNode, StepChangeTypeChecker typeChecker,
 			PairList pairList, DiffMatcher matcher) {
+		if (latestBugNode instanceof ConcurrentTraceNode) {
+			return concurrentCreateControlRecord(currentNode, (ConcurrentTraceNode) latestBugNode, typeChecker, pairList, matcher);
+		}
+
 		List<DeadEndRecord> deadEndRecords = new ArrayList<>();
 		
 		Trace trace = currentNode.getTrace();
@@ -812,6 +816,44 @@ public class Simulator  {
 		return deadEndRecords;
 	}
 
+	/**
+	 * Find the dead end for control steps iff the change type is a control change type
+	 * @param currentNode
+	 * @param latestBugNode
+	 * @param typeChecker
+	 * @param pairList
+	 * @param matcher
+	 * @return
+	 */
+	private List<DeadEndRecord> concurrentCreateControlRecord(TraceNode currentNode, ConcurrentTraceNode latestBugNode,  StepChangeTypeChecker typeChecker,
+			PairList pairList, DiffMatcher matcher) {
+		List<DeadEndRecord> deadEndRecords = new ArrayList<>();
+		Trace trace = currentNode.getTrace();
+		for(int i=currentNode.getOrder()+1; i<=latestBugNode.getInitialOrder() && i < trace.size(); i++) {
+			TraceNode node = trace.getTraceNode(i);
+			StepChangeType changeType = typeChecker.getType(node, true, pairList, matcher);
+			if(changeType.getType()==StepChangeType.CTL){
+				DeadEndRecord record = new DeadEndRecord(DeadEndRecord.CONTROL, 
+						latestBugNode.getOrder(), currentNode.getOrder(), -1, node.getOrder());
+				deadEndRecords.add(record);
+				
+				TraceNode equivalentNode = node.getStepOverNext();
+				while(equivalentNode!=null && equivalentNode.getBreakPoint().equals(node.getBreakPoint())){
+					DeadEndRecord addRecord = new DeadEndRecord(DeadEndRecord.CONTROL, 
+							latestBugNode.getOrder(), currentNode.getOrder(), -1, equivalentNode.getOrder());
+					deadEndRecords.add(addRecord);
+					equivalentNode = equivalentNode.getStepOverNext();
+				}
+				
+				break;
+			}
+		}
+		
+		return deadEndRecords;
+		
+	}
+	
+	
 	private List<TraceNode> findTheNearestCorrespondence(TraceNode domOnRef, PairList pairList, Trace buggyTrace, Trace correctTrace) {
 		List<TraceNode> list = new ArrayList<>();
 		

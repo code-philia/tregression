@@ -264,9 +264,12 @@ public class RegressionRetrieveHandler extends AbstractHandler {
 			return null;
 		}
 		Trace buggyTrace = execTraceReader.read(buggyExec);
+		List<Trace> buggyTraces = execTraceReader.getAllTraces();
 		Trace fixTrace = execTraceReader.read(fixExec);
+		List<Trace> correctTraces = execTraceReader.getAllTraces();
 
 		Regression regression = new Regression(buggyTrace, fixTrace, null);
+		regression.setBuggyAndCorrectTraces(buggyTraces, correctTraces);
 		return regression;
 	}
 

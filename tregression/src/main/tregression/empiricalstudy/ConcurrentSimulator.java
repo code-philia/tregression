@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import microbat.instrumentation.instr.aggreplay.shared.ParseData;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import tregression.SimulationFailException;
@@ -29,7 +30,7 @@ public class ConcurrentSimulator extends Simulator {
 
 	public void prepareConc(List<Trace> buggyTraces, 
 			List<Trace> correctTraces, 
-			PairList combinedPairList, 
+			PairList combinedPairList,
 			Map<Long, Long> threadIdMap,
 			DiffMatcher matcher) {
 		Map<Long, Trace> correctTraceMap = new HashMap<>();
@@ -83,6 +84,26 @@ public class ConcurrentSimulator extends Simulator {
 		
 		return trials;
 	}
+
+	
+	/**
+	 * Method to perform ERASE without relying on merging the trace into a single trace list
+	 * 
+	 * @param buggyTrace
+	 * @param correctTrace
+	 * @param matcher
+	 * @param optionSearchLimit
+	 * @return
+	 * @throws SimulationFailException
+	 */
+	public List<EmpiricalTrial> detectMutatedBugAlt(List<Trace> buggyTrace, List<Trace> correctTrace, 
+			DiffMatcher matcher,
+			PairList overallPairList,
+			Map<Long, Long> threadIdMap) throws SimulationFailException {
+		List<EmpiricalTrial> trials = null;
+		return null;
+	}
+	
 
 	public List<EmpiricalTrial> detectMutatedBug(Trace buggyTrace, Trace correctTrace, DiffMatcher matcher,
 			int optionSearchLimit) throws SimulationFailException {

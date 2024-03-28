@@ -89,6 +89,10 @@ public class Defects4jProjectConfig extends ProjectConfig{
 					projectName, regressionID);
 		}
 		
+		if (projectName.equals("simple_defects")) {
+			config = generateMaventProjectConfig(DEFAULT_MAVEN_TEST, MAIN_JAVA_DIR, TARGET_DIR, "test-classes", projectName, regressionID);
+		}
+		
 		return config;
 	}
 	

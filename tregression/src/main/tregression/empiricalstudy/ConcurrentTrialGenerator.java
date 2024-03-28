@@ -58,9 +58,7 @@ public class ConcurrentTrialGenerator {
 					includedClassNames, excludedClassNames);
 			correctRs = correctCollector0.run(fixPath, tc, config, isRunInTestMode, true, includedClassNames, excludedClassNames);
 			
-			ConcurrentVisualiser vizConcurrentVisualiser = 
-					new ConcurrentVisualiser(buggyTraces, correctTraces, pairLists, diffMatcher);
-			vizConcurrentVisualiser.visualise();
+		
 			
 			Map<Long, Long> traceMap = new ConcurrentTraceMatcher(diffMatcher).matchTraces(buggyTraces, correctTraces);
 			pairLists = traceMatcher.matchConcurrentTraceNodePair(buggyTraces, correctTraces, diffMatcher, traceMap);
@@ -70,7 +68,9 @@ public class ConcurrentTrialGenerator {
 				tnPair.addAll(pairList.getPairList());
 			}
 			PairList basePairList = new PairList(tnPair);
-			
+			ConcurrentVisualiser vizConcurrentVisualiser = 
+					new ConcurrentVisualiser(correctTraces, buggyTraces, basePairList, diffMatcher);
+			vizConcurrentVisualiser.visualise();
 			
 			RootCauseFinder rootCauseFinder = new RootCauseFinder();
 			rootCauseFinder.setRootCauseBasedOnDefects4JConc(pairLists, diffMatcher, buggyTraces, correctTraces);

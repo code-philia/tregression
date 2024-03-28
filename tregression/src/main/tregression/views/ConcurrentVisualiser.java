@@ -1,6 +1,7 @@
 package tregression.views;
 
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.swt.widgets.Display;
 
@@ -15,12 +16,19 @@ public class ConcurrentVisualiser implements Runnable {
 
 	private final List<Trace> correctTraces;
 	private final List<Trace> bugTraces;
-	private List<PairList> pairLists;
+	private PairList pairList;
 	private DiffMatcher diffMatcher;
 	
+	/**
+	 * Concurrent visualiser for showing concurrent programs in diff
+	 * @param correctTraces
+	 * @param bugTraces
+	 * @param pairList
+	 * @param diffMatcher
+	 */
 	public ConcurrentVisualiser(List<Trace> correctTraces, List<Trace> bugTraces,
-			List<PairList> pairList, DiffMatcher diffMatcher) {
-		this.pairLists = pairList;
+			PairList pairList, DiffMatcher diffMatcher) {
+		this.pairList = pairList;
 		this.diffMatcher = diffMatcher;
 		this.correctTraces = correctTraces;
 		this.bugTraces = bugTraces;
@@ -37,10 +45,14 @@ public class ConcurrentVisualiser implements Runnable {
 	public void run() {
 		ConcurrentTregressionTraceView view = TregressionViews.getConcBuggyTraceView();
 		view.setTraceList(bugTraces);
+		view.setDiffMatcher(diffMatcher);
+		view.setPairList(pairList);
 		view.updateData();
 		
-		ConcurrentTregressionTraceView correctView = TregressionViews.getConcCorrectTraceView();
+		ConcurrentCorrectTraceView correctView = TregressionViews.getConcCorrectTraceView();
 		correctView.setTraceList(correctTraces);
+		correctView.setPairList(this.pairList);
+		correctView.setDiffMatcher(diffMatcher);
 		correctView.updateData();
 		
 	}

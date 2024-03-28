@@ -14,6 +14,7 @@ import microbat.model.variable.VirtualVar;
 import microbat.util.PrimitiveUtils;
 import sav.common.core.Pair;
 import tregression.empiricalstudy.MatchStepFinder;
+import tregression.model.ConcurrentTraceNode;
 import tregression.model.PairList;
 import tregression.model.TraceNodePair;
 import tregression.separatesnapshots.DiffMatcher;
@@ -67,6 +68,10 @@ public class StepChangeTypeChecker {
 			}
 		}
 
+	}
+	
+	public StepChangeType getType(ConcurrentTraceNode step, boolean isOnBeforeTrace, PairList pairList, DiffMatcher matcher) {
+		return getType(step.getInitialTraceNode(), isOnBeforeTrace, pairList, matcher);
 	}
 	
 	/**

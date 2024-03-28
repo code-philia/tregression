@@ -20,6 +20,14 @@ public abstract class ConcurrentTregressionTraceView extends ConcurrentTraceView
 	protected PairList pairList;
 	protected DiffMatcher diffMatcher;
 	
+	public void setPairList(final PairList pairList) {
+		this.pairList = pairList;
+	}
+	
+	public void setDiffMatcher(final DiffMatcher diffMatcher) {
+		this.diffMatcher = diffMatcher;
+	}
+	
 	@Override
 	protected void appendMenuForTraceStep() {
 		menuMgr.setRemoveAllWhenShown(true);

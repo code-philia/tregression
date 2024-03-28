@@ -53,7 +53,15 @@ public class ConcurrentTraceNode extends TraceNode {
 	 * The thread id
 	 */
 	protected long threadId = 0;
+	private ConcurrentTrace concurrentTrace;
 	
+	public void setConcurrentTrace(ConcurrentTrace concurrentTrace) {
+		this.concurrentTrace = concurrentTrace;
+	}
+	
+	public ConcurrentTrace getConcurrentTrace() {
+		return this.concurrentTrace;
+	}
 	
 	public long getCurrentThread() {
 		return initialTraceNode.getTrace().getThreadId();
@@ -105,6 +113,10 @@ public class ConcurrentTraceNode extends TraceNode {
 	@Override
 	public int getOrder() {
 		return concurrentOrder;
+	}
+	
+	public int getInitialOrder() {
+		return initialTraceNode.getOrder();
 	}
 	
 	@Override

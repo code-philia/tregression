@@ -46,6 +46,7 @@ public class ConcurrentTrace extends Trace {
 	private void postProcess() {
 		for (int i = 0; i < generatedTraceNodes.size(); ++i) {
 			generatedTraceNodes.get(i).setOrder(i + 1);
+			generatedTraceNodes.get(i).setConcurrentTrace(this);
 			this.addTraceNode(generatedTraceNodes.get(i));
 		}
 	}

@@ -1,15 +1,18 @@
 package tregression.views;
 
+import java.util.Map;
+
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.viewers.IStructuredSelection;
 
 import microbat.model.ClassLocation;
+import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import tregression.empiricalstudy.RootCauseFinder;
 
 public class ConcurrentBuggyTraceView extends ConcurrentTregressionTraceView {
 	public static final String ID = "tregression.evalView.buggyConcTraceView";
-
+	
 	@Override
 	protected Action createControlMendingAction() {
 		Action action = new Action() {
@@ -22,7 +25,7 @@ public class ConcurrentBuggyTraceView extends ConcurrentTregressionTraceView {
 					IStructuredSelection selection = (IStructuredSelection) listViewer.getSelection();
 					TraceNode node = (TraceNode) selection.getFirstElement();
 					
-					CorrectTraceView correctTraceView = TregressionViews.getCorrectTraceView();
+					ConcurrentCorrectTraceView correctTraceView = TregressionViews.getConcCorrectTraceView();
 					ClassLocation correspondingLocation = diffMatcher.findCorrespondingLocation(node.getBreakPoint(), false);
 					TraceNode otherControlDom = new RootCauseFinder().findControlMendingNodeOnOtherTrace(node, pairList, 
 							correctTraceView.getTrace(), false, correspondingLocation, diffMatcher);

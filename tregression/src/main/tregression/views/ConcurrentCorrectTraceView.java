@@ -40,7 +40,7 @@ public class ConcurrentCorrectTraceView extends ConcurrentTregressionTraceView {
 					IStructuredSelection selection = (IStructuredSelection) listViewer.getSelection();
 					TraceNode node = (TraceNode) selection.getFirstElement();
 					
-					BuggyTraceView buggyTraceView = TregressionViews.getBuggyTraceView();
+					ConcurrentBuggyTraceView buggyTraceView = TregressionViews.getConcBuggyTraceView();
 					ClassLocation correspondingLocation = diffMatcher.findCorrespondingLocation(node.getBreakPoint(), true);
 					TraceNode otherControlDom = new RootCauseFinder().findControlMendingNodeOnOtherTrace(node, pairList, 
 							buggyTraceView.getTrace(), true, correspondingLocation, diffMatcher);
@@ -131,7 +131,7 @@ public class ConcurrentCorrectTraceView extends ConcurrentTregressionTraceView {
 	}
 
 	@Override
-	protected void otherViewsBehavior(TraceNode correctNode) {
+	public void otherViewsBehavior(TraceNode correctNode) {
 		if (this.refreshProgramState) {
 			
 			StepPropertyView stepPropertyView = null;
@@ -149,7 +149,7 @@ public class ConcurrentCorrectTraceView extends ConcurrentTregressionTraceView {
 				buggyNode = pair.getBeforeNode();
 				if (buggyNode != null) {
 					ConcurrentBuggyTraceView buggyTraceView = TregressionViews.getConcBuggyTraceView();
-					buggyTraceView.jumpToNode(buggyTraceView.getTrace(), buggyNode.getOrder(), false);
+					buggyTraceView.jumpToNode(buggyNode.getTrace(), buggyNode.getOrder(), false);
 				}
 			}
 			
@@ -163,16 +163,8 @@ public class ConcurrentCorrectTraceView extends ConcurrentTregressionTraceView {
 		return pairList;
 	}
 
-	public void setPairList(PairList pairList) {
-		this.pairList = pairList;
-	}
 
 	public DiffMatcher getDiffMatcher() {
 		return diffMatcher;
 	}
-
-	public void setDiffMatcher(DiffMatcher diffMatcher) {
-		this.diffMatcher = diffMatcher;
-	}
-
 }
