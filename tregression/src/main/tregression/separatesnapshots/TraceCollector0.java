@@ -69,12 +69,6 @@ public class TraceCollector0 {
 		
 		
 		boolean isMultiThread = precheckInfo.getThreadNum()!=1;
-		if(!isMultiThread && mustBeMultiThread) {
-			System.out.println("It is multi-thread program!");
-			RunningResult rs = new RunningResult();
-			rs.setFailureType(TrialGenerator0.NOT_MULTI_THREAD);
-			return rs;
-		}
 		
 		if(isMultiThread && !allowMultiThread) {
 			System.out.println("It is multi-thread program!");

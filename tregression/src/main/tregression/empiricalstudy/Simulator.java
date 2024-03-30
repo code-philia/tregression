@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+import microbat.model.trace.ConcurrentTrace;
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -21,8 +23,6 @@ import tregression.StepChangeTypeChecker;
 import tregression.empiricalstudy.recommendation.BreakerRecommender;
 import tregression.empiricalstudy.training.DED;
 import tregression.empiricalstudy.training.TrainingDataTransfer;
-import tregression.model.ConcurrentTrace;
-import tregression.model.ConcurrentTraceNode;
 import tregression.model.PairList;
 import tregression.model.StepOperationTuple;
 import tregression.model.TraceNodePair;

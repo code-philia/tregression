@@ -9,11 +9,11 @@ import java.util.Set;
 import java.util.Stack;
 
 import microbat.instrumentation.instr.aggreplay.shared.ParseData;
+import microbat.model.trace.ConcurrentTrace;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import tregression.SimulationFailException;
 import tregression.StepChangeTypeChecker;
-import tregression.model.ConcurrentTrace;
 import tregression.model.PairList;
 import tregression.model.StepOperationTuple;
 import tregression.separatesnapshots.DiffMatcher;

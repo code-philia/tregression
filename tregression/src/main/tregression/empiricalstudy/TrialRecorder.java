@@ -14,6 +14,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import microbat.model.trace.ConcurrentTraceNode;
+import microbat.model.trace.TraceNode;
 import tregression.model.StepOperationTuple;
 
 public class TrialRecorder {
@@ -109,17 +111,20 @@ public class TrialRecorder {
 		setCellValue(row, Header.BUG_ID, bugID);
 		setCellValue(row, Header.MUTATION_TYPE, mutationType);
 		setCellValue(row, Header.TESTCASE, trial.getTestcase());
-		
-		int order = -1;
+		// set to 
+		String order = -1 + "";
 		if(trial.getRootcauseNode()!=null) {
-			order = trial.getRootcauseNode().getOrder();
+			TraceNode trialRootCauseNode = ConcurrentTraceNode.getIniTraceNode(trial.getRootcauseNode());
+			order = trial.getRootcauseNode().getOrder() + "," + trialRootCauseNode.getTrace().getThreadId();
 		}
 		setCellValue(row, Header.FOUND_CAUSE, order);
 		
-		order = -1;
+		order = -1 + "";
 		if(trial.getRootCauseFinder()!=null) {
 			if(!trial.getRootCauseFinder().getRealRootCaseList().isEmpty()){
-				order = trial.getRootCauseFinder().getRealRootCaseList().get(0).getRoot().getOrder();				
+				TraceNode root = trial.getRootCauseFinder().getRealRootCaseList().get(0).getRoot();
+				root = ConcurrentTraceNode.getIniTraceNode(root);
+				order = root.getOrder() + "," + root.getTrace().getThreadId(); 				
 			}
 		}
 		setCellValue(row, Header.GENERAL_CAUSE, order);

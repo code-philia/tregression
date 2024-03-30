@@ -74,6 +74,7 @@ public class RegressionUtil {
 		TraceNode closestStep = null;
 		int distance = -1;
 		for(TraceNode step: visitedSteps) {
+			if (step.getTrace().getThreadId() != stopStep.getTrace().getThreadId()) continue;
 			if(step.getOrder()>stopStep.getOrder()) {
 				if(closestStep==null) {
 					closestStep = step;

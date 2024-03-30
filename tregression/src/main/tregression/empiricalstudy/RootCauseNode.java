@@ -1,7 +1,7 @@
 package tregression.empiricalstudy;
 
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.TraceNode;
-import tregression.model.ConcurrentTraceNode;
 
 public class RootCauseNode {
 

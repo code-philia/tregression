@@ -3,6 +3,7 @@ package tregression;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.ReferenceValue;
@@ -14,7 +15,6 @@ import microbat.model.variable.VirtualVar;
 import microbat.util.PrimitiveUtils;
 import sav.common.core.Pair;
 import tregression.empiricalstudy.MatchStepFinder;
-import tregression.model.ConcurrentTraceNode;
 import tregression.model.PairList;
 import tregression.model.TraceNodePair;
 import tregression.separatesnapshots.DiffMatcher;

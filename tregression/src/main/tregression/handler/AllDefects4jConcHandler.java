@@ -25,6 +25,7 @@ import tregression.empiricalstudy.TrialGenerator;
 import tregression.empiricalstudy.TrialGenerator0;
 import tregression.empiricalstudy.TrialReader;
 import tregression.empiricalstudy.TrialRecorder;
+import tregression.empiricalstudy.config.ConfigFactory;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.empiricalstudy.training.DED;
@@ -52,8 +53,8 @@ public class AllDefects4jConcHandler extends AbstractHandler {
 					e1.printStackTrace();
 				}
 				
-				String[] projects = {"Closure"};
-				int[] bugNum = {47};
+				String[] projects = {"simple_defects"};
+				int[] bugNum = {1};
 				
 //				String[] projects = {"Lang"};
 //				int[] bugNum = {65};
@@ -110,7 +111,7 @@ public class AllDefects4jConcHandler extends AbstractHandler {
 							
 							TrialGenerator0 generator0 = new TrialGenerator0();
 							
-							ProjectConfig d4jConfig = Defects4jProjectConfig.getConfig(projects[i], String.valueOf(j));
+							ProjectConfig d4jConfig = ConfigFactory.createConfig(projects[i], i + "", buggyPath, fixPath);
 							List<EmpiricalTrial> trials = generator0.generateTrialsConcurrent(buggyPath, fixPath, 
 									false, false, false, 3, true, d4jConfig, null);
 							

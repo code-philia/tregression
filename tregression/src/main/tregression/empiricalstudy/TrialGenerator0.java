@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 
+import microbat.model.trace.ConcurrentTrace;
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.preference.AnalysisScopePreference;
@@ -22,7 +24,6 @@ import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.empiricalstudy.solutionpattern.PatternIdentifier;
 import tregression.io.RegressionRecorder;
-import tregression.model.ConcurrentTrace;
 import tregression.model.PairList;
 import tregression.model.StepOperationTuple;
 import tregression.model.TraceNodePair;
@@ -80,40 +81,52 @@ public class TrialGenerator0 {
 
 	public List<EmpiricalTrial> generateTrialsConcurrent(String buggyPath, String fixPath, boolean isReuse, boolean useSliceBreaker,
 			boolean enableRandom, int breakLimit, boolean requireVisualization, ProjectConfig config, String testcase) {
-		SingleTimer timer = SingleTimer.start("generateTrial");
 		List<TestCase> tcList;
 		EmpiricalTrial trial = null;
 		TestCase workingTC = null;
+		LinkedList<EmpiricalTrial> result = new LinkedList<>();
 		try {
 			tcList = retrieveD4jFailingTestCase(buggyPath);
-			
-			if(testcase!=null){
-				tcList = filterSpecificTestCase(testcase, tcList);
-			}
-			
-			for (TestCase tc : tcList) {
-				System.out.println("#####working on test case " + tc.testClass + "#" + tc.testMethod);
-				workingTC = tc;
-
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return new LinkedList<>();
+		}
+		
+		if(testcase!=null){
+			tcList = filterSpecificTestCase(testcase, tcList);
+		}
+		
+		for (TestCase tc : tcList) {
+			System.out.println("#####working on test case " + tc.testClass + "#" + tc.testMethod);
+			workingTC = tc;
+			SingleTimer timer = SingleTimer.start("generateTrial");
+			try {
 				trial = analyzeConcurrentTestCase(buggyPath, fixPath, isReuse,
 						tc, config, requireVisualization, true, useSliceBreaker, enableRandom, breakLimit);
-				if(!trial.isDump()){
-					break;
-				}
+				trial.setExecutionTime(timer.getExecutionTime());
+				result.add(trial);
+			} catch (Exception e) {
+				trial = EmpiricalTrial.createDumpTrial("Runtime exception occurs " + e);
+				trial.setTestcase(workingTC.testClass + "::" + workingTC.testMethod);
+				trial.setExecutionTime(timer.getExecutionTime());
+				result.add(trial);
 			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
+			
+//				if(!trial.isDump()){
+//					break;
+//				}
 		}
 
-		if (trial == null) {
-			trial = EmpiricalTrial.createDumpTrial("runtime exception occurs");
-			trial.setTestcase(workingTC.testClass + "::" + workingTC.testMethod);
-		}
-		trial.setExecutionTime(timer.getExecutionTime());
-		List<EmpiricalTrial> list = new ArrayList<>();
-		list.add(trial);
-		return list;
+		
+
+//		if (trial == null) {
+//			trial = EmpiricalTrial.createDumpTrial("runtime exception occurs");
+//			trial.setTestcase(workingTC.testClass + "::" + workingTC.testMethod);
+//		}
+//		List<EmpiricalTrial> list = new ArrayList<>();
+//		list.add(trial);
+		return result;
 	}
 	
 
@@ -376,8 +389,16 @@ public class TrialGenerator0 {
 					List<TraceNode> correctSteps = rootcauseFinder.getStopStepsOnCorrectTrace();
 					
 					List<String> newIncludedClassNames = new ArrayList<>();
-					List<String> newIncludedBuggyClassNames = RegressionUtil.identifyIncludedClassNames(buggySteps, buggyRS.getPrecheckInfo(), rootcauseFinder.getRegressionNodeList());
-					List<String> newIncludedCorrectClassNames = RegressionUtil.identifyIncludedClassNames(correctSteps, correctRs.getPrecheckInfo(), rootcauseFinder.getCorrectNodeList());
+
+					List<TraceNode> convertedBuggySteps = ConcurrentTraceNode.convert(buggySteps);
+					List<TraceNode> convertedConcurrentSteps = ConcurrentTraceNode.convert(correctSteps);
+					List<TraceNode> convertedRegressionNodes = ConcurrentTraceNode.convert(rootcauseFinder.getRegressionNodeList());
+					List<TraceNode> convertedCorrectNodeList = ConcurrentTraceNode.convert(rootcauseFinder.getCorrectNodeList());
+					
+					
+					List<String> newIncludedBuggyClassNames = RegressionUtil.identifyIncludedClassNames(convertedBuggySteps, buggyRS.getPrecheckInfo(), convertedRegressionNodes);
+					List<String> newIncludedCorrectClassNames = RegressionUtil.identifyIncludedClassNames(convertedConcurrentSteps, correctRs.getPrecheckInfo(), convertedCorrectNodeList);
+					
 					newIncludedClassNames.addAll(newIncludedBuggyClassNames);
 					newIncludedClassNames.addAll(newIncludedCorrectClassNames);
 					boolean includedClassChanged = false;

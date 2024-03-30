@@ -201,7 +201,7 @@ public class StepDetailUI {
 
 			if (obj instanceof VarValue) {
 				Trace trace = traceView.getTrace();
-
+				
 				value = (VarValue) obj;
 				String varID = value.getVarID();
 
