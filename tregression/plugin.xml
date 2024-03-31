@@ -68,6 +68,11 @@
              id="tregression.command.regressionLocalConc"
              name="Play the process of regession localisation (Concurrent)">
        </command>
+       <command
+             defaultHandler="tregression.handler.RunRecordingExperiment"
+             id="tregression.command.recordingexp"
+             name="Run recording experiment">
+       </command>
  </extension>	
  <extension
          point="org.eclipse.ui.views">

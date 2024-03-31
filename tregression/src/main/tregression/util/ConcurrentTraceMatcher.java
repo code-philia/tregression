@@ -147,10 +147,10 @@ public class ConcurrentTraceMatcher implements TraceMatcher {
 	private int computeWeight(Trace t1, Trace t2) {
 		BipGraph bipGraph = new BipGraph(t1.size(), t2.size());
 		int sameLines = 0;
-		for (int i = 0; i < t1.size(); ++i) {
+		for (int i = 1; i <= t1.size(); ++i) {
 			BreakPoint bp1 = t1.getTraceNode(i).getBreakPoint();
-			for (int j = 0; j < t2.size(); ++j) {
-				BreakPoint bp2 = t2.getTraceNode(i).getBreakPoint();
+			for (int j = 1; j <= t2.size(); ++j) {
+				BreakPoint bp2 = t2.getTraceNode(j).getBreakPoint();
 				if (diffMatcher.isMatch(bp1, bp2)) {
 					bipGraph.addEdge(i, j);
 				}

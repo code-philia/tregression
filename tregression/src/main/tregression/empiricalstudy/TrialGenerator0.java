@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -111,6 +112,7 @@ public class TrialGenerator0 {
 				trial.setTestcase(workingTC.testClass + "::" + workingTC.testMethod);
 				trial.setExecutionTime(timer.getExecutionTime());
 				result.add(trial);
+				e.printStackTrace();
 			}
 			
 //				if(!trial.isDump()){
@@ -302,6 +304,7 @@ public class TrialGenerator0 {
 				correctRs = correctCollector.runForceMultithreaded(fixPath, tc, config, isRunInTestCaseMode, includedClassNames, excludedClassNames);
 				if (correctRs.getRunningType() != NORMAL) {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(correctRs.getRunningType()));
+					trial.setTestcase(tc.toString());
 					return trial;
 				}
 
@@ -321,8 +324,7 @@ public class TrialGenerator0 {
 					}
 				}
 				
-
-				Map<Long, Long> threadIdMap = new ConcurrentTraceMatcher(diffMatcher).matchTraces(buggyTraces, correctTraces);
+				Map<Long, Long> threadIdMap = new HashMap<>();
 				if (buggyRS != null && correctRs != null) {
 					cachedBuggyRS = buggyRS;
 					cachedCorrectRS = correctRs;
@@ -333,6 +335,7 @@ public class TrialGenerator0 {
 					diffMatcher = new DiffMatcher(config.srcSourceFolder, config.srcTestFolder, buggyPath, fixPath);
 					diffMatcher.matchCode();
 
+					threadIdMap = new ConcurrentTraceMatcher(diffMatcher).matchTraces(buggyTraces, correctTraces);
 					ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
 					basePairLists = traceMatcher.matchConcurrentTraceNodePair(buggyTraces, correctTraces, diffMatcher, threadIdMap);
 					LinkedList<TraceNodePair> pairs = new LinkedList<>();
