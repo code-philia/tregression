@@ -133,15 +133,7 @@ public class ConcurrentCorrectTraceView extends ConcurrentTregressionTraceView {
 	@Override
 	public void otherViewsBehavior(TraceNode correctNode) {
 		if (this.refreshProgramState) {
-			
-			StepPropertyView stepPropertyView = null;
-			try {
-				stepPropertyView = (StepPropertyView)PlatformUI.getWorkbench().
-						getActiveWorkbenchWindow().getActivePage().showView(StepPropertyView.ID);
-			} catch (PartInitException e) {
-				e.printStackTrace();
-			}
-			
+			ConcurrentStepPropertyView stepPropertyView = TregressionViews.getConcStepPropertyView();
 			TraceNodePair pair = pairList.findByAfterNode(correctNode);
 			correctNode.toString();
 			TraceNode buggyNode = null;

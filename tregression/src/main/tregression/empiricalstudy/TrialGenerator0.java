@@ -357,15 +357,20 @@ public class TrialGenerator0 {
 					cachedPairList = pairList;
 				}
 				
+				ConcurrentTrace buggyTrace = ConcurrentTrace.fromTimeStampOrder(buggyTraces);
+				ConcurrentTrace correctTrace = ConcurrentTrace.fromTimeStampOrder(correctTraces);
 				
 				
 				if (requireVisualization) {
-					ConcurrentVisualiser visualizer = new ConcurrentVisualiser(correctTraces, buggyTraces, pairList, diffMatcher);
+					ConcurrentVisualiser visualizer = 
+							new ConcurrentVisualiser(correctTraces, buggyTraces, buggyTrace, correctTrace, pairList, diffMatcher);
 					visualizer.visualise();
 				}
 				
 				RootCauseFinder rootcauseFinder = new RootCauseFinder();
 				rootcauseFinder.setRootCauseBasedOnDefects4JConc(basePairLists, diffMatcher, buggyTraces, correctTraces);
+				
+				
 				
 				ConcurrentSimulator simulator = new ConcurrentSimulator(useSliceBreaker, enableRandom, breakLimit);
 				
@@ -383,8 +388,6 @@ public class TrialGenerator0 {
 					return trial;
 				}
 
-				ConcurrentTrace buggyTrace = ConcurrentTrace.fromTimeStampOrder(buggyTraces);
-				ConcurrentTrace correctTrace = ConcurrentTrace.fromTimeStampOrder(correctTraces);
 				rootcauseFinder.checkRootCauseConc(simulator.getObservedFault(), buggyTrace, correctTrace, pairList, diffMatcher);
 				TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, buggyTrace, correctTrace);
 				

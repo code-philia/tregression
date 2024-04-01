@@ -62,4 +62,16 @@ public class TregressionViews {
 		
 		return view;
 	}
+	
+	public static ConcurrentStepPropertyView getConcStepPropertyView(){
+		ConcurrentStepPropertyView view = null;
+		try {
+			view = (ConcurrentStepPropertyView)PlatformUI.getWorkbench().
+					getActiveWorkbenchWindow().getActivePage().showView(ConcurrentStepPropertyView.ID);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		
+		return view;
+	}
 }

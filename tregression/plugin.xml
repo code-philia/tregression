@@ -120,6 +120,14 @@
             name="Concurrent Correct Trace"
             restorable="true">
       </view>
+      <view
+            category="tregression.categories"
+            class="tregression.views.ConcurrentStepPropertyView"
+            icon="icons/property.png"
+            id="tregression.view.concStepProperties"
+            name="Step Properties view concurrent"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">
