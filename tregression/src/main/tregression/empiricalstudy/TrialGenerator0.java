@@ -238,6 +238,9 @@ public class TrialGenerator0 {
 		System.currentTimeMillis();
 	}
 	
+	/**
+	 * Used to run erased on concurrent program
+	 */
 	private EmpiricalTrial analyzeConcurrentTestCase(String buggyPath, String fixPath, boolean isReuse, 
 			TestCase tc, ProjectConfig config, boolean requireVisualization, 
 			boolean isRunInTestCaseMode, boolean useSliceBreaker, boolean enableRandom, int breakLimit) throws SimulationFailException {
@@ -296,6 +299,7 @@ public class TrialGenerator0 {
 				buggyRS = buggyCollector.runForceMultithreaded(buggyPath, tc, config, isRunInTestCaseMode, includedClassNames, excludedClassNames);
 				if (buggyRS.getRunningType() != NORMAL) {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(buggyRS.getRunningType()));
+					trial.setTestcase(tc.testClass + "#" + tc.testMethod);
 					return trial;
 				}
 
@@ -381,7 +385,7 @@ public class TrialGenerator0 {
 
 				ConcurrentTrace buggyTrace = ConcurrentTrace.fromTimeStampOrder(buggyTraces);
 				ConcurrentTrace correctTrace = ConcurrentTrace.fromTimeStampOrder(correctTraces);
-				rootcauseFinder.checkRootCause(simulator.getObservedFault(), buggyTrace, correctTrace, pairList, diffMatcher);
+				rootcauseFinder.checkRootCauseConc(simulator.getObservedFault(), buggyTrace, correctTrace, pairList, diffMatcher);
 				TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, buggyTrace, correctTrace);
 				
 				if(rootCause==null){

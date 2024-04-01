@@ -62,7 +62,7 @@ public class ConcurrentBuggyTraceView extends ConcurrentTregressionTraceView {
 				e.printStackTrace();
 			}
 			
-			TraceNodePair pair = pairList.findByAfterNode(buggyNode);
+			TraceNodePair pair = pairList.findByBeforeNode(buggyNode);
 			buggyNode.toString();
 			TraceNode correctNode = null;
 			if(pair != null){
@@ -73,7 +73,7 @@ public class ConcurrentBuggyTraceView extends ConcurrentTregressionTraceView {
 				}
 			}
 			
-			stepPropertyView.refreshConc(buggyNode, correctNode, diffMatcher, pairList);
+			stepPropertyView.refreshConc(correctNode, buggyNode, diffMatcher, pairList);
 		}
 
 		markJavaEditor(buggyNode);

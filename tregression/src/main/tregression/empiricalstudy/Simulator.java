@@ -768,7 +768,7 @@ public class Simulator  {
 	}
 
 
-	private TraceNode findLatestControlDifferent(TraceNode currentNode, TraceNode controlDom, 
+	protected TraceNode findLatestControlDifferent(TraceNode currentNode, TraceNode controlDom, 
 			StepChangeTypeChecker checker, PairList pairList, DiffMatcher matcher) {
 		TraceNode n = currentNode.getStepInPrevious();
 		StepChangeType t = checker.getType(n, true, pairList, matcher);
@@ -784,7 +784,7 @@ public class Simulator  {
 		return controlDom;
 	}
 
-	private List<DeadEndRecord> createControlRecord(TraceNode currentNode, TraceNode latestBugNode, StepChangeTypeChecker typeChecker,
+	protected List<DeadEndRecord> createControlRecord(TraceNode currentNode, TraceNode latestBugNode, StepChangeTypeChecker typeChecker,
 			PairList pairList, DiffMatcher matcher) {
 		if (latestBugNode instanceof ConcurrentTraceNode) {
 			return concurrentCreateControlRecord(currentNode, (ConcurrentTraceNode) latestBugNode, typeChecker, pairList, matcher);
@@ -909,7 +909,7 @@ public class Simulator  {
 		return list;
 	}
 
-	private List<DeadEndRecord> createDataRecord(TraceNode currentNode, TraceNode buggyNode,
+	protected List<DeadEndRecord> createDataRecord(TraceNode currentNode, TraceNode buggyNode,
 			StepChangeTypeChecker typeChecker, PairList pairList, DiffMatcher matcher, RootCauseFinder rootCauseFinder) {
 		
 		List<DeadEndRecord> deadEndlist = new ArrayList<>();
@@ -991,7 +991,7 @@ public class Simulator  {
 		return list;
 	}
 
-	private StepOperationTuple generateDataFeedback(TraceNode currentNode, StepChangeType changeType,
+	protected StepOperationTuple generateDataFeedback(TraceNode currentNode, StepChangeType changeType,
 			VarValue readVar) {
 		UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 		ChosenVariableOption option = new ChosenVariableOption(readVar, null);
@@ -1000,7 +1000,7 @@ public class Simulator  {
 		return operation;
 	}
 
-	private int checkOverskipLength(PairList pairList, DiffMatcher matcher, Trace buggyTrace, TraceNode rootcauseNode,
+	protected int checkOverskipLength(PairList pairList, DiffMatcher matcher, Trace buggyTrace, TraceNode rootcauseNode,
 			 List<StepOperationTuple> checkingList) {
 		TraceNode latestNode = checkingList.get(checkingList.size() - 1).getNode();
 

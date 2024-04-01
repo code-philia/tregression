@@ -55,7 +55,15 @@ public class RunRecordingExperiment extends AbstractHandler {
 		EXECUTION_TIME,
 		ORIGINAL_MEMORY_SIZE,
 		MEMEORY_SIZE,
-		LOG_SIZE;
+		LOG_SIZE,
+		/**
+		 * For error during the normal run.
+		 */
+		PROCESS_ERROR,
+		/**
+		 * For error during shared memory detection.
+		 */
+		SHARED_MEM_DETEC_ERROR;
 		public String getTitle() {
 			return name();
 		}
@@ -84,7 +92,8 @@ public class RunRecordingExperiment extends AbstractHandler {
 			super(file);
 		}
 		
-		public void writeRow(String testCaseName, long executionTime, long originalMem, long memorySize, long logSize) {
+		public void writeRow(String testCaseName, long executionTime, long originalMem, long memorySize, long logSize, String processError,
+				String sharedMemError) {
 			Sheet sheet = getSheet("data", RecordHeaders.values(), 0);
 			int rowNum = sheet.getLastRowNum() + 1;
 			Row row = sheet.createRow(rowNum);
@@ -93,6 +102,7 @@ public class RunRecordingExperiment extends AbstractHandler {
 			addCell(row, RecordHeaders.ORIGINAL_MEMORY_SIZE, originalMem);
 			addCell(row, RecordHeaders.MEMEORY_SIZE, memorySize);
 			addCell(row, RecordHeaders.LOG_SIZE, logSize);
+			addCell(row, RecordHeaders.PROCESS_ERROR, processError);
 		}
 		
 		private void writeError(String testCaseName, Exception exception) {
@@ -194,6 +204,8 @@ public class RunRecordingExperiment extends AbstractHandler {
 		long origMemSize = -1;
 		List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
 		List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
+		String sharedMemError = "";
+		String processMemError = "";
 		InstrumentationExecutor executor = new InstrumentationExecutor(appJavaClassPath,
 		generateTraceDir(appJavaClassPath), "trace", includedClassNames, excludedClassNames);
 		cancelThread = new CancelThread(monitor, executor);
@@ -235,9 +247,9 @@ public class RunRecordingExperiment extends AbstractHandler {
 
 		CancelThread ctThread = new CancelThread(monitor, executor);
 		ctThread.start();
-		executor.runSharedVariable(fileName, Settings.stepLimit);
+		sharedMemError = executor.runSharedVariable(fileName, Settings.stepLimit);
 		SingleTimer timer = SingleTimer.start("execute record");
-		executor.runRecordConc(fileName, concFileNameString, Settings.stepLimit);
+		processMemError = executor.runRecordConc(fileName, concFileNameString, Settings.stepLimit);
 		ctThread.stopMonitoring();
 		long logSize = concDumpFile.length();
 		long timeTaken = timer.getExecutionTime();
@@ -256,7 +268,7 @@ public class RunRecordingExperiment extends AbstractHandler {
 			e.printStackTrace();
 		}
 		
-		report.writeRow(Settings.launchClass, timeTaken, origMemSize, memoryUsed, logSize);
+		report.writeRow(Settings.launchClass, timeTaken, origMemSize, memoryUsed, logSize, processMemError, sharedMemError);
 		cancelThread.stopMonitoring();
 		return null;
 	}
