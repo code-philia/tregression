@@ -74,25 +74,7 @@ public class ConcurrentStepPropertyView extends ViewPart {
 		
 		return null;
 	}
-	
-	
-	public void refresh(TraceNode correctNode, TraceNode buggyNode, DiffMatcher diffMatcher, PairList pairList){
-		Trace buggyTrace = TregressionViews.getBuggyTraceView().getTrace();
-		Trace correctTrace = TregressionViews.getCorrectTraceView().getTrace();
-		StepChangeTypeChecker checker = new StepChangeTypeChecker(buggyTrace, correctTrace);
-		
-		if(buggyDetailUI != null && buggyNode != null){
-			StepChangeType changeType = checker.getType(buggyNode, true, pairList, diffMatcher);
-			buggyDetailUI.refresh(buggyNode, changeType);
-		}
-		
-		if(correctDetailUI != null && correctNode != null){
-			StepChangeType changeType = checker.getType(correctNode, false, pairList, diffMatcher);
-			correctDetailUI.refresh(correctNode, changeType);
-		}
-	}
-	
-	
+
 	public void refreshConc(TraceNode correctNode, TraceNode buggyNode, DiffMatcher diffMatcher, PairList pairList){
 		if (buggyNode == null || correctNode == null) {
 			return;
@@ -101,12 +83,12 @@ public class ConcurrentStepPropertyView extends ViewPart {
 		Trace correctTrace = correctNode.getTrace();
 		StepChangeTypeChecker checker = new StepChangeTypeChecker(buggyTrace, correctTrace);
 		
-		if(buggyDetailUI != null && buggyNode != null){
+		if(buggyDetailUI != null && buggyNode != null) {
 			StepChangeType changeType = checker.getType(buggyNode, true, pairList, diffMatcher);
 			buggyDetailUI.refresh(buggyNode, changeType);
 		}
 		
-		if(correctDetailUI != null && correctNode != null){
+		if(correctDetailUI != null && correctNode != null) {
 			StepChangeType changeType = checker.getType(correctNode, false, pairList, diffMatcher);
 			correctDetailUI.refresh(correctNode, changeType);
 		}

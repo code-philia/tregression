@@ -100,7 +100,9 @@ public class EmpiricalTrial {
 		String type = (this.bugType==FIND_BUG) ? "bug_found" : "over_skip";
 		buffer.append("trial type: " + type + "\n");
 		int rootcauseOrder = (this.rootcauseNode==null)? -1 : this.rootcauseNode.getOrder();
-		buffer.append("found root cause: " + rootcauseOrder + "\n");
+		String rootCauseThreadName = (this.rootcauseNode==null)?"":this.rootcauseNode.getTrace().getThreadName();
+		
+		buffer.append("found root cause: " + rootcauseOrder + " " + rootCauseThreadName + "\n");
 		
 		String realcauseOrders = "";
 		if(this.rootCauseFinder==null){

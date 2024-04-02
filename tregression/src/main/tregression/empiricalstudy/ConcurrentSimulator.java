@@ -26,6 +26,7 @@ import tregression.separatesnapshots.DiffMatcher;
  */
 public class ConcurrentSimulator extends Simulator {
 
+	boolean isMultiThread = false;
 	public ConcurrentSimulator(boolean useSlicerBreaker, boolean enableRandom, int breakerTrialLimit) {
 		super(useSlicerBreaker, enableRandom, breakerTrialLimit);
 	}
@@ -36,6 +37,7 @@ public class ConcurrentSimulator extends Simulator {
 			Map<Long, Long> threadIdMap,
 			DiffMatcher matcher) {
 		Map<Long, Trace> correctTraceMap = new HashMap<>();
+		this.isMultiThread = correctTraces.size() > 1 || buggyTraces.size() > 1;
 		for (Trace trace : correctTraces) {
 			correctTraceMap.put(trace.getThreadId(), trace);
 		}
@@ -50,7 +52,6 @@ public class ConcurrentSimulator extends Simulator {
 
 	private List<EmpiricalTrial> startSimulationConc(TraceNode observedFaultNode, Trace buggyTrace, Trace correctTrace,
 			PairList pairList, DiffMatcher matcher, RootCauseFinder rootCauseFinder) {
-
 		StepChangeTypeChecker typeChecker = new StepChangeTypeChecker(buggyTrace, correctTrace);
 		List<EmpiricalTrial> trials = new ArrayList<>();
 		TraceNode currentNode = observedFaultNode;
@@ -66,7 +67,7 @@ public class ConcurrentSimulator extends Simulator {
 			TraceNode currentNode) {
 		List<StepOperationTuple> checkingList = new ArrayList<>();
 		TraceNode rootcauseNode = rootCauseFinder.retrieveRootCause(pairList, matcher, buggyTrace, correctTrace);
-		boolean isMultiThread = false;
+		rootCauseFinder.setRootCauseBasedOnDefects4J(pairList, matcher, buggyTrace, correctTrace);
 		
 		long startTime = System.currentTimeMillis();
 		
@@ -390,7 +391,7 @@ public class ConcurrentSimulator extends Simulator {
 			if(trials!=null) {
 				boolean rootcauseFind = false;
 				for(EmpiricalTrial trial: trials) {
-					if(!rootcauseFind && trial.getRootcauseNode()!=null){
+					if(!rootcauseFind && trial.getRootcauseNode()!=null) {
 						rootcauseFind = true;
 					}
 					trial.setSimulationTime(checkTime);

@@ -83,9 +83,10 @@ public class StepChangeType {
 			CausalityNode cNode = new CausalityNode(node, isOnBefore);
 			VarValue value = guidance.get(cNode);
 			if(value != null ){
-				if(!node.getWrittenVariables().contains(value)){
-					return value;					
-				}
+//				if(!node.getWrittenVariables().contains(value)){
+//					return value;					
+//				}
+				return value;
 			}
 		}
 		

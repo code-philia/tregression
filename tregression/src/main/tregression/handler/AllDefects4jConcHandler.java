@@ -18,6 +18,7 @@ import experiment.utils.report.ExperimentReportComparisonReporter;
 import experiment.utils.report.rules.SimulatorComparisonRule;
 import experiment.utils.report.rules.TextComparisonRule;
 import microbat.Activator;
+import microbat.handler.CancelThread;
 import sav.common.core.utils.SingleTimer;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.ReadEmpiricalTrial;
@@ -40,7 +41,8 @@ public class AllDefects4jConcHandler extends AbstractHandler {
 			protected IStatus run(IProgressMonitor monitor) {
 				int skippedNum = 0;
 				int endNum = 500;
-				
+				CancelThread cancelThread = new CancelThread(monitor, null);
+				cancelThread.start();
 //				String[] projects = {"Chart", "Closure", "Lang", "Math", "Mockito", "Time"};
 //				int[] bugNum = {26, 133, 65, 106, 38, 27};
 				
@@ -53,8 +55,10 @@ public class AllDefects4jConcHandler extends AbstractHandler {
 					e1.printStackTrace();
 				}
 				
-				String[] projects = {"simple_defects"};
-				int[] bugNum = {1};
+//				String[] projects = {"simple_defects"};
+//				int[] bugNum = {1};
+				String[] projects = {"Closure"};
+				int[] bugNum = {50};
 				
 //				String[] projects = {"Lang"};
 //				int[] bugNum = {65};
@@ -68,9 +72,9 @@ public class AllDefects4jConcHandler extends AbstractHandler {
 				File defects4jFile = null;
 				try {
 					for(int i=0; i<projects.length; i++) {
-						
+						if (cancelThread.stopped) break;
 						for(int j=1; j<=bugNum[i]; j++) {
-							
+							if (cancelThread.stopped) break;
 							SingleTimer timer = SingleTimer.start("generateTrials");
 							if (monitor.isCanceled()) {
 								return Status.OK_STATUS;
@@ -110,10 +114,11 @@ public class AllDefects4jConcHandler extends AbstractHandler {
 							System.out.println("analyzing the " + j + "th bug in " + projects[i] + " project.");
 							
 							TrialGenerator0 generator0 = new TrialGenerator0();
+							generator0.setCancelThread(cancelThread);
 							
 							ProjectConfig d4jConfig = ConfigFactory.createConfig(projects[i], i + "", buggyPath, fixPath);
 							List<EmpiricalTrial> trials = generator0.generateTrialsConcurrent(buggyPath, fixPath, 
-									false, false, false, 3, true, d4jConfig, null);
+									false, false, false, 3, false, d4jConfig, null);
 							
 							TrialRecorder recorder;
 							try {
@@ -156,7 +161,7 @@ public class AllDefects4jConcHandler extends AbstractHandler {
 									Arrays.asList(new TextComparisonRule(null), new SimulatorComparisonRule()), keys);
 					}
 				}
-					
+				cancelThread.stopMonitoring();
 //					System.out.println("all the trials");
 //					for(int j=0; j<trials.size(); j++) {
 //						System.out.println("Trial " + (j+1));

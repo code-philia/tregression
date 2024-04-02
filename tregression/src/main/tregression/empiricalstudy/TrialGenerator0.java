@@ -4,12 +4,18 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.Stack;
 
+import microbat.handler.CancelThread;
+import microbat.instrumentation.instr.aggreplay.TimeoutThread;
 import microbat.model.trace.ConcurrentTrace;
 import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
@@ -54,7 +60,12 @@ public class TrialGenerator0 {
 	private DiffMatcher cachedDiffMatcher;
 	private PairList cachedPairList;
 	private List<PairList> cachedPairLists;
-
+	private CancelThread cancelThread = null;
+	
+	public void setCancelThread(CancelThread cThread) {
+		this.cancelThread = cThread;
+	}
+	
 	public static String getProblemType(int type) {
 		switch (type) {
 		case OVER_LONG:
@@ -99,6 +110,7 @@ public class TrialGenerator0 {
 		}
 		
 		for (TestCase tc : tcList) {
+			if (cancelThread != null && cancelThread.stopped) break;
 			System.out.println("#####working on test case " + tc.testClass + "#" + tc.testMethod);
 			workingTC = tc;
 			SingleTimer timer = SingleTimer.start("generateTrial");
@@ -239,6 +251,56 @@ public class TrialGenerator0 {
 	}
 	
 	/**
+	 * 
+	 * @param traces The list of traces to check for dead lock
+	 * @return The set of threads that are involved in the deadlock.
+	 */
+	private Set<Long> hasDeadlock(List<Trace> traces) {
+		HashMap<Long, Long> waitingForMap  = new HashMap<Long, Long>();
+		HashSet<Long> visited = new HashSet<>();
+		HashMap<Long, Long> lockedOnMap = new HashMap<Long, Long>();
+		for (Trace trace : traces) {
+			for (Long object : trace.getAcquiredLocks()) {
+				lockedOnMap.put(object, trace.getThreadId());
+			}
+		}
+		for (Trace trace : traces) {
+			if (lockedOnMap.containsKey(trace.getAcquiringLock())) {
+				waitingForMap.put(trace.getThreadId(), lockedOnMap.get(trace.getAcquiringLock()));
+			}
+		}
+		long cycleNode = -1L;
+		for (Trace trace : traces) {
+			if (visited.contains(trace.getThreadId())) continue;
+			long currentNode = trace.getThreadId();
+			while (true) {
+				if (visited.contains(currentNode)) {
+					// detected a cycle.
+					cycleNode = currentNode;
+					break;
+				}
+				visited.add(currentNode);
+				if (!waitingForMap.containsKey(currentNode)) {
+					break;
+				}
+				currentNode = waitingForMap.get(currentNode);
+			}
+			if (cycleNode != -1) break;
+		}
+		// no cycles found
+		if (cycleNode == -1) return Collections.emptySet();
+		HashSet<Long> cycleNodes = new HashSet<Long>();
+		long currentNode = cycleNode;
+		while (true) {
+			if (cycleNodes.contains(currentNode)) break;
+			cycleNodes.add(currentNode);
+			currentNode = waitingForMap.get(currentNode);
+		}
+		
+		return cycleNodes;
+	}
+	
+	/**
 	 * Used to run erased on concurrent program
 	 */
 	private EmpiricalTrial analyzeConcurrentTestCase(String buggyPath, String fixPath, boolean isReuse, 
@@ -327,6 +389,7 @@ public class TrialGenerator0 {
 						correctTrace.setAppJavaClassPath(correctAppJavaClassPath);
 					}
 				}
+				boolean isTimeout = buggyRS.getRunningInfo().getProgramMsg().equals(TimeoutThread.TIMEOUT_MSG);
 				
 				Map<Long, Long> threadIdMap = new HashMap<>();
 				if (buggyRS != null && correctRs != null) {
@@ -369,6 +432,8 @@ public class TrialGenerator0 {
 				
 				RootCauseFinder rootcauseFinder = new RootCauseFinder();
 				rootcauseFinder.setRootCauseBasedOnDefects4JConc(basePairLists, diffMatcher, buggyTraces, correctTraces);
+				
+				
 				
 				
 				
