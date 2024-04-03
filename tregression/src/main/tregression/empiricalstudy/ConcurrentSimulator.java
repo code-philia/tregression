@@ -30,6 +30,10 @@ public class ConcurrentSimulator extends Simulator {
 	public ConcurrentSimulator(boolean useSlicerBreaker, boolean enableRandom, int breakerTrialLimit) {
 		super(useSlicerBreaker, enableRandom, breakerTrialLimit);
 	}
+	
+	public boolean isMultiThread() {
+		return this.isMultiThread;
+	}
 
 	public void prepareConc(List<Trace> buggyTraces, 
 			List<Trace> correctTraces, 

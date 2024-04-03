@@ -37,6 +37,8 @@ public class EmpiricalTrial {
 	private List<TraceNode> visitedRegressionNodes;
 	private List<TraceNode> visitedCorrectNodes;
 	
+	private boolean isDeadLock = false;
+	
 	private int totalVisitedNodesNum;
 	
 	private List<StepOperationTuple> checkList = new ArrayList<>();
@@ -46,7 +48,7 @@ public class EmpiricalTrial {
 	private RootCauseFinder rootCauseFinder;
 	
 	private List<DeadEndRecord> deadEndRecordList = new ArrayList<>();
-	
+	private boolean timeOut = false;
 	private boolean isMultiThread;
 	private long executionTime;
 
@@ -78,6 +80,22 @@ public class EmpiricalTrial {
 				-1, -1, null, false);
 		trial.setExceptionExplanation(reason);
 		return trial;
+	}
+	
+	public void setTimeout(boolean timeout) {
+		this.timeOut = timeout;
+	}
+	
+	public boolean isTimeout() {
+		return this.timeOut;
+	}
+	
+	public void setDeadLock(boolean isDeadLock) {
+		this.isDeadLock = isDeadLock;
+	}
+	
+	public boolean isDeadLock() {
+		return this.isDeadLock;
 	}
 	
 	public boolean isDump(){

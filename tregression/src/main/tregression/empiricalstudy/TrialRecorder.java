@@ -158,6 +158,8 @@ public class TrialRecorder {
 			setCellValue(row, Header.EXCEPTION, trial.getExceptionExplanation());
 		}
 		setCellValue(row, Header.MULTI_THREAD, trial.isMultiThread());
+		setCellValue(row, Header.IS_DEADLOCK, trial.isDeadLock());
+		setCellValue(row, Header.IS_TIMEOUT, trial.isTimeout());
 		
 		setCellValue(row, Header.BREAK_TO_BUG, trial.isBreakSlice());
 		setCellValue(row, Header.EXECTION_TIME, trial.getExecutionTime());

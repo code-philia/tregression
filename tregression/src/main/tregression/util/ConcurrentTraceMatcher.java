@@ -116,7 +116,7 @@ public class ConcurrentTraceMatcher implements TraceMatcher {
 				int weight = computeWeight(trace, trace2);
 				// use this weight to differentiate
 				// between matching small to superset and small to equal set
-				double score = weight / Math.max(trace.size(), trace2.size());
+				double score = weight / Math.max(Math.max(trace.size(), trace2.size()), 1);
 				int arbitraryMult = max_trace;
 				int k_weight = (int) (score * arbitraryMult);
 				if (weight > traces1.size() / 2) {

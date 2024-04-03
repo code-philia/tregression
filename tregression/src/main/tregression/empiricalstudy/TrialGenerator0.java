@@ -390,6 +390,12 @@ public class TrialGenerator0 {
 					}
 				}
 				boolean isTimeout = buggyRS.getRunningInfo().getProgramMsg().equals(TimeoutThread.TIMEOUT_MSG);
+				boolean isCorrectTimeout = correctRs.getRunningInfo().getProgramMsg().equals(TimeoutThread.TIMEOUT_MSG);
+				
+				Set<Long> deadLockThreads = new HashSet<Long>();
+				if (isTimeout) {
+					deadLockThreads = hasDeadlock(buggyTraces);
+				}
 				
 				Map<Long, Long> threadIdMap = new HashMap<>();
 				if (buggyRS != null && correctRs != null) {
@@ -420,6 +426,17 @@ public class TrialGenerator0 {
 					cachedPairList = pairList;
 				}
 				
+				System.out.println("Wrong traces");
+				
+				for (Trace trace : buggyTraces) {
+					System.out.println(trace.getInnerThreadId().printRootListNode());
+				}
+				
+				System.out.println("Correct traces");
+				for (Trace trace : correctTraces) {
+					System.out.println(trace.getInnerThreadId().printRootListNode());
+				}
+//				
 				ConcurrentTrace buggyTrace = ConcurrentTrace.fromTimeStampOrder(buggyTraces);
 				ConcurrentTrace correctTrace = ConcurrentTrace.fromTimeStampOrder(correctTraces);
 				
@@ -440,6 +457,12 @@ public class TrialGenerator0 {
 				ConcurrentSimulator simulator = new ConcurrentSimulator(useSliceBreaker, enableRandom, breakLimit);
 				
 				simulator.prepareConc(buggyTraces, correctTraces, pairList, threadIdMap, diffMatcher);
+				if (!simulator.isMultiThread()) {
+					EmpiricalTrial trial0 = EmpiricalTrial.createDumpTrial("is not multi thread");
+					trial0.setTestcase(tc.getName());
+					trial0.setBugType(NOT_MULTI_THREAD);
+					return trial0;
+				}
 				if(rootcauseFinder.getRealRootCaseList().isEmpty()) {
 					trial = EmpiricalTrial.createDumpTrial("cannot find real root cause");
 					StepOperationTuple tuple = new StepOperationTuple(simulator.getObservedFault(), 
@@ -509,7 +532,7 @@ public class TrialGenerator0 {
 					t.setFixedTrace(correctTrace);
 					t.setPairList(pairList);
 					t.setDiffMatcher(diffMatcher);
-					
+					t.setDeadLock(deadLockThreads.size() > 0);
 					PatternIdentifier identifier = new PatternIdentifier();
 					identifier.identifyPattern(t);
 				}
