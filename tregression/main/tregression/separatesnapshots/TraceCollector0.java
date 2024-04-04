@@ -32,7 +32,7 @@ public class TraceCollector0 {
 		String traceDir = MicroBatUtil.generateTraceDir(config.projectName, config.regressionID);
 		String traceName = isBuggy ? "bug" : "fix";
 		InstrumentationExecutor exectuor = new InstrumentationExecutor(appClassPath,
-				traceDir, traceName, includeLibs, excludeLibs, config.srcSourceFolder, config.srcTestFolder);
+				traceDir, traceName, includeLibs, excludeLibs);
 		
 		RunningInfo info = null;
 		try {

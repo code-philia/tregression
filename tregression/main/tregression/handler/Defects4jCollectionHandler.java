@@ -32,7 +32,7 @@ public class Defects4jCollectionHandler extends AbstractHandler {
 	
 	private void execute() {
 		final String basePath = "D:\\Defects4j";
-		final String resultPath = "D:\\dependency_recovery\\gpt_v2.txt";
+		final String resultPath = "D:\\dependency_recovery\\gpt_v1.txt";
 		final ProjectsRunner runner = new Defects4jRunner(basePath, resultPath);
 		runner.run();
 	}

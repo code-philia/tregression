@@ -137,7 +137,7 @@ public class RunAllDefects4jHandler  extends AbstractHandler {
 		String traceDir = MicroBatUtil.generateTraceDir(config.projectName, config.regressionID);
 		String traceName = isBuggy ? "bug" : "fix";
 		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath, traceDir, traceName, includeLibs,
-				excludeLibs, config.srcSourceFolder, config.srcTestFolder);
+				excludeLibs);
 		
 		RunningInfo info = null;
 		try {
