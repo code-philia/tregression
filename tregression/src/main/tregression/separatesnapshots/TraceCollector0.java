@@ -1,6 +1,7 @@
 package tregression.separatesnapshots;
 
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.PreCheckInformation;
@@ -20,12 +21,8 @@ public class TraceCollector0 {
 		this.isBuggy = buggy;
 	}
 	
-
-	public RunningResult runInner(String workingDir, TestCase tc, 
-			ProjectConfig config, boolean isRunInTestCaseMode, boolean mustBeMultiThread,
-			boolean allowMultiThread,
-			List<String> includeLibs, List<String> excludeLibs){
-		
+	protected InstrumentationExecutor generateExecutor(String workingDir, TestCase tc, 
+			ProjectConfig config, boolean isRunInTestCaseMode, List<String> includeLibs, List<String> excludeLibs) {
 		AppJavaClassPath appClassPath = AppClassPathInitializer.initialize(workingDir, tc, config);
 		if(!isRunInTestCaseMode) {
 			appClassPath.setLaunchClass(appClassPath.getOptionalTestClass());
@@ -33,17 +30,26 @@ public class TraceCollector0 {
 		
 		String traceDir = MicroBatUtil.generateTraceDir(config.projectName, config.regressionID);
 		String traceName = isBuggy ? "bug" : "fix";
-		InstrumentationExecutor exectuor = new InstrumentationExecutor(appClassPath,
+		return new InstrumentationExecutor(appClassPath,
 				traceDir, traceName, includeLibs, excludeLibs);
 		
+	}
+	
+
+	public RunningResult runInner(String workingDir, TestCase tc, 
+			ProjectConfig config, boolean isRunInTestCaseMode, boolean mustBeMultiThread,
+			boolean allowMultiThread,
+			List<String> includeLibs, List<String> excludeLibs){
+		
+		InstrumentationExecutor executor = generateExecutor(workingDir, tc, config, isRunInTestCaseMode, includeLibs, excludeLibs);
 		RunningInfo info = null;
 		try {
-			info = exectuor.run();
+			info = executor.run();
 		} catch (StepLimitException e) {
 			e.printStackTrace();
 		}
 		
-		PreCheckInformation precheckInfo = exectuor.getPrecheckInfo();
+		PreCheckInformation precheckInfo = executor.getPrecheckInfo();
 		System.out.println("There are " + precheckInfo.getStepNum() + " steps in this trace");
 		if(precheckInfo.isOverLong()) {
 			System.out.println("The trace is over long!");
@@ -83,15 +89,21 @@ public class TraceCollector0 {
 //			rs.setFailureType(TrialGenerator0.EXPECTED_STEP_NOT_MET);
 //			return rs;
 //		}
-		List<Trace> traces = info.getTraceList();
-		Trace trace = info.getMainTrace();
-		trace.constructLoopParentRelation();
-		trace.setSourceVersion(isBuggy);
+		updateTraceInfo(info);
+		Trace mainTrace = info.getMainTrace();
 		
-		RunningResult rs = new RunningResult(trace, null, null, precheckInfo, appClassPath);
-		rs.setRunningTrace(trace);
+		RunningResult rs = new RunningResult(mainTrace, null, null, precheckInfo, executor.getAppPath());
+		rs.setRunningTrace(mainTrace);
 		rs.setRunningInfo(info);
 		return rs;
+	}
+	
+	protected void updateTraceInfo(RunningInfo runningInfo) {
+		List<Trace> traces = runningInfo.getTraceList();
+		for (Trace trace : traces) {
+			trace.constructLoopParentRelation();
+			trace.setSourceVersion(isBuggy);	
+		}
 	}
 	
 	

@@ -35,6 +35,7 @@ import tregression.model.PairList;
 import tregression.model.StepOperationTuple;
 import tregression.model.TraceNodePair;
 import tregression.separatesnapshots.AppClassPathInitializer;
+import tregression.separatesnapshots.BuggyTraceCollector;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.separatesnapshots.RunningResult;
 import tregression.separatesnapshots.TraceCollector0;
@@ -306,7 +307,7 @@ public class TrialGenerator0 {
 	private EmpiricalTrial analyzeConcurrentTestCase(String buggyPath, String fixPath, boolean isReuse, 
 			TestCase tc, ProjectConfig config, boolean requireVisualization, 
 			boolean isRunInTestCaseMode, boolean useSliceBreaker, boolean enableRandom, int breakLimit) throws SimulationFailException {
-		TraceCollector0 buggyCollector = new TraceCollector0(true);
+		TraceCollector0 buggyCollector = new BuggyTraceCollector(10);
 		TraceCollector0 correctCollector = new TraceCollector0(false);
 		long time1 = 0;
 		long time2 = 0;
@@ -616,9 +617,6 @@ public class TrialGenerator0 {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(correctRs.getRunningType()));
 					return trial;
 				}
-
-				List<Trace> buggyTraces = buggyRS.getRunningInfo().getTraceList();
-				List<Trace> correctTraces = correctRs.getRunningInfo().getTraceList();
 				
 				if (buggyRS != null && correctRs != null) {
 					cachedBuggyRS = buggyRS;
