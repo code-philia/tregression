@@ -1,19 +1,13 @@
 package tregression.auto;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.List;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 import microbat.model.trace.Trace;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
-import tregression.empiricalstudy.TrialGenerator0;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.empiricalstudy.solutionpattern.SolutionPattern;
@@ -62,7 +56,13 @@ public class Defects4jRunner extends ProjectsRunner {
 			
 			final String bugFolder = Paths.get(basePath, projectName, bugID_str, "bug").toString();
 			final String fixFolder = Paths.get(basePath, projectName, bugID_str, "fix").toString();
+
+			long time1 = System.currentTimeMillis();
 			List<EmpiricalTrial> trials = this.generateTrials(bugFolder, fixFolder, config);
+			long time2 = System.currentTimeMillis();
+			int time = (int) (time2 - time1);
+			result.time = time;
+
 			if (trials == null || trials.isEmpty()) {
 				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
 				return result;

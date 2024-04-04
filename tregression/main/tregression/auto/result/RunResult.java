@@ -1,13 +1,5 @@
 package tregression.auto.result;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.util.*;
-
 public class RunResult {
 	
 	public String projectName = " ";
@@ -17,6 +9,7 @@ public class RunResult {
 	public boolean isOmissionBug = false;
 //	public String solutionName = " ";
 	public String errorMessage = " ";
+	public int time = -1;
 	
 	public final static String DELIMITER = ",";
 
@@ -32,6 +25,7 @@ public class RunResult {
 		this.isOmissionBug = result.isOmissionBug;
 //		this.solutionName = result.solutionName;
 		this.errorMessage = result.errorMessage;
+		this.time = result.time;
 	}
 	
 	public boolean isSuccess() {
@@ -63,6 +57,9 @@ public class RunResult {
 		final String errMsg = tokens[5];
 		result.errorMessage = errMsg == " " ? null : errMsg;
 		
+		final String time = tokens[6];
+		result.time = Integer.valueOf(time);
+
 		return result;
 	}
 	
@@ -76,6 +73,7 @@ public class RunResult {
 		this.appendStr(strBuilder, String.valueOf(this.isOmissionBug));
 //		this.appendStr(strBuilder, this.solutionName);
 		this.appendStr(strBuilder, this.errorMessage);
+		this.appendStr(strBuilder, String.valueOf(this.time));
 		return strBuilder.toString();
 	}
 	

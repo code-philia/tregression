@@ -182,7 +182,7 @@ public class RootCauseFinder {
 					VarValue readVar = (stepW.isOnBefore)? pair.first() : pair.second();
 					trace = getCorrespondingTrace(stepW.isOnBefore, buggyTrace, correctTrace);
 					
-					TraceNode dataDom = trace.findDataDependency(step, readVar); 
+					TraceNode dataDom = trace.findDataDependencyV2(step, readVar);
 					addWorkNode(workList, dataDom, stepW.isOnBefore);
 					addCausality(dataDom, stepW.isOnBefore, causalityGraph, resultNode, readVar);
 					
