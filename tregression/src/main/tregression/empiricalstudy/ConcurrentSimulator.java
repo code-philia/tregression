@@ -216,6 +216,7 @@ public class ConcurrentSimulator extends Simulator {
 			if(!checkingList.isEmpty()){
 				StepOperationTuple lastTuple = checkingList.get(checkingList.size()-1);
 				previousNode = lastTuple.getNode();
+				previousNode = previousNode.getBound();
 			}
 			
 			if(currentNode==null || (previousNode!=null && currentNode.getOrder()==previousNode.getOrder())){

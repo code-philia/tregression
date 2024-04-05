@@ -36,6 +36,22 @@ public class TraceCollector0 {
 	}
 	
 
+	public static InstrumentationExecutor generateExecutor(String workingDir, TestCase tc, 
+			ProjectConfig config, boolean isRunInTestCaseMode, List<String> includeLibs, List<String> excludeLibs, boolean isBuggy) {
+		AppJavaClassPath appClassPath = AppClassPathInitializer.initialize(workingDir, tc, config);
+		if(!isRunInTestCaseMode) {
+			appClassPath.setLaunchClass(appClassPath.getOptionalTestClass());
+		}
+		
+		String traceDir = MicroBatUtil.generateTraceDir(config.projectName, config.regressionID);
+		String traceName = isBuggy ? "bug" : "fix";
+		return new InstrumentationExecutor(appClassPath,
+				traceDir, traceName, includeLibs, excludeLibs);
+		
+	}
+	
+	
+
 	public RunningResult runInner(String workingDir, TestCase tc, 
 			ProjectConfig config, boolean isRunInTestCaseMode, boolean mustBeMultiThread,
 			boolean allowMultiThread,
@@ -80,6 +96,13 @@ public class TraceCollector0 {
 			System.out.println("It is multi-thread program!");
 			RunningResult rs = new RunningResult();
 			rs.setFailureType(TrialGenerator0.MULTI_THREAD);
+			return rs;
+		}
+		
+		if (info.getTraceList().size() == 0) {
+			RunningResult rs = new RunningResult();
+			System.out.println("No trace");
+			rs.setFailureType(TrialGenerator0.NO_TRACE);
 			return rs;
 		}
 		

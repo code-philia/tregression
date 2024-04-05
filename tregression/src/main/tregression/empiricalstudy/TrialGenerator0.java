@@ -14,8 +14,10 @@ import java.util.Scanner;
 import java.util.Set;
 import java.util.Stack;
 
+import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.handler.CancelThread;
 import microbat.instrumentation.instr.aggreplay.TimeoutThread;
+import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.ConcurrentTrace;
 import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
@@ -35,6 +37,7 @@ import tregression.model.PairList;
 import tregression.model.StepOperationTuple;
 import tregression.model.TraceNodePair;
 import tregression.separatesnapshots.AppClassPathInitializer;
+import tregression.separatesnapshots.BuggyRnRTraceCollector;
 import tregression.separatesnapshots.BuggyTraceCollector;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.separatesnapshots.RunningResult;
@@ -54,6 +57,7 @@ public class TrialGenerator0 {
 	public static final int EXPECTED_STEP_NOT_MET = 6;
 	public static final int UNDETERMINISTIC = 7;
 	public static final int NOT_MULTI_THREAD = 8;
+	public static final int NO_TRACE = 9;
 
 	private RunningResult cachedBuggyRS;
 	private RunningResult cachedCorrectRS;
@@ -85,10 +89,71 @@ public class TrialGenerator0 {
 			return "this is undeterministic testcase";
 		case NOT_MULTI_THREAD:
 			return "this is not multi threaded";
+		case NO_TRACE:
+			return "main trace has no recording";
 		default:
 			break;
 		}
 		return "I don't know";
+	}
+	
+
+	public List<EmpiricalTrial> findConcurrent(String buggyPath, String fixPath, boolean isReuse, boolean useSliceBreaker,
+			boolean enableRandom, int breakLimit, boolean requireVisualization, ProjectConfig config, String testcase) {
+		List<TestCase> tcList;
+		EmpiricalTrial trial = null;
+		TestCase workingTC = null;
+		LinkedList<EmpiricalTrial> result = new LinkedList<>();
+		try {
+			tcList = retrieveD4jFailingTestCase(buggyPath);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return new LinkedList<>();
+		}
+		
+		if(testcase!=null){
+			tcList = filterSpecificTestCase(testcase, tcList);
+		}
+		
+		for (TestCase tc : tcList) {
+			if (cancelThread != null && cancelThread.stopped) break;
+			System.out.println("#####working on test case " + tc.testClass + "#" + tc.testMethod);
+			workingTC = tc;
+			SingleTimer timer = SingleTimer.start("generateTrial");
+
+			List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
+			List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
+			try {	
+				InstrumentationExecutor executor = TraceCollector0.generateExecutor(buggyPath, tc, config, true, includedClassNames, excludedClassNames, true);
+				executor.runPrecheck(null, Settings.stepLimit);
+				
+				trial = EmpiricalTrial.createDumpTrial("");
+				trial.setTestcase(tc.getName());
+				trial.setMultiThread(executor.getPrecheckInfo().getThreadNum() > 1);
+				result.add(trial);
+			} catch (Exception e) {
+				trial = EmpiricalTrial.createDumpTrial("Runtime exception occurs " + e);
+				trial.setTestcase(workingTC.testClass + "::" + workingTC.testMethod);
+				trial.setExecutionTime(timer.getExecutionTime());
+				result.add(trial);
+				e.printStackTrace();
+			}
+			
+//				if(!trial.isDump()){
+//					break;
+//				}
+		}
+
+		
+
+//		if (trial == null) {
+//			trial = EmpiricalTrial.createDumpTrial("runtime exception occurs");
+//			trial.setTestcase(workingTC.testClass + "::" + workingTC.testMethod);
+//		}
+//		List<EmpiricalTrial> list = new ArrayList<>();
+//		list.add(trial);
+		return result;
 	}
 	
 
@@ -307,7 +372,7 @@ public class TrialGenerator0 {
 	private EmpiricalTrial analyzeConcurrentTestCase(String buggyPath, String fixPath, boolean isReuse, 
 			TestCase tc, ProjectConfig config, boolean requireVisualization, 
 			boolean isRunInTestCaseMode, boolean useSliceBreaker, boolean enableRandom, int breakLimit) throws SimulationFailException {
-		TraceCollector0 buggyCollector = new BuggyTraceCollector(10);
+		TraceCollector0 buggyCollector = new BuggyTraceCollector(100);
 		TraceCollector0 correctCollector = new TraceCollector0(false);
 		long time1 = 0;
 		long time2 = 0;
@@ -430,11 +495,19 @@ public class TrialGenerator0 {
 				System.out.println("Wrong traces");
 				
 				for (Trace trace : buggyTraces) {
+					if (trace.getInnerThreadId() == null) {
+						System.out.println("null");
+						continue;
+					}
 					System.out.println(trace.getInnerThreadId().printRootListNode());
 				}
 				
 				System.out.println("Correct traces");
 				for (Trace trace : correctTraces) {
+					if (trace.getInnerThreadId() == null) {
+						System.out.println("null");
+						continue;
+					}
 					System.out.println(trace.getInnerThreadId().printRootListNode());
 				}
 //				

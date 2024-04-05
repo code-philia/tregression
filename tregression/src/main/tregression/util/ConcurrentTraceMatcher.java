@@ -32,13 +32,16 @@ public class ConcurrentTraceMatcher implements TraceMatcher {
 		Map<Long, Long> resultMap = new HashMap<>();
 		HashSet<Long> notMatchedT1 = new HashSet<>();
 		HashSet<Long> notMatchedT2 = new HashSet<>();
+		// trying matching without threadId
 		HashMap<ThreadId, Long> traceThreadIdHashMap = new HashMap<ThreadId, Long>();
 		for (Trace trace: trace1) {
 			notMatchedT1.add(trace.getThreadId());
+			if (trace.getInnerThreadId() == null) continue; 
 			traceThreadIdHashMap.put(trace.getInnerThreadId(), trace.getThreadId());
 		}
 		for (Trace trace: trace2) {
-			if (traceThreadIdHashMap.containsKey(trace.getInnerThreadId())) {
+//			if (false) {
+			if (trace.getInnerThreadId() != null && traceThreadIdHashMap.containsKey(trace.getInnerThreadId())) {
 				Long prevTrace = traceThreadIdHashMap.get(trace.getInnerThreadId());
 				notMatchedT1.remove(prevTrace);
 				resultMap.put(prevTrace, trace.getThreadId());
@@ -73,13 +76,13 @@ public class ConcurrentTraceMatcher implements TraceMatcher {
 		initCapCostForMCMF(traces1, traces2, s, cap, cost);
 		
 		mcmf.getMaxFlow(cap, cost, s-2, s-1);
-		List<Pair<Integer, Integer>> matchEdgeList = mcmf.getSTEdgeList(0, traces1.size(), 0, traces2.size());
-		
+		List<Pair<Integer, Integer>> matchEdgeList = mcmf.getSTEdgeList(0, traces1.size(), traces1.size(), traces2.size() + traces1.size());
+	 	
 		ArrayList<Trace> tempTraces1 = new ArrayList<>(traces1);
 		ArrayList<Trace> tempTraces2 = new ArrayList<>(traces2);
 		for (Pair<Integer, Integer> pair : matchEdgeList) {
 			Trace t1 = tempTraces1.get(pair.first());
-			Trace t2 = tempTraces2.get(pair.second());
+			Trace t2 = tempTraces2.get(pair.second() - traces1.size());
 			resultMap.put(t1.getThreadId(), t2.getThreadId());
 		}
 		return resultMap;
@@ -113,7 +116,8 @@ public class ConcurrentTraceMatcher implements TraceMatcher {
 		for (Trace trace : traces1) {
 			int j = traces1.size();
 			for (Trace trace2: traces2) {
-				int weight = computeWeight(trace, trace2);
+//				int weight = computeWeight(trace, trace2);
+				int weight = computeWeight2(trace, trace2);
 				// use this weight to differentiate
 				// between matching small to superset and small to equal set
 				double score = weight / Math.max(Math.max(trace.size(), trace2.size()), 1);
@@ -135,6 +139,23 @@ public class ConcurrentTraceMatcher implements TraceMatcher {
 				cost[i][j] = m_weight - cost[i][j];
 			}
 		}
+	}
+	
+	private int computeWeight2(Trace t1, Trace t2) {
+		int sameLined = 0;
+		int i = 1;
+		int j = 1;
+		while (i <= t1.size() && j <= t2.size()) {
+			BreakPoint bp1 = t1.getTraceNode(j).getBreakPoint();
+			BreakPoint bp2 = t2.getTraceNode(j).getBreakPoint();
+			if (diffMatcher.isMatch(bp1, bp2)) {
+				sameLined++;
+				i++; j++;
+			} else {
+				i++;
+			}
+		}
+		return sameLined;
 	}
 	
 	/**

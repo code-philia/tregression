@@ -185,7 +185,8 @@ public class RootCauseFinder {
 		while(!workList.isEmpty()){
 			TraceNodeW stepW = workList.remove(0);
 			TraceNode step = stepW.node;
-			
+
+			if (step.getBound() != null) step = step.getBound();
 			CausalityNode resultNode = causalityGraph.findOrCreate(step, stepW.isOnBefore);
 			
 			StepChangeType changeType = typeChecker.getType(step, stepW.isOnBefore, pairList, matcher);

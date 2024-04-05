@@ -55,11 +55,11 @@ public class AllDefects4jConcHandler extends AbstractHandler {
 					e1.printStackTrace();
 				}
 				
-//				String[] projects = {"simple_defects"};
-//				int[] bugNum = {1};
-				String[] projects = {"Closure"};
-				int[] bugNum = {50};
-				
+				String[] projects = {"simple_defects"};
+				int[] bugNum = {1};
+//				String[] projects = {"Pool"};
+//				int[] bugNum = {6};
+//				
 //				String[] projects = {"Lang"};
 //				int[] bugNum = {65};
 //				
@@ -119,7 +119,8 @@ public class AllDefects4jConcHandler extends AbstractHandler {
 							ProjectConfig d4jConfig = ConfigFactory.createConfig(projects[i], i + "", buggyPath, fixPath);
 							List<EmpiricalTrial> trials = generator0.generateTrialsConcurrent(buggyPath, fixPath, 
 									false, false, false, 3, false, d4jConfig, null);
-							
+//							List<EmpiricalTrial> trials = generator0.findConcurrent(buggyPath, fixPath, 
+//									false, false, false, 3, false, d4jConfig, null);
 							TrialRecorder recorder;
 							try {
 								recorder = new TrialRecorder();
