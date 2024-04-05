@@ -182,22 +182,25 @@ public class RootCauseFinder {
 					VarValue readVar = (stepW.isOnBefore)? pair.first() : pair.second();
 					trace = getCorrespondingTrace(stepW.isOnBefore, buggyTrace, correctTrace);
 					
-					TraceNode dataDom = trace.findDataDependencyV2(step, readVar);
-					addWorkNode(workList, dataDom, stepW.isOnBefore);
-					addCausality(dataDom, stepW.isOnBefore, causalityGraph, resultNode, readVar);
-					
-					TraceNode matchedStep = changeType.getMatchingStep();
-					addWorkNode(workList, matchedStep, !stepW.isOnBefore);
-					CausalityNode cNode = addCausality(matchedStep, !stepW.isOnBefore, causalityGraph, resultNode, null);
-					
-					trace = getCorrespondingTrace(!stepW.isOnBefore, buggyTrace, correctTrace);
-					
-					VarValue matchedVar = MatchStepFinder.findMatchVariable(readVar, matchedStep);
-					
-					if(matchedVar != null) {
-						TraceNode otherDataDom = trace.findDataDependency(matchedStep, matchedVar);
-						addWorkNode(workList, otherDataDom, !stepW.isOnBefore);	
-						addCausality(otherDataDom, !stepW.isOnBefore, causalityGraph, cNode, matchedVar);
+					List<TraceNode> dataDoms = trace.findDataDependencyV2(step, readVar);
+					for (TraceNode dataDom : dataDoms) {
+						addWorkNode(workList, dataDom, stepW.isOnBefore);
+						addCausality(dataDom, stepW.isOnBefore, causalityGraph, resultNode, readVar);
+
+						TraceNode matchedStep = changeType.getMatchingStep();
+						addWorkNode(workList, matchedStep, !stepW.isOnBefore);
+						CausalityNode cNode = addCausality(matchedStep, !stepW.isOnBefore, causalityGraph, resultNode,
+								null);
+
+						trace = getCorrespondingTrace(!stepW.isOnBefore, buggyTrace, correctTrace);
+
+						VarValue matchedVar = MatchStepFinder.findMatchVariable(readVar, matchedStep);
+
+						if (matchedVar != null) {
+							TraceNode otherDataDom = trace.findDataDependency(matchedStep, matchedVar);
+							addWorkNode(workList, otherDataDom, !stepW.isOnBefore);
+							addCausality(otherDataDom, !stepW.isOnBefore, causalityGraph, cNode, matchedVar);
+						}
 					}
 					
 				}
