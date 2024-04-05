@@ -267,6 +267,12 @@
                   icon="icons/after.ico"
                   style="push">
             </command>
+            <command
+                  commandId="tregression.collectDefects4jData"
+                  icon="icons/trace_comparison.png"
+                  label="Lib Runtime Overhead"
+                  style="push">
+            </command>
          </toolbar>
       </menuContribution>
    </extension>
