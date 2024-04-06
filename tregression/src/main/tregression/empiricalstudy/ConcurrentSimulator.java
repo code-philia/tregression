@@ -507,7 +507,7 @@ public class ConcurrentSimulator extends Simulator {
 			RootCauseFinder finder = new RootCauseFinder();
 			
 			long start = System.currentTimeMillis();
-			finder.checkRootCause(observedFault, buggyTrace, correctTrace, pairList, matcher);
+			finder.checkRootCauseConc(observedFault, (ConcurrentTrace) buggyTrace, (ConcurrentTrace) correctTrace, pairList, matcher);
 			long end = System.currentTimeMillis();
 			int checkTime = (int) (end-start);
 
