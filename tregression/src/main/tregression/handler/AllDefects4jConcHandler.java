@@ -39,6 +39,7 @@ public class AllDefects4jConcHandler extends AbstractHandler {
 		Job job = new Job("Do evaluation") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				Thread.currentThread().setName("All defects 4j conc run");
 				int skippedNum = 0;
 				int endNum = 500;
 				CancelThread cancelThread = new CancelThread(monitor, null);

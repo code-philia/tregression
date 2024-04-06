@@ -854,7 +854,7 @@ public class Simulator  {
 	}
 	
 	
-	private List<TraceNode> findTheNearestCorrespondence(TraceNode domOnRef, PairList pairList, Trace buggyTrace, Trace correctTrace) {
+	protected List<TraceNode> findTheNearestCorrespondence(TraceNode domOnRef, PairList pairList, Trace buggyTrace, Trace correctTrace) {
 		List<TraceNode> list = new ArrayList<>();
 		
 		List<TraceNode> sameLineSteps = findSameLineSteps(domOnRef);

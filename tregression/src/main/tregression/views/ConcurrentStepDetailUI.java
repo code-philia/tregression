@@ -103,7 +103,7 @@ public class ConcurrentStepDetailUI {
 					}
 				}
 				else if(controlButton.getSelection()){
-					suspiciousNode = currentNode.getInvocationMethodOrDominator();
+					suspiciousNode = currentNode.getBound().getInvocationMethodOrDominator();
 				}
 				
 				if(suspiciousNode != null){

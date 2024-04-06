@@ -75,22 +75,22 @@ public class SeparateVersionConcHandler extends AbstractHandler {
 					System.out.println("Trial " + (i+1));
 					System.out.println(trials.get(i));
 					
-					EmpiricalTrial t = trials.get(i);
-					Trace trace = t.getBuggyTrace();
-					
-					if(!t.getDeadEndRecordList().isEmpty()){
-						Repository.clearCache();
-						DeadEndRecord record = t.getDeadEndRecordList().get(0);
-						DED datas = record.getTransformedData(trace);
-//						DED datas = new TrainingDataTransfer().transfer(record, trace);
-						setTestCase(datas, t.getTestcase());						
-						try {
-//							new DeadEndReporter().export(datas.getAllData(), projectName, Integer.valueOf(id));
-							new DeadEndCSVWriter("_d4j", null).export(datas.getAllData(), projectName, id);
-						} catch (NumberFormatException | IOException e) {
-							e.printStackTrace();
-						}
-					}
+//					EmpiricalTrial t = trials.get(i);
+//					Trace trace = t.getBuggyTrace();
+//                  Commented out as it breaks during run with mismatched trace					
+//					if(!t.getDeadEndRecordList().isEmpty()){
+//						Repository.clearCache();
+//						DeadEndRecord record = t.getDeadEndRecordList().get(0);
+//						DED datas = record.getTransformedData(trace);
+////						DED datas = new TrainingDataTransfer().transfer(record, trace);
+//						setTestCase(datas, t.getTestcase());						
+//						try {
+////							new DeadEndReporter().export(datas.getAllData(), projectName, Integer.valueOf(id));
+//							new DeadEndCSVWriter("_d4j", null).export(datas.getAllData(), projectName, id);
+//						} catch (NumberFormatException | IOException e) {
+//							e.printStackTrace();
+//						}
+//					}
 					
 				}
 				

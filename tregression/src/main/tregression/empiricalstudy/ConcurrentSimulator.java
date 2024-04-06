@@ -19,6 +19,7 @@ import tregression.StepChangeType;
 import tregression.StepChangeTypeChecker;
 import tregression.model.PairList;
 import tregression.model.StepOperationTuple;
+import tregression.model.TraceNodePair;
 import tregression.separatesnapshots.DiffMatcher;
 
 /**
@@ -195,6 +196,131 @@ public class ConcurrentSimulator extends Simulator {
 		
 	}
 	
+	
+	
+	@Override
+	protected List<DeadEndRecord> createDataRecord(TraceNode currentNode, TraceNode buggyNode,
+			StepChangeTypeChecker typeChecker, PairList pairList, DiffMatcher matcher,
+			RootCauseFinder rootCauseFinder) {
+		// TODO Auto-generated method stub
+		List<DeadEndRecord> deadEndlist = new ArrayList<>();
+		TraceNodePair pair = pairList.findByBeforeNode(buggyNode);
+		TraceNode matchingStep = pair.getAfterNode();
+		
+		TraceNode domOnRef = null;
+		StepChangeType matchingStepType = typeChecker.getType(matchingStep, false, pairList, matcher);
+		System.currentTimeMillis();
+		if(matchingStepType.getWrongVariableList()==null) {
+			return deadEndlist;
+		}
+		
+		VarValue wrongVar = matchingStepType.getWrongVariable(currentNode, false, rootCauseFinder);
+		domOnRef = matchingStep.getDataDominator(wrongVar);
+		
+		List<TraceNode> breakSteps = new ArrayList<>();
+		 
+		while(domOnRef != null){
+			StepChangeType changeType = typeChecker.getType(domOnRef, false, pairList, matcher);
+			if(changeType.getType()==StepChangeType.SRC){
+				breakSteps = findTheNearestCorrespondence(domOnRef, pairList, buggyNode.getTrace(), matchingStep.getTrace());
+				break;
+			}
+			else{
+				TraceNodePair conPair = pairList.findByAfterNode(domOnRef);
+				if(conPair != null && conPair.getBeforeNode() != null){
+					/**
+					 * if we find a matched step on buggy trace, then we find the first incorrect step starting at the matched
+					 * step as the break step.
+					 */
+					TraceNode matchingPoint = conPair.getBeforeNode();
+					for(int order=matchingPoint.getOrder(); order<=matchingPoint.getTrace().size(); order++){
+						TraceNode potentialPoint = matchingPoint.getTrace().getTraceNode(order);
+						StepChangeType ct = typeChecker.getType(potentialPoint, true, pairList, matcher);
+						if(ct.getType()!=StepChangeType.IDT){
+							breakSteps.add(potentialPoint);
+							break;
+						}
+					}
+					
+					break;
+				}
+				else{
+					domOnRef = domOnRef.getInvocationMethodOrDominator();
+				}
+			}
+		}
+		
+		VarValue wrongVarOnBuggyTrace = matchingStepType.getWrongVariable(currentNode, true, rootCauseFinder);
+		for(TraceNode breakStep: breakSteps){
+			DeadEndRecord record = new DeadEndRecord(DeadEndRecord.DATA, buggyNode.getOrder(), 
+					currentNode.getOrder(), -1, breakStep.getOrder());
+			record.setVarValue(wrongVarOnBuggyTrace);
+			if(!deadEndlist.contains(record)) {
+				deadEndlist.add(record);						
+			}
+		}
+		
+		return deadEndlist;
+	}
+	private List<TraceNode> findSameLineSteps(TraceNode domOnRef) {
+		List<TraceNode> list = new ArrayList<>();
+		list.add(domOnRef);
+		
+		TraceNode node = domOnRef.getStepOverPrevious();
+		while(node!=null && node.getLineNumber()==domOnRef.getLineNumber()){
+			list.add(node);
+			node = node.getStepOverPrevious();
+		}
+		
+		node = domOnRef.getStepOverNext();
+		while(node!=null && node.getLineNumber()==domOnRef.getLineNumber()){
+			list.add(node);
+			node = node.getStepOverNext();
+		}
+		
+		return list;
+	}
+	@Override
+	protected List<TraceNode> findTheNearestCorrespondence(TraceNode domOnRef, PairList pairList, Trace buggyTrace,
+			Trace correctTrace) {
+		List<TraceNode> list = new ArrayList<>();
+		
+		List<TraceNode> sameLineSteps = findSameLineSteps(domOnRef);
+		for(TraceNode sameLineStep: sameLineSteps){
+			TraceNodePair pair = pairList.findByAfterNode(sameLineStep);
+			if(pair!=null){
+				TraceNode beforeNode = pair.getBeforeNode();
+				if(beforeNode!=null){
+					list.add(beforeNode);
+				}
+			}
+		}
+		if(!list.isEmpty()){
+			return list;
+		}
+		
+		int endOrder = new RootCauseFinder().findEndOrderInOtherTrace(domOnRef, pairList, false, correctTrace);
+		if (endOrder >= buggyTrace.size()) {
+			endOrder = buggyTrace.size();
+		}
+		TraceNode startNode = buggyTrace.getTraceNode(endOrder);
+		list.add(startNode);
+		while(startNode.getStepOverPrevious()!=null && 
+				startNode.getStepOverPrevious().getBreakPoint().equals(startNode.getBreakPoint())){
+			startNode = startNode.getStepOverPrevious();
+			list.add(startNode);
+		}
+		
+//		TraceNode end = buggyTrace.getTraceNode(endOrder);
+//		TraceNode n = end.getStepOverNext();
+//		while(n!=null && (n.getLineNumber()==end.getLineNumber())){
+//			list.add(n);
+//			n = n.getStepOverNext();
+//		}
+		
+		return list;
+	}
+
 	protected EmpiricalTrial workSingleTrial(Trace buggyTrace, Trace correctTrace, PairList pairList, DiffMatcher matcher,
 			RootCauseFinder rootCauseFinder, StepChangeTypeChecker typeChecker,
 			TraceNode currentNode) {

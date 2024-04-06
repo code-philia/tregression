@@ -76,11 +76,15 @@ public class ConcurrentStepPropertyView extends ViewPart {
 	}
 
 	public void refreshConc(TraceNode correctNode, TraceNode buggyNode, DiffMatcher diffMatcher, PairList pairList){
-		if (buggyNode == null || correctNode == null) {
-			return;
+	
+		Trace buggyTrace = null;
+		if (buggyNode != null) {
+			buggyTrace  = buggyNode.getTrace();	
 		}
-		Trace buggyTrace = buggyNode.getTrace();
-		Trace correctTrace = correctNode.getTrace();
+		Trace correctTrace = null;
+		if (correctNode != null) {
+			correctTrace = correctNode.getTrace();
+		}
 		StepChangeTypeChecker checker = new StepChangeTypeChecker(buggyTrace, correctTrace);
 		
 		if(buggyDetailUI != null && buggyNode != null) {
