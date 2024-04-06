@@ -93,6 +93,7 @@ public class StepChangeType {
 		List<VarValue> virList = new ArrayList<>();
 		List<VarValue> primitiveList = new ArrayList<>();
 		List<VarValue> referenceList = new ArrayList<>();
+		if (wrongVariableList == null) return new PrimitiveValue("dummy value", true, null);
 		for(Pair<VarValue, VarValue> pair: wrongVariableList){
 			
 			VarValue var = pair.first();

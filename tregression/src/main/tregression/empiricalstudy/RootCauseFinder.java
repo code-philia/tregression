@@ -12,6 +12,7 @@ import microbat.model.ClassLocation;
 import microbat.model.ConcNode;
 import microbat.model.ControlScope;
 import microbat.model.trace.ConcurrentTrace;
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.trace.TraceNodeOrderComparator;
@@ -202,7 +203,9 @@ public class RootCauseFinder {
 			TraceNodeW stepW = workList.remove(0);
 			TraceNode step = stepW.node;
 
-			if (step.getBound() != null) step = step.getBound();
+			if (step instanceof ConcurrentTraceNode) {
+				step = ((ConcurrentTraceNode) step).getInitialTraceNode();
+			}
 			CausalityNode resultNode = causalityGraph.findOrCreate(step, stepW.isOnBefore);
 			
 			StepChangeType changeType = typeChecker.getType(step, stepW.isOnBefore, pairList, matcher);
@@ -250,7 +253,7 @@ public class RootCauseFinder {
 				
 			}
 			else if(changeType.getType()==StepChangeType.CTL){
-				TraceNode controlDom = step.getInvocationMethodOrDominator();
+				TraceNode controlDom = step.getBound().getInvocationMethodOrDominator();
 				if(step.insideException()){
 					controlDom = step.getStepInPrevious();
 				}

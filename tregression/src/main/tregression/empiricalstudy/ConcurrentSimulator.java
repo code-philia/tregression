@@ -93,8 +93,8 @@ public class ConcurrentSimulator extends Simulator {
 		case StepChangeType.DAT:
 			// handle the data 
 			feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
-			TraceNode currentNode = ((ConcurrentTraceNode)trace.getTraceNode(concNode.getNode1()));
-			StepChangeType changeType = typeChecker.getType(currentNode, true, pairList, matcher);
+			TraceNode currentNode = ((ConcurrentTraceNode)trace.getTraceNode(concNode.getNode1())).getInitialTraceNode();
+			StepChangeType changeType = typeChecker.getType(currentNode, concNode.isBefore1(), pairList, matcher);
 			VarValue value = changeType.getWrongVariable(currentNode, concNode.isBefore1(), rootCauseFinder);
 			return generateDataFeedback(currentNode, changeType, value);
 		case StepChangeType.CTL:
