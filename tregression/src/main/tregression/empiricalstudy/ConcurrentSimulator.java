@@ -3,17 +3,27 @@ package tregression.empiricalstudy;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.Stack;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+
+import japa.parser.ast.Node;
 import microbat.instrumentation.instr.aggreplay.shared.ParseData;
+import microbat.model.ConcNode;
 import microbat.model.trace.ConcurrentTrace;
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.UserFeedback;
+import sav.common.core.Pair;
 import tregression.SimulationFailException;
 import tregression.StepChangeType;
 import tregression.StepChangeTypeChecker;
@@ -55,7 +65,7 @@ public class ConcurrentSimulator extends Simulator {
 		}
 	}
 
-	private List<EmpiricalTrial> startSimulationConc(TraceNode observedFaultNode, Trace buggyTrace, Trace correctTrace,
+	private List<EmpiricalTrial> startSimulationConc(TraceNode observedFaultNode, ConcurrentTrace buggyTrace, ConcurrentTrace correctTrace,
 			PairList pairList, DiffMatcher matcher, RootCauseFinder rootCauseFinder) {
 		StepChangeTypeChecker typeChecker = new StepChangeTypeChecker(buggyTrace, correctTrace);
 		List<EmpiricalTrial> trials = new ArrayList<>();
@@ -67,14 +77,106 @@ public class ConcurrentSimulator extends Simulator {
 		return trials;
 	}
 	
-	protected EmpiricalTrial workSingleTrialConc(Trace buggyTrace, Trace correctTrace, PairList pairList, DiffMatcher matcher,
+	public StepOperationTuple fromConcNode(ConcNode concNode, ConcurrentTrace buggyTrace,
+			ConcurrentTrace correctTrace, PairList pairList, DiffMatcher diffMatcher, StepChangeTypeChecker typeChecker,
+			RootCauseFinder rootCauseFinder) {
+
+		ConcurrentTrace trace = buggyTrace;
+		if (!concNode.isBefore1()) {
+			trace = correctTrace;
+		}
+		UserFeedback feedback = null;
+		switch (concNode.getChangeType()) {
+		case StepChangeType.SRC:
+			feedback = new UserFeedback(UserFeedback.UNCLEAR);
+			break;
+		case StepChangeType.DAT:
+			// handle the data 
+			feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
+			TraceNode currentNode = ((ConcurrentTraceNode)trace.getTraceNode(concNode.getNode1()));
+			StepChangeType changeType = typeChecker.getType(currentNode, true, pairList, matcher);
+			VarValue value = changeType.getWrongVariable(currentNode, concNode.isBefore1(), rootCauseFinder);
+			return generateDataFeedback(currentNode, changeType, value);
+		case StepChangeType.CTL:
+			feedback = new UserFeedback(UserFeedback.WRONG_PATH);
+			break;
+		case -1:
+			feedback = new UserFeedback(UserFeedback.UNCLEAR);
+			break;
+		}
+		return new StepOperationTuple((
+				(ConcurrentTraceNode) trace.getTraceNode(concNode.getNode1())).getInitialTraceNode(), 
+				feedback, 
+				null);
+	}
+	
+	protected EmpiricalTrial workSingleTrialConc(ConcurrentTrace buggyTrace, 
+			ConcurrentTrace correctTrace, PairList pairList, DiffMatcher matcher,
 			RootCauseFinder rootCauseFinder, StepChangeTypeChecker typeChecker,
 			TraceNode currentNode) {
 		List<StepOperationTuple> checkingList = new ArrayList<>();
 		TraceNode rootcauseNode = rootCauseFinder.retrieveRootCause(pairList, matcher, buggyTrace, correctTrace);
 		rootCauseFinder.setRootCauseBasedOnDefects4J(pairList, matcher, buggyTrace, correctTrace);
-		
 		long startTime = System.currentTimeMillis();
+		
+		if (rootcauseNode != null) {
+			List<ConcNode> edgeList = rootCauseFinder.getConcNodes();
+			// the edge taken that caused this node to be visited in bfs
+			HashMap<Pair<Integer, Boolean>, ConcNode> visitedPrevious = new HashMap<>();
+			int target = rootcauseNode.getBound().getOrder();
+			// use BFS to perform debugging -> find the path to root cause
+			HashMap<Pair<Integer, Boolean>, LinkedList<ConcNode>> adjMatrix = new HashMap<>();
+			for (ConcNode concNode : edgeList) {
+				if (!adjMatrix.containsKey(concNode.getFirst())) {
+					adjMatrix.put(concNode.getFirst(), new LinkedList<>());
+				}
+				adjMatrix.get(concNode.getFirst()).add(concNode);
+			}
+			// start bfs from current node to rear
+			int startNode = currentNode.getBound().getOrder();
+			Queue<Pair<Integer, Boolean>> frontier = new LinkedList<>();
+			frontier.add(Pair.of(startNode, true));
+			while (!frontier.isEmpty()) {
+				Pair<Integer, Boolean> frontPair = frontier.poll();
+				// we found the target
+				if (frontPair.first() == target && frontPair.second() == true) {
+					break;
+				}
+				if (adjMatrix.get(frontPair) != null) {
+					for (ConcNode concNode : adjMatrix.get(frontPair)) {
+						Pair<Integer, Boolean> currPair = Pair.of(concNode.getNode2(), concNode.isBefore2());
+						if (visitedPrevious.containsKey(currPair)) continue;
+						frontier.add(currPair);
+						visitedPrevious.put(currPair, concNode);
+					}
+				}
+			}
+			LinkedList<ConcNode> edgesTakeNodes = new LinkedList<>();
+			Pair<Integer, Boolean> currentPair = Pair.of(target, true);
+			Pair<Integer, Boolean> rootPair = Pair.of(startNode, true);
+			while (!currentPair.equals(rootPair)) {
+				ConcNode edgeConcNode = visitedPrevious.get(currentPair);
+				if (edgeConcNode == null)  break;
+				edgesTakeNodes.add(edgeConcNode);
+				currentPair = Pair.of(edgeConcNode.getNode1(), edgeConcNode.isBefore1());
+			}
+			Iterator<ConcNode> descIterator = edgesTakeNodes.descendingIterator();
+			
+			while (descIterator.hasNext()) {
+				ConcNode node = descIterator.next();
+				checkingList.add(fromConcNode(node, buggyTrace, correctTrace, pairList, matcher, typeChecker, rootCauseFinder));
+			}
+			checkingList.add(new StepOperationTuple(
+					((ConcurrentTraceNode) buggyTrace.getTraceNode(target)).getInitialTraceNode(), 
+					new UserFeedback(UserFeedback.UNCLEAR), null));
+
+			long endTime = System.currentTimeMillis();
+			EmpiricalTrial trial = new EmpiricalTrial(EmpiricalTrial.FIND_BUG, 0, rootcauseNode, 
+					checkingList, -1, -1, (int)(endTime-startTime), buggyTrace.size(), correctTrace.size(),
+					rootCauseFinder, isMultiThread);
+			return trial;
+		}
+		
 		
 		/**
 		 * start debugging
@@ -516,7 +618,7 @@ public class ConcurrentSimulator extends Simulator {
 				trials = startSimulationWithCachedState(observedFault, buggyTrace, correctTrace, getPairList(), matcher, finder);
 			}
 			else {
-				trials = startSimulationConc(observedFault, buggyTrace, correctTrace, getPairList(), matcher, finder);				
+				trials = startSimulationConc(observedFault, (ConcurrentTrace) buggyTrace, (ConcurrentTrace) correctTrace, getPairList(), matcher, finder);				
 			}
 			
 			if(trials!=null) {

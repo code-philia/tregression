@@ -9,6 +9,7 @@ import microbat.codeanalysis.bytecode.ByteCodeParser;
 import microbat.codeanalysis.bytecode.MethodFinderByLine;
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
+import microbat.model.ConcNode;
 import microbat.model.ControlScope;
 import microbat.model.trace.ConcurrentTrace;
 import microbat.model.trace.Trace;
@@ -168,9 +169,24 @@ public class RootCauseFinder {
 	
 	private CausalityGraph causalityGraph;
 	
+	private ArrayList<ConcNode> nodes;
+	
+	public List<ConcNode> getConcNodes() {
+		return nodes;
+	}
+	
+	private void addConcNodes(TraceNode node1, TraceNode node2, boolean isOnBefore1, boolean isOnBefore2
+			, int changeType) {
+		if (node1 == null || node2 == null) {
+			return;
+		}
+		nodes.add(ConcNode.fromTraceNodes(node1, node2, isOnBefore1, isOnBefore2, changeType));
+	}
+	
 
 	public void checkRootCauseConc(TraceNode observedFaultNode, ConcurrentTrace buggyTrace, ConcurrentTrace correctTrace, 
 			PairList pairList, DiffMatcher matcher){
+		nodes = new ArrayList<>();
 		getRegressionNodeList().add(observedFaultNode);
 		
 		CausalityGraph causalityGraph = new CausalityGraph();
@@ -211,9 +227,12 @@ public class RootCauseFinder {
 					TraceNode dataDom = trace.findDataDependency(step, readVar); 
 					addWorkNode(workList, dataDom, stepW.isOnBefore);
 					addCausality(dataDom, stepW.isOnBefore, causalityGraph, resultNode, readVar);
+					addConcNodes(step, dataDom, stepW.isOnBefore, stepW.isOnBefore, StepChangeType.DAT);
+					
 					
 					TraceNode matchedStep = changeType.getMatchingStep();
 					addWorkNode(workList, matchedStep, !stepW.isOnBefore);
+					addConcNodes(step, matchedStep, stepW.isOnBefore, !stepW.isOnBefore, -1);
 					CausalityNode cNode = addCausality(matchedStep, !stepW.isOnBefore, causalityGraph, resultNode, null);
 					
 					trace = getCorrespondingTrace(!stepW.isOnBefore, buggyTrace, correctTrace);
@@ -222,6 +241,7 @@ public class RootCauseFinder {
 					
 					if(matchedVar != null) {
 						TraceNode otherDataDom = trace.findDataDependency(matchedStep, matchedVar);
+						addConcNodes(step, otherDataDom, stepW.isOnBefore, !stepW.isOnBefore, StepChangeType.DAT);
 						addWorkNode(workList, otherDataDom, !stepW.isOnBefore);	
 						addCausality(otherDataDom, !stepW.isOnBefore, causalityGraph, cNode, matchedVar);
 					}
@@ -250,6 +270,7 @@ public class RootCauseFinder {
 					}
 				}
 				addWorkNode(workList, controlDom, stepW.isOnBefore);
+				addConcNodes(step, controlDom, stepW.isOnBefore, stepW.isOnBefore, StepChangeType.CTL);
 				CausalityNode cNode = addCausality(controlDom, stepW.isOnBefore, causalityGraph, resultNode, null);
 				
 				trace = getCorrespondingTrace(!stepW.isOnBefore, buggyTrace, correctTrace);
@@ -259,11 +280,14 @@ public class RootCauseFinder {
 				TraceNode otherControlDom = findControlMendingNodeOnOtherTrace(step, pairList, trace, 
 						!stepW.isOnBefore, correspondingLocation, matcher);
 				addWorkNode(workList, otherControlDom, !stepW.isOnBefore);
+
+				addConcNodes(step, otherControlDom, stepW.isOnBefore, !stepW.isOnBefore, StepChangeType.CTL);
 				addCausality(otherControlDom, !stepW.isOnBefore, causalityGraph, cNode, null);
 			}
 			else if(changeType.getType()==StepChangeType.IDT){
 				if(step.isException()){
 					TraceNode nextStep = step.getStepInPrevious();
+					addConcNodes(step, nextStep, stepW.isOnBefore, !stepW.isOnBefore, StepChangeType.IDT);
 					addWorkNode(workList, nextStep, !stepW.isOnBefore);
 					addCausality(nextStep, stepW.isOnBefore, causalityGraph, resultNode, null);
 					continue;
