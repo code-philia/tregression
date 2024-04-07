@@ -1,5 +1,6 @@
 package tregression.model;
 
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.ChosenVariableOption;
@@ -59,7 +60,9 @@ public class StepOperationTuple {
 		
 		int order = node.getOrder();
 		int lineNumber = node.getBreakPoint().getLineNumber();
+		String threadName = ConcurrentTraceNode.getIniTraceNode(node).getTrace().getThreadName();
 		buffer.append("order " + order + ", ");
+		buffer.append("threadName: " + threadName + ",");
 		buffer.append("line " + lineNumber + ", ");
 		
 		ChosenVariableOption option = userFeedback.getOption();
@@ -69,14 +72,15 @@ public class StepOperationTuple {
 		}
 		
 		if(getReferenceNode() != null){
-			buffer.append("reference node order " + getReferenceNode().getOrder());
+			buffer.append("reference node order " + getReferenceNode().getOrder() + " reference thread name " + getReferenceNode().getTrace().getThreadName());
 		}
 		
 		return buffer.toString();
 	}
 
 	public TraceNode getReferenceNode() {
-		return referenceNode;
+		TraceNode refNode = ConcurrentTraceNode.getIniTraceNode(referenceNode);
+		return refNode;
 	}
 
 	public void setReferenceNode(TraceNode referenceNode) {

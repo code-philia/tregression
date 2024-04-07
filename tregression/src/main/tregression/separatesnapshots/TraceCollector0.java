@@ -16,7 +16,7 @@ import tregression.empiricalstudy.config.ProjectConfig;
 
 public class TraceCollector0 {
 	private boolean isBuggy;
-	
+	protected boolean isForceJunit3Or4 = false;
 	public TraceCollector0(boolean buggy) {
 		this.isBuggy = buggy;
 	}
@@ -58,6 +58,7 @@ public class TraceCollector0 {
 			List<String> includeLibs, List<String> excludeLibs){
 		
 		InstrumentationExecutor executor = generateExecutor(workingDir, tc, config, isRunInTestCaseMode, includeLibs, excludeLibs);
+		executor.setIsForceJunit3Or4(this.isForceJunit3Or4);
 		RunningInfo info = null;
 		try {
 			info = executor.run();

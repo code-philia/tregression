@@ -20,6 +20,7 @@ public class BuggyTraceCollector extends TraceCollector0 {
 	
 	public BuggyTraceCollector(int limit) {
 		super(true);
+		isForceJunit3Or4 = true;
 		this.limit = limit;
 		// TODO Auto-generated constructor stub
 	}
