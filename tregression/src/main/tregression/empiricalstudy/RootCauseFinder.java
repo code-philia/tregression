@@ -176,6 +176,10 @@ public class RootCauseFinder {
 		return nodes;
 	}
 	
+	/**
+	 * Used to keep track of changes to work list and then construct explaination
+	 * from observed fault to root cause.
+	 */
 	private void addConcNodes(TraceNode node1, TraceNode node2, boolean isOnBefore1, boolean isOnBefore2
 			, int changeType) {
 		if (node1 == null || node2 == null) {

@@ -77,6 +77,10 @@ public class ConcurrentSimulator extends Simulator {
 		return trials;
 	}
 	
+	private ConcurrentTrace getTrace(boolean isBuggy, ConcurrentTrace trace1, ConcurrentTrace trace2) {
+		return isBuggy ? trace1 : trace2;
+	}
+	
 	public StepOperationTuple fromConcNode(ConcNode concNode, ConcurrentTrace buggyTrace,
 			ConcurrentTrace correctTrace, PairList pairList, DiffMatcher diffMatcher, StepChangeTypeChecker typeChecker,
 			RootCauseFinder rootCauseFinder) {
@@ -120,6 +124,11 @@ public class ConcurrentSimulator extends Simulator {
 		long startTime = System.currentTimeMillis();
 		
 		if (rootcauseNode != null) {
+			List<TraceNode> regressionList = new LinkedList<>();
+			List<TraceNode> correctNodeList = new LinkedList<>();
+			/**
+			 * BFS to get to the root cause.
+			 */
 			List<ConcNode> edgeList = rootCauseFinder.getConcNodes();
 			// the edge taken that caused this node to be visited in bfs
 			HashMap<Pair<Integer, Boolean>, ConcNode> visitedPrevious = new HashMap<>();
@@ -165,11 +174,21 @@ public class ConcurrentSimulator extends Simulator {
 			while (descIterator.hasNext()) {
 				ConcNode node = descIterator.next();
 				checkingList.add(fromConcNode(node, buggyTrace, correctTrace, pairList, matcher, typeChecker, rootCauseFinder));
+				ConcurrentTrace trace = getTrace(node.isBefore1(), buggyTrace, correctTrace);
+				TraceNode traceNode = trace.getTraceNode(node.getNode1()).getBound().getInitialTraceNode();
+				if (node.isBefore1()) {
+					regressionList.add(traceNode);
+				} else {
+					correctNodeList.add(traceNode);
+				}
 			}
+			regressionList.add(rootcauseNode);
+			rootCauseFinder.setRegressionNodeList(regressionList);
+			rootCauseFinder.setCorrectNodeList(correctNodeList);
 			checkingList.add(new StepOperationTuple(
 					((ConcurrentTraceNode) buggyTrace.getTraceNode(target)).getInitialTraceNode(), 
 					new UserFeedback(UserFeedback.UNCLEAR), null));
-
+			
 			long endTime = System.currentTimeMillis();
 			EmpiricalTrial trial = new EmpiricalTrial(EmpiricalTrial.FIND_BUG, 0, rootcauseNode, 
 					checkingList, -1, -1, (int)(endTime-startTime), buggyTrace.size(), correctTrace.size(),
