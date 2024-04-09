@@ -372,7 +372,7 @@ public class TrialGenerator0 {
 	private EmpiricalTrial analyzeConcurrentTestCase(String buggyPath, String fixPath, boolean isReuse, 
 			TestCase tc, ProjectConfig config, boolean requireVisualization, 
 			boolean isRunInTestCaseMode, boolean useSliceBreaker, boolean enableRandom, int breakLimit) throws SimulationFailException {
-		TraceCollector0 buggyCollector = new BuggyRnRTraceCollector(100);
+		TraceCollector0 buggyCollector = new BuggyTraceCollector(100);
 		TraceCollector0 correctCollector = new TraceCollector0(false);
 		long time1 = 0;
 		long time2 = 0;
