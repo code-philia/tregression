@@ -372,7 +372,7 @@ public class TrialGenerator0 {
 	private EmpiricalTrial analyzeConcurrentTestCase(String buggyPath, String fixPath, boolean isReuse, 
 			TestCase tc, ProjectConfig config, boolean requireVisualization, 
 			boolean isRunInTestCaseMode, boolean useSliceBreaker, boolean enableRandom, int breakLimit) throws SimulationFailException {
-		TraceCollector0 buggyCollector = new BuggyTraceCollector(100);
+		TraceCollector0 buggyCollector = new BuggyRnRTraceCollector(100);
 		TraceCollector0 correctCollector = new TraceCollector0(false);
 		long time1 = 0;
 		long time2 = 0;
@@ -424,7 +424,8 @@ public class TrialGenerator0 {
 				
 				Settings.compilationUnitMap.clear();
 				Settings.iCompilationUnitMap.clear();
-				buggyRS = buggyCollector.runForceMultithreaded(buggyPath, tc, config, isRunInTestCaseMode, includedClassNames, excludedClassNames);
+				buggyRS = buggyCollector.run(buggyPath, tc, config, isRunInTestCaseMode, true, includedClassNames, excludedClassNames);
+//				buggyRS = buggyCollector.runForceMultithreaded(buggyPath, tc, config, isRunInTestCaseMode, includedClassNames, excludedClassNames);
 				if (buggyRS.getRunningType() != NORMAL) {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(buggyRS.getRunningType()));
 					trial.setTestcase(tc.testClass + "#" + tc.testMethod);
@@ -510,7 +511,18 @@ public class TrialGenerator0 {
 					}
 					System.out.println(trace.getInnerThreadId().printRootListNode());
 				}
-//				
+				for (Trace trace : buggyTraces) {
+					if (trace.getAppJavaClassPath() == null) {
+						System.out.println("Null app java path");
+						throw new RuntimeException("missing app java path");
+					}
+				}
+				for (Trace trace : correctTraces) {
+					if (trace.getAppJavaClassPath() == null) {
+						throw new RuntimeException("Missing app java path");
+					}
+				}
+				
 				ConcurrentTrace buggyTrace = ConcurrentTrace.fromTimeStampOrder(buggyTraces);
 				ConcurrentTrace correctTrace = ConcurrentTrace.fromTimeStampOrder(correctTraces);
 				

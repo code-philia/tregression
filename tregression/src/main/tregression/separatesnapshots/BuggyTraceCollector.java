@@ -28,21 +28,21 @@ public class BuggyTraceCollector extends TraceCollector0 {
 	
 	protected RunningResult generateResult(String workingDir, TestCase tc, ProjectConfig config, boolean isRunInTestCaseMode,
 			boolean allowMultiThread, List<String> includeLibs, List<String> excludeLibs) {
-		return super.run(workingDir, tc, config, isRunInTestCaseMode, allowMultiThread, includeLibs, excludeLibs);
+		RunningResult tmpResult = super.run(workingDir, tc, config, isRunInTestCaseMode, allowMultiThread, includeLibs, excludeLibs);
+		for (int i = 0; i < limit; ++i) {
+			if (!tmpResult.hasPassedTest()) {
+				break;
+			}
+			numOfIter = i + 2;
+			tmpResult = super.run(workingDir, tc, config, isRunInTestCaseMode, allowMultiThread, includeLibs, excludeLibs);
+		}
+		return tmpResult;
 	}
 
 	@Override
 	public RunningResult run(String workingDir, TestCase tc, ProjectConfig config, boolean isRunInTestCaseMode,
 			boolean allowMultiThread, List<String> includeLibs, List<String> excludeLibs) {
-		RunningResult tmpResult = null;
-		for (int i = 0; i < limit; ++i) {
-			tmpResult = generateResult(workingDir, tc, config, isRunInTestCaseMode, allowMultiThread, includeLibs, excludeLibs);
-			if (!tmpResult.hasPassedTest()) {
-				numOfIter = i + 1;
-				return tmpResult;
-			}
-		}
-		return tmpResult;
+		return this.generateResult(workingDir, tc, config, isRunInTestCaseMode, allowMultiThread, includeLibs, excludeLibs);
 	}
 	
 	
