@@ -17,6 +17,28 @@ public class TregressionViews {
 		return view;
 	}
 	
+	public static ConcurrentCorrectTraceView getConcCorrectTraceView() {
+		ConcurrentCorrectTraceView view = null;
+		try {
+			view = (ConcurrentCorrectTraceView) PlatformUI.getWorkbench().
+					getActiveWorkbenchWindow().getActivePage().showView(ConcurrentCorrectTraceView.ID);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		return view;
+	}
+	
+	public static ConcurrentBuggyTraceView getConcBuggyTraceView() {
+		ConcurrentBuggyTraceView view = null;
+		try {
+			view = (ConcurrentBuggyTraceView) PlatformUI.getWorkbench().
+					getActiveWorkbenchWindow().getActivePage().showView(ConcurrentBuggyTraceView.ID);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		return view;
+	}
+	
 	public static BuggyTraceView getBuggyTraceView(){
 		BuggyTraceView view = null;
 		try {
@@ -34,6 +56,18 @@ public class TregressionViews {
 		try {
 			view = (StepPropertyView)PlatformUI.getWorkbench().
 					getActiveWorkbenchWindow().getActivePage().showView(StepPropertyView.ID);
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+		
+		return view;
+	}
+	
+	public static ConcurrentStepPropertyView getConcStepPropertyView(){
+		ConcurrentStepPropertyView view = null;
+		try {
+			view = (ConcurrentStepPropertyView)PlatformUI.getWorkbench().
+					getActiveWorkbenchWindow().getActivePage().showView(ConcurrentStepPropertyView.ID);
 		} catch (PartInitException e) {
 			e.printStackTrace();
 		}

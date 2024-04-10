@@ -2,11 +2,15 @@ package tregression.empiricalstudy;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.Stack;
 
+import microbat.model.trace.ConcurrentTrace;
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -35,9 +39,9 @@ public class Simulator  {
 
 	protected PairList pairList;
 	protected DiffMatcher matcher;
-	private List<TraceNode> observedFaultList = new ArrayList<>();
+	protected List<TraceNode> observedFaultList = new ArrayList<>();
+	protected boolean useSliceBreaker;
 	
-	private boolean useSliceBreaker;
 	private boolean enableRandom;
 	private int breakerTrialLimit;
 	
@@ -169,15 +173,16 @@ public class Simulator  {
 		
 		return false;
 	}
-	
+		
 //	List<TraceNode> rootCauseNodes;
 	public void prepare(Trace buggyTrace, Trace correctTrace, PairList pairList, DiffMatcher matcher) {
 		this.pairList = pairList;
 		this.matcher = matcher;
 		TraceNode initialStep = buggyTrace.getLatestNode();
+		if (initialStep == null) return;
 		TraceNode lastObservableFault = findObservedFault(initialStep, buggyTrace, correctTrace);
 		
-		if(lastObservableFault!=null){
+		if(lastObservableFault!=null) {
 			observedFaultList.add(lastObservableFault);
 
 			StepChangeTypeChecker checker = new StepChangeTypeChecker(buggyTrace, correctTrace);
@@ -189,8 +194,7 @@ public class Simulator  {
 				StepChangeType changeType = checker.getType(node, true, pairList, matcher);
 				if(changeType.getType()!=StepChangeType.IDT){
 					observedFaultList.add(node);
-				}
-				
+				}		
 				node = node.getStepOverPrevious();
 			}
 		}
@@ -234,6 +238,8 @@ public class Simulator  {
 
 		return trials;
 	}
+	
+	
 
 	private List<EmpiricalTrial> startSimulationWithCachedState(TraceNode observedFaultNode, Trace buggyTrace, Trace correctTrace,
 			PairList pairList, DiffMatcher matcher, RootCauseFinder rootCauseFinder) {
@@ -293,7 +299,7 @@ public class Simulator  {
 	 * @param state
 	 * @return
 	 */
-	private EmpiricalTrial workSingleTrial(Trace buggyTrace, Trace correctTrace, PairList pairList, DiffMatcher matcher,
+	protected EmpiricalTrial workSingleTrial(Trace buggyTrace, Trace correctTrace, PairList pairList, DiffMatcher matcher,
 			RootCauseFinder rootCauseFinder, StepChangeTypeChecker typeChecker,
 			TraceNode currentNode) {
 		
@@ -445,7 +451,7 @@ public class Simulator  {
 	 * @param state
 	 * @return
 	 */
-	private EmpiricalTrial workSingleTrialWithCachedState(Trace buggyTrace, Trace correctTrace, 
+	protected EmpiricalTrial workSingleTrialWithCachedState(Trace buggyTrace, Trace correctTrace, 
 			PairList pairList, DiffMatcher matcher,
 			RootCauseFinder rootCauseFinder, StepChangeTypeChecker typeChecker,
 			TraceNode currentNode, Stack<DebuggingState> stack, Set<DebuggingState> visitedStates,
@@ -762,7 +768,7 @@ public class Simulator  {
 	}
 
 
-	private TraceNode findLatestControlDifferent(TraceNode currentNode, TraceNode controlDom, 
+	protected TraceNode findLatestControlDifferent(TraceNode currentNode, TraceNode controlDom, 
 			StepChangeTypeChecker checker, PairList pairList, DiffMatcher matcher) {
 		TraceNode n = currentNode.getStepInPrevious();
 		StepChangeType t = checker.getType(n, true, pairList, matcher);
@@ -778,8 +784,12 @@ public class Simulator  {
 		return controlDom;
 	}
 
-	private List<DeadEndRecord> createControlRecord(TraceNode currentNode, TraceNode latestBugNode, StepChangeTypeChecker typeChecker,
+	protected List<DeadEndRecord> createControlRecord(TraceNode currentNode, TraceNode latestBugNode, StepChangeTypeChecker typeChecker,
 			PairList pairList, DiffMatcher matcher) {
+		if (latestBugNode instanceof ConcurrentTraceNode) {
+			return concurrentCreateControlRecord(currentNode, (ConcurrentTraceNode) latestBugNode, typeChecker, pairList, matcher);
+		}
+
 		List<DeadEndRecord> deadEndRecords = new ArrayList<>();
 		
 		Trace trace = currentNode.getTrace();
@@ -806,7 +816,45 @@ public class Simulator  {
 		return deadEndRecords;
 	}
 
-	private List<TraceNode> findTheNearestCorrespondence(TraceNode domOnRef, PairList pairList, Trace buggyTrace, Trace correctTrace) {
+	/**
+	 * Find the dead end for control steps iff the change type is a control change type
+	 * @param currentNode
+	 * @param latestBugNode
+	 * @param typeChecker
+	 * @param pairList
+	 * @param matcher
+	 * @return
+	 */
+	private List<DeadEndRecord> concurrentCreateControlRecord(TraceNode currentNode, ConcurrentTraceNode latestBugNode,  StepChangeTypeChecker typeChecker,
+			PairList pairList, DiffMatcher matcher) {
+		List<DeadEndRecord> deadEndRecords = new ArrayList<>();
+		Trace trace = currentNode.getTrace();
+		for(int i=currentNode.getOrder()+1; i<=latestBugNode.getInitialOrder() && i < trace.size(); i++) {
+			TraceNode node = trace.getTraceNode(i);
+			StepChangeType changeType = typeChecker.getType(node, true, pairList, matcher);
+			if(changeType.getType()==StepChangeType.CTL){
+				DeadEndRecord record = new DeadEndRecord(DeadEndRecord.CONTROL, 
+						latestBugNode.getOrder(), currentNode.getOrder(), -1, node.getOrder());
+				deadEndRecords.add(record);
+				
+				TraceNode equivalentNode = node.getStepOverNext();
+				while(equivalentNode!=null && equivalentNode.getBreakPoint().equals(node.getBreakPoint())){
+					DeadEndRecord addRecord = new DeadEndRecord(DeadEndRecord.CONTROL, 
+							latestBugNode.getOrder(), currentNode.getOrder(), -1, equivalentNode.getOrder());
+					deadEndRecords.add(addRecord);
+					equivalentNode = equivalentNode.getStepOverNext();
+				}
+				
+				break;
+			}
+		}
+		
+		return deadEndRecords;
+		
+	}
+	
+	
+	protected List<TraceNode> findTheNearestCorrespondence(TraceNode domOnRef, PairList pairList, Trace buggyTrace, Trace correctTrace) {
 		List<TraceNode> list = new ArrayList<>();
 		
 		List<TraceNode> sameLineSteps = findSameLineSteps(domOnRef);
@@ -861,7 +909,7 @@ public class Simulator  {
 		return list;
 	}
 
-	private List<DeadEndRecord> createDataRecord(TraceNode currentNode, TraceNode buggyNode,
+	protected List<DeadEndRecord> createDataRecord(TraceNode currentNode, TraceNode buggyNode,
 			StepChangeTypeChecker typeChecker, PairList pairList, DiffMatcher matcher, RootCauseFinder rootCauseFinder) {
 		
 		List<DeadEndRecord> deadEndlist = new ArrayList<>();
@@ -943,7 +991,7 @@ public class Simulator  {
 		return list;
 	}
 
-	private StepOperationTuple generateDataFeedback(TraceNode currentNode, StepChangeType changeType,
+	protected StepOperationTuple generateDataFeedback(TraceNode currentNode, StepChangeType changeType,
 			VarValue readVar) {
 		UserFeedback feedback = new UserFeedback(UserFeedback.WRONG_VARIABLE_VALUE);
 		ChosenVariableOption option = new ChosenVariableOption(readVar, null);
@@ -952,7 +1000,7 @@ public class Simulator  {
 		return operation;
 	}
 
-	private int checkOverskipLength(PairList pairList, DiffMatcher matcher, Trace buggyTrace, TraceNode rootcauseNode,
+	protected int checkOverskipLength(PairList pairList, DiffMatcher matcher, Trace buggyTrace, TraceNode rootcauseNode,
 			 List<StepOperationTuple> checkingList) {
 		TraceNode latestNode = checkingList.get(checkingList.size() - 1).getNode();
 

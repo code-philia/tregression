@@ -9,7 +9,10 @@ import microbat.codeanalysis.bytecode.ByteCodeParser;
 import microbat.codeanalysis.bytecode.MethodFinderByLine;
 import microbat.model.BreakPoint;
 import microbat.model.ClassLocation;
+import microbat.model.ConcNode;
 import microbat.model.ControlScope;
+import microbat.model.trace.ConcurrentTrace;
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.trace.TraceNodeOrderComparator;
@@ -123,6 +126,29 @@ public class RootCauseFinder {
 		return null;
 	}
 	
+	public void setRootCauseBasedOnDefects4JConc(List<PairList> pairLists, DiffMatcher matcher, List<Trace> buggyTrace, List<Trace> correctTrace) {
+		List<RootCauseNode> list = new ArrayList<>();
+		for (Trace bTrace : buggyTrace) {
+			for(int i=bTrace.size()-1; i>=0; i--) {
+				TraceNode buggyNode = bTrace.getExecutionList().get(i);
+				if(matcher.checkSourceDiff(buggyNode.getBreakPoint(), true)) {
+					list.add(new RootCauseNode(buggyNode, true));
+				}
+			}
+		}
+		
+		for (Trace cTrace: correctTrace) {
+			for(int i=cTrace.size()-1; i>=0; i--) {
+				TraceNode correctTraceNode = cTrace.getExecutionList().get(i);
+				if(matcher.checkSourceDiff(correctTraceNode.getBreakPoint(), false)) {
+					list.add(new RootCauseNode(correctTraceNode, false));
+				}
+			}
+		}
+
+		this.setRealRootCaseList(list);
+	}
+	
 	public void setRootCauseBasedOnDefects4J(PairList pairList, DiffMatcher matcher, Trace buggyTrace, Trace correctTrace) {
 		List<RootCauseNode> list = new ArrayList<>();
 		for(int i=buggyTrace.size()-1; i>=0; i--) {
@@ -143,6 +169,153 @@ public class RootCauseFinder {
 	}
 	
 	private CausalityGraph causalityGraph;
+	
+	private ArrayList<ConcNode> nodes;
+	
+	public List<ConcNode> getConcNodes() {
+		return nodes;
+	}
+	
+	/**
+	 * Used to keep track of changes to work list and then construct explaination
+	 * from observed fault to root cause.
+	 */
+	private void addConcNodes(TraceNode node1, TraceNode node2, boolean isOnBefore1, boolean isOnBefore2
+			, int changeType) {
+		if (node1 == null || node2 == null) {
+			return;
+		}
+		nodes.add(ConcNode.fromTraceNodes(node1, node2, isOnBefore1, isOnBefore2, changeType));
+	}
+	
+
+	public void checkRootCauseConc(TraceNode observedFaultNode, ConcurrentTrace buggyTrace, ConcurrentTrace correctTrace, 
+			PairList pairList, DiffMatcher matcher){
+		nodes = new ArrayList<>();
+		getRegressionNodeList().add(observedFaultNode);
+		
+		CausalityGraph causalityGraph = new CausalityGraph();
+		CausalityNode causeNode = new CausalityNode(observedFaultNode, true);
+		causalityGraph.getObservedFaults().add(causeNode);
+		
+		List<TraceNodeW> workList = new ArrayList<>();
+		workList.add(new TraceNodeW(observedFaultNode, true));
+		
+		StepChangeTypeChecker typeChecker = new StepChangeTypeChecker(buggyTrace, correctTrace);
+		
+		while(!workList.isEmpty()){
+			TraceNodeW stepW = workList.remove(0);
+			TraceNode step = stepW.node;
+
+			if (step instanceof ConcurrentTraceNode) {
+				step = ((ConcurrentTraceNode) step).getInitialTraceNode();
+			}
+			CausalityNode resultNode = causalityGraph.findOrCreate(step, stepW.isOnBefore);
+			
+			StepChangeType changeType = typeChecker.getType(step, stepW.isOnBefore, pairList, matcher);
+			Trace trace = getCorrespondingTrace(stepW.isOnBefore, buggyTrace, correctTrace);
+			
+//			String isBefore = stepW.isOnBefore?"before":"after";
+//			System.out.println("On " + isBefore + " trace," + step);
+//			System.out.println("It's a " + changeType.getType() + " type");
+			
+			if(changeType.getType()==StepChangeType.SRC){
+				//TODO
+				causalityGraph.addRoot(resultNode);
+				if(resultNode.isOnBefore()){
+					break;					
+				}
+			}
+			else if(changeType.getType()==StepChangeType.DAT){
+				for(Pair<VarValue, VarValue> pair: changeType.getWrongVariableList()){
+					VarValue readVar = (stepW.isOnBefore)? pair.first() : pair.second();
+					trace = getCorrespondingTrace(stepW.isOnBefore, buggyTrace, correctTrace);
+					
+					TraceNode dataDom = trace.findDataDependency(step, readVar); 
+					addWorkNode(workList, dataDom, stepW.isOnBefore);
+					addCausality(dataDom, stepW.isOnBefore, causalityGraph, resultNode, readVar);
+					addConcNodes(step, dataDom, stepW.isOnBefore, stepW.isOnBefore, StepChangeType.DAT);
+					
+					
+					TraceNode matchedStep = changeType.getMatchingStep();
+					addWorkNode(workList, matchedStep, !stepW.isOnBefore);
+					addConcNodes(step, matchedStep, stepW.isOnBefore, !stepW.isOnBefore, -1);
+					CausalityNode cNode = addCausality(matchedStep, !stepW.isOnBefore, causalityGraph, resultNode, null);
+					
+					trace = getCorrespondingTrace(!stepW.isOnBefore, buggyTrace, correctTrace);
+					
+					VarValue matchedVar = MatchStepFinder.findMatchVariable(readVar, matchedStep);
+					
+					if(matchedVar != null) {
+						TraceNode otherDataDom = trace.findDataDependency(matchedStep, matchedVar);
+						addConcNodes(step, otherDataDom, stepW.isOnBefore, !stepW.isOnBefore, StepChangeType.DAT);
+						addWorkNode(workList, otherDataDom, !stepW.isOnBefore);	
+						addCausality(otherDataDom, !stepW.isOnBefore, causalityGraph, cNode, matchedVar);
+					}
+					
+				}
+				
+			}
+			else if(changeType.getType()==StepChangeType.CTL){
+				TraceNode controlDom = step.getBound().getInvocationMethodOrDominator();
+				if(step.insideException()){
+					controlDom = step.getStepInPrevious();
+				}
+				else if(controlDom!=null && !controlDom.isConditional() && controlDom.isBranch()
+						&& !controlDom.equals(step.getInvocationParent())){
+					StepChangeType t = typeChecker.getType(controlDom, true, pairList, matcher);
+					if(t.getType()==StepChangeType.IDT){
+						controlDom = findLatestControlDifferent(step, controlDom, 
+								typeChecker, pairList, matcher);
+					}
+				}
+				
+				if(controlDom==null){
+					TraceNode invocationParent = step.getInvocationParent();
+					if(!isMatchable(invocationParent, pairList, stepW.isOnBefore)){
+						controlDom = invocationParent;
+					}
+				}
+				addWorkNode(workList, controlDom, stepW.isOnBefore);
+				addConcNodes(step, controlDom, stepW.isOnBefore, stepW.isOnBefore, StepChangeType.CTL);
+				CausalityNode cNode = addCausality(controlDom, stepW.isOnBefore, causalityGraph, resultNode, null);
+				
+				trace = getCorrespondingTrace(!stepW.isOnBefore, buggyTrace, correctTrace);
+				
+				ClassLocation correspondingLocation = matcher.findCorrespondingLocation(step.getBreakPoint(), !stepW.isOnBefore);
+				
+				TraceNode otherControlDom = findControlMendingNodeOnOtherTrace(step, pairList, trace, 
+						!stepW.isOnBefore, correspondingLocation, matcher);
+				addWorkNode(workList, otherControlDom, !stepW.isOnBefore);
+
+				addConcNodes(step, otherControlDom, stepW.isOnBefore, !stepW.isOnBefore, StepChangeType.CTL);
+				addCausality(otherControlDom, !stepW.isOnBefore, causalityGraph, cNode, null);
+			}
+			else if(changeType.getType()==StepChangeType.IDT){
+				if(step.isException()){
+					TraceNode nextStep = step.getStepInPrevious();
+					addConcNodes(step, nextStep, stepW.isOnBefore, !stepW.isOnBefore, StepChangeType.IDT);
+					addWorkNode(workList, nextStep, !stepW.isOnBefore);
+					addCausality(nextStep, stepW.isOnBefore, causalityGraph, resultNode, null);
+					continue;
+				}
+				
+				if(stepW.isOnBefore){
+					if(!this.stopStepsOnBuggyTrace.contains(step)){
+						this.stopStepsOnBuggyTrace.add(step);
+					}
+				}
+				else{
+					if(!this.stopStepsOnCorrectTrace.contains(step)){
+						this.stopStepsOnCorrectTrace.add(step);
+					}
+				}
+			}
+		}
+		
+		causalityGraph.generateSimulationGuidance();
+		this.causalityGraph = causalityGraph;
+	}
 	
 	public void checkRootCause(TraceNode observedFaultNode, Trace buggyTrace, Trace correctTrace, 
 			PairList pairList, DiffMatcher matcher){
@@ -608,6 +781,15 @@ public class RootCauseFinder {
 
 	public List<RootCauseNode> getRealRootCaseList() {
 		return realRootCaseList;
+	}
+	
+	/**
+	 * Checks if the real root cause is empty.
+	 * @return false if the real root cause is empty or null and true otherwise.
+	 */
+	public boolean hasRealRootCause() {
+		if (realRootCaseList == null) return false;
+		return !realRootCaseList.isEmpty();
 	}
 
 	public void setRealRootCaseList(List<RootCauseNode> realRootCaseList) {

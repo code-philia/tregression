@@ -3,8 +3,10 @@ package tregression.tracematch;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.algorithm.graphdiff.HierarchyGraphDiffer;
@@ -16,6 +18,39 @@ import tregression.model.TraceNodePair;
 import tregression.separatesnapshots.DiffMatcher;
 
 public class ControlPathBasedTraceMatcher{
+	
+	
+	/**
+	 * Matches trace nodes using match trace node pair.
+	 * If a particular trace doesn't have a map from 1 to another, we assume an
+	 * empty trace maps to it.
+	 * @param trace1
+	 * @param trace2
+	 * @param diffMatcher
+	 * @param threadIdMap Map from buggy trace id to 
+	 * @return
+	 */
+	public List<PairList> matchConcurrentTraceNodePair(List<Trace> trace1, List<Trace> trace2, DiffMatcher diffMatcher,
+			Map<Long, Long> threadIdMap) {
+		Map<Long, Trace> trace2Map = new HashMap<>();
+		LinkedList<PairList> resultLinkedList = new LinkedList<>();
+		for (Trace trace : trace2) {
+			trace2Map.put(trace.getThreadId(), trace);
+		}
+		for (Trace trace: trace1) {
+			for (TraceNode traceNode : trace.getExecutionList()) {
+				if (traceNode.getBreakPoint().getFullJavaFilePath() == null) {
+					throw new RuntimeException("NO full java path");
+				}
+			}
+			if (threadIdMap.containsKey(trace.getThreadId())) {
+				Long nextThreadId = threadIdMap.get(trace.getThreadId());
+				Objects.requireNonNull(trace2Map.get(nextThreadId));
+				resultLinkedList.add(matchTraceNodePair(trace, trace2Map.get(nextThreadId), diffMatcher));
+			}
+		}
+		return resultLinkedList;
+	}
 
 	
 	public PairList matchTraceNodePair(Trace mutatedTrace, Trace correctTrace, DiffMatcher matcher) {

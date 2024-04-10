@@ -109,6 +109,27 @@ public class StepPropertyView extends ViewPart {
 		}
 	}
 	
+	
+	public void refreshConc(TraceNode correctNode, TraceNode buggyNode, DiffMatcher diffMatcher, PairList pairList){
+		if (buggyNode == null || correctNode == null) {
+			return;
+		}
+		Trace buggyTrace = buggyNode.getTrace();
+		Trace correctTrace = correctNode.getTrace();
+		StepChangeTypeChecker checker = new StepChangeTypeChecker(buggyTrace, correctTrace);
+		
+		if(buggyDetailUI != null && buggyNode != null){
+			StepChangeType changeType = checker.getType(buggyNode, true, pairList, diffMatcher);
+			buggyDetailUI.refresh(buggyNode, changeType);
+		}
+		
+		if(correctDetailUI != null && correctNode != null){
+			StepChangeType changeType = checker.getType(correctNode, false, pairList, diffMatcher);
+			correctDetailUI.refresh(correctNode, changeType);
+		}
+	}
+	
+	
 	@Override
 	public void setFocus() {
 

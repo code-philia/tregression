@@ -14,10 +14,10 @@ import tregression.empiricalstudy.CausalityNode;
 import tregression.empiricalstudy.RootCauseFinder;
 
 public class StepChangeType {
-	public static int IDT = 0;
-	public static int SRC = 1;
-	public static int DAT = 2;
-	public static int CTL = 3;
+	public final static int IDT = 0;
+	public final static int SRC = 1;
+	public final static int DAT = 2;
+	public final static int CTL = 3;
 	
 	private int type;
 	private TraceNode matchingStep;
@@ -83,15 +83,17 @@ public class StepChangeType {
 			CausalityNode cNode = new CausalityNode(node, isOnBefore);
 			VarValue value = guidance.get(cNode);
 			if(value != null ){
-				if(!node.getWrittenVariables().contains(value)){
-					return value;					
-				}
+//				if(!node.getWrittenVariables().contains(value)){
+//					return value;					
+//				}
+				return value;
 			}
 		}
 		
 		List<VarValue> virList = new ArrayList<>();
 		List<VarValue> primitiveList = new ArrayList<>();
 		List<VarValue> referenceList = new ArrayList<>();
+		if (wrongVariableList == null) return new PrimitiveValue("dummy value", true, null);
 		for(Pair<VarValue, VarValue> pair: wrongVariableList){
 			
 			VarValue var = pair.first();

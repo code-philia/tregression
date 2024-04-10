@@ -24,6 +24,7 @@ import microbat.codeanalysis.bytecode.MethodFinderByLine;
 import microbat.codeanalysis.bytecode.MethodFinderBySignature;
 import microbat.codeanalysis.runtime.PreCheckInformation;
 import microbat.model.BreakPoint;
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.util.PrimitiveUtils;
@@ -73,7 +74,9 @@ public class RegressionUtil {
 	private static TraceNode findClosestStep(TraceNode stopStep, List<TraceNode> visitedSteps) {
 		TraceNode closestStep = null;
 		int distance = -1;
-		for(TraceNode step: visitedSteps) {
+		for(TraceNode st: visitedSteps) {
+			TraceNode step = ConcurrentTraceNode.getIniTraceNode(st);
+			if (step.getTrace().getThreadId() != stopStep.getTrace().getThreadId()) continue;
 			if(step.getOrder()>stopStep.getOrder()) {
 				if(closestStep==null) {
 					closestStep = step;
@@ -99,7 +102,7 @@ public class RegressionUtil {
 		if(closetStep==null){
 			return list;
 		}
-		
+		assert(closetStep.getTrace().getThreadId() == stopStep.getTrace().getThreadId());
 		Trace trace = stopStep.getTrace();
 		for(int i=closetStep.getOrder(); i>stopStep.getOrder(); i--) {
 			TraceNode step = trace.getTraceNode(i);

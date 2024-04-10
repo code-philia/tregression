@@ -1,5 +1,7 @@
 package tregression.preference;
 
+import java.util.Optional;
+
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.core.runtime.preferences.IEclipsePreferences;
 import org.eclipse.jface.preference.PreferencePage;
@@ -35,6 +37,7 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 	private String defaultBugID;
 	private String defaultTestCase;
 	private String defaultDefects4jFile;
+	private Optional<String> traceLocation = Optional.empty();
 	
 //	public static final String BUGGY_PATH = "buggy_path";
 //	public static final String CORRECT_PATH = "correct_path";
@@ -44,6 +47,12 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 	public static final String BUG_ID = "bug_id";
 	public static final String TEST_CASE = "test_case";
 	public static final String DEFECTS4J_FILE = "defects4j_file";
+	
+	/**
+	 * 
+	 */
+	public static final String TRACE_LOCATION = "trace_location";
+	
 	
 	
 	public TregressionPreference() {

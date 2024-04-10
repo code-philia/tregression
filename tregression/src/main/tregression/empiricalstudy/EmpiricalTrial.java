@@ -37,6 +37,8 @@ public class EmpiricalTrial {
 	private List<TraceNode> visitedRegressionNodes;
 	private List<TraceNode> visitedCorrectNodes;
 	
+	private boolean isDeadLock = false;
+	
 	private int totalVisitedNodesNum;
 	
 	private List<StepOperationTuple> checkList = new ArrayList<>();
@@ -46,7 +48,7 @@ public class EmpiricalTrial {
 	private RootCauseFinder rootCauseFinder;
 	
 	private List<DeadEndRecord> deadEndRecordList = new ArrayList<>();
-	
+	private boolean timeOut = false;
 	private boolean isMultiThread;
 	private long executionTime;
 
@@ -80,6 +82,22 @@ public class EmpiricalTrial {
 		return trial;
 	}
 	
+	public void setTimeout(boolean timeout) {
+		this.timeOut = timeout;
+	}
+	
+	public boolean isTimeout() {
+		return this.timeOut;
+	}
+	
+	public void setDeadLock(boolean isDeadLock) {
+		this.isDeadLock = isDeadLock;
+	}
+	
+	public boolean isDeadLock() {
+		return this.isDeadLock;
+	}
+	
 	public boolean isDump(){
 		return bugType==-1 && checkList.isEmpty();
 	}
@@ -100,7 +118,9 @@ public class EmpiricalTrial {
 		String type = (this.bugType==FIND_BUG) ? "bug_found" : "over_skip";
 		buffer.append("trial type: " + type + "\n");
 		int rootcauseOrder = (this.rootcauseNode==null)? -1 : this.rootcauseNode.getOrder();
-		buffer.append("found root cause: " + rootcauseOrder + "\n");
+		String rootCauseThreadName = (this.rootcauseNode==null)?"":this.rootcauseNode.getTrace().getThreadName();
+		
+		buffer.append("found root cause: " + rootcauseOrder + " " + rootCauseThreadName + "\n");
 		
 		String realcauseOrders = "";
 		if(this.rootCauseFinder==null){
@@ -109,7 +129,7 @@ public class EmpiricalTrial {
 		else{
 			for(RootCauseNode node: this.rootCauseFinder.getRealRootCaseList()){
 				realcauseOrders += node.toString() + ", ";
-			}			
+			}
 		}
 		
 		buffer.append("error message: " + exceptionExplanation + "\n");

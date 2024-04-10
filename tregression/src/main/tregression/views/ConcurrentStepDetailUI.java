@@ -44,7 +44,7 @@ import org.eclipse.ui.PlatformUI;
 import microbat.algorithm.graphdiff.GraphDiff;
 import microbat.model.BreakPointValue;
 import microbat.model.UserInterestedVariables;
-import microbat.model.trace.ConcurrentTraceNode;
+import microbat.model.trace.ConcurrentTrace;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.ReferenceValue;
@@ -61,7 +61,7 @@ import sav.common.core.Pair;
 import sav.strategies.dto.AppJavaClassPath;
 import tregression.StepChangeType;
 
-public class StepDetailUI {
+public class ConcurrentStepDetailUI {
 	
 	public static final String RW = "rw";
 	public static final String STATE = "state";
@@ -82,16 +82,6 @@ public class StepDetailUI {
 		}
 		
 		public void mouseDown(MouseEvent e) {
-			
-			//for(int i=66644; i<=67830; i++){
-				TraceNode n = traceView.getTrace().getExecutionList().get(1);
-				for(VarValue var: n.getReadVariables()){
-					if(var.getVarName().contains("code")){
-						//System.out.println(n.getOrder()+":" + var.getVarName());
-					}
-				}
-			//}
-			
 			if (feedback == null) {
 				openChooseFeedbackDialog();
 			} 
@@ -104,15 +94,16 @@ public class StepDetailUI {
 						Object obj = objList[0];
 						if(obj instanceof VarValue) {
 							VarValue readVar = (VarValue)obj;
-							ConcurrentTraceNode concurrentTraceNode = currentNode.getBound();
-							if (concurrentTraceNode != null) {
-								suspiciousNode = concurrentTraceNode.getConcurrentTrace().findDataDependency(currentNode, readVar);
+							if (currentNode.getBound() != null) {
+								ConcurrentTrace trace = currentNode.getBound().getConcurrentTrace();
+								suspiciousNode = trace.findDataDependency(currentNode, readVar);
+							
 							}
 						}
 					}
 				}
 				else if(controlButton.getSelection()){
-					suspiciousNode = currentNode.getInvocationMethodOrDominator();
+					suspiciousNode = currentNode.getBound().getInvocationMethodOrDominator();
 				}
 				
 				if(suspiciousNode != null){
@@ -394,10 +385,10 @@ public class StepDetailUI {
 	private CheckboxTreeViewer readVariableTreeViewer;
 
 	private ITreeViewerListener treeListener;
-	private TregressionTraceView traceView;
+	private ConcurrentTregressionTraceView traceView;
 	private boolean isOnBefore;
 	
-	public StepDetailUI(TregressionTraceView view, TraceNode node, boolean isOnBefore){
+	public ConcurrentStepDetailUI(ConcurrentTregressionTraceView view, TraceNode node, boolean isOnBefore){
 		this.traceView = view;
 		this.currentNode = node;
 		this.isOnBefore = isOnBefore;
