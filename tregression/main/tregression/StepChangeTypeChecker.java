@@ -93,21 +93,27 @@ public class StepChangeTypeChecker {
 		List<Pair<VarValue, VarValue>> wrongVariableList = new ArrayList<>();
 		int count = 0;
 		for(VarValue readVar: thisStep.getReadVariables()){
-			count++;
-			if(count>100){
-				break;
-			}
-			
-			VarMatch varMatch = canbeMatched(isOnBefore, readVar, thisStep, thatStep, pairList, matcher);
-//			System.currentTimeMillis();
-			if(varMatch.canBeMatched && !varMatch.sameContent){
-				if(isOnBefore){
-					Pair<VarValue, VarValue> pair = Pair.of(readVar, varMatch.matchedVariable);
-					wrongVariableList.add(pair);
+			List<VarValue> varsToCheck = readVar.getAllDescedentChildren();
+			varsToCheck.add(readVar);
+			for (VarValue v : varsToCheck) {
+				if (v == null || v.getStringValue().equals("null") || v.hashCode() == 0) {
+					continue;
 				}
-				else{
-					Pair<VarValue, VarValue> pair = Pair.of(varMatch.matchedVariable, readVar);
-					wrongVariableList.add(pair);
+				count++;
+				if (count > 100) {
+					break;
+				}
+
+				VarMatch varMatch = canbeMatched(isOnBefore, v, thisStep, thatStep, pairList, matcher);
+//				System.currentTimeMillis();
+				if (varMatch.canBeMatched && !varMatch.sameContent) {
+					if (isOnBefore) {
+						Pair<VarValue, VarValue> pair = Pair.of(v, varMatch.matchedVariable);
+						wrongVariableList.add(pair);
+					} else {
+						Pair<VarValue, VarValue> pair = Pair.of(varMatch.matchedVariable, v);
+						wrongVariableList.add(pair);
+					}
 				}
 			}
 		}
