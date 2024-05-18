@@ -16,6 +16,11 @@ If you need to reference our technique, please use the following citations:
 
 - Haijun Wang#, Yun Lin#*, Zijiang Yang, Jun Sun, Yang Liu, Jin Song Dong, Qinghua Zhen, and Ting Liu. Explaining Regressions via Alignment Slicing and Mending, Transcation on Software Engineering (TSE 2019). (#co-first author, *corrsponding author)
 
+# ❗Important Notice
+If you are using __Eclipse 4.25 (2022-09)__ or later versions, __Java 17__ or newer JRE/JDK is required.
+
+For older versions of Eclipse, please refer to the [Eclipse Wiki Page](https://wiki.eclipse.org/Eclipse/Installation) for more information.
+
 # Source Code Configuration
 ## Dependency
 The TRegression (i.e., ERASE) project relies on Microbat project to collect execution Trace of Java program. When you are importing tregression project, you need to important Microbat project (https://github.com/llmhyy/microbat) as well. Note that all the projects are Eclipse plugin project. The imported projects are listed as follows:
