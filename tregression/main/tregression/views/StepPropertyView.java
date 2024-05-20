@@ -81,12 +81,18 @@ public class StepPropertyView extends ViewPart {
 		
 		if(view instanceof BuggyTraceView){
 			// Modified by David
-//			buggyDetailUI = new StepDetailUI(view, null, true);		
-			buggyDetailUI = new StepDetailIOUI(view, null, true);
+//			buggyDetailUI = new StepDetailUI(view, null, true);
+//			buggyDetailUI = new StepDetailIOUI(view, null, true);
+			
+			/* Modified by hongshuwang */
+			buggyDetailUI = new TraceRecovStepDetailUI(view, null, true);
 			return buggyDetailUI.createDetails(panel);
 		}
 		else if(view instanceof CorrectTraceView){
-			correctDetailUI = new StepDetailUI(view, null, false);
+//			correctDetailUI = new StepDetailUI(view, null, false);
+			
+			/* Modified by hongshuwang */
+			correctDetailUI = new TraceRecovStepDetailUI(view, null, false);
 			return correctDetailUI.createDetails(panel);
 		}
 		
