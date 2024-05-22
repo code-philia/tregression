@@ -1,9 +1,6 @@
 package tregression.views;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -16,7 +13,7 @@ import org.eclipse.swt.widgets.Group;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.tracerecov.candidatevar.CandidateVarRetriever;
+import microbat.tracerecov.VariableGraph;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 
 /**
@@ -79,32 +76,20 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 				if (obj instanceof VarValue) {
 					VarValue readVar = (VarValue) obj;
 
-					/* Candidate Variables Identification */
-					/* Identify candidate variables through Java bytecode analysis (static) */
-					List<String> candidateVariables = CandidateVarRetriever
-							.getCandidateVariables(currentNode.getInvokingMethod());
-					readVar.setCandidateVariables(candidateVariables);
-
 					/* Context Scope Analysis */
-					/* 1. Relevant Step Identification: Identify relevant steps by variable ID
-					 * 2. Variable Mapping: Link candidate variables to variables on trace
-					 * 3. Repeat step (1) and (2) to find the relevant steps for each candidate variable */
-					Map<String, List<TraceNode>> relevantSteps = trace.findRecoveredDataDependency(currentNode,
-							readVar);
+					VariableGraph.reset();
+					trace.findRecoveredDataDependency(currentNode, readVar);
 
 					/* Execution Simulation */
 					/* Simulate execution by calling LLM model */
 					try {
-						ExecutionSimulator executionSimulator = new ExecutionSimulator(relevantSteps, currentNode, readVar);
-						List<String> response = executionSimulator.sendRequests();
+						ExecutionSimulator executionSimulator = new ExecutionSimulator(currentNode, readVar);
+						executionSimulator.sendRequests();
 						System.out.println();
 					} catch (IOException ioException) {
 						ioException.printStackTrace();
 					}
-
-					/* Variable Mapping */
-					/* Add critical variables identified by the LLM to the trace */
-
+					
 					readVariableTreeViewer.refresh();
 				}
 			}
