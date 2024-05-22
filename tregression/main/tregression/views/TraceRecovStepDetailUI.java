@@ -83,13 +83,12 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					/* Execution Simulation */
 					/* Simulate execution by calling LLM model */
 					try {
-						ExecutionSimulator executionSimulator = new ExecutionSimulator(currentNode, readVar);
+						ExecutionSimulator executionSimulator = new ExecutionSimulator();
 						executionSimulator.sendRequests();
-						System.out.println();
 					} catch (IOException ioException) {
 						ioException.printStackTrace();
 					}
-					
+
 					readVariableTreeViewer.refresh();
 				}
 			}
