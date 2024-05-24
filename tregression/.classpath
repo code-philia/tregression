@@ -7,6 +7,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry exported="true" kind="lib" path="lib/json-20220924.jar"/>
+	<classpathentry kind="lib" path="lib/javaparser-core-3.25.8.jar"/>
 	<classpathentry exported="true" kind="con" path="org.eclipse.pde.core.requiredPlugins"/>
 	<classpathentry exported="true" kind="lib" path="lib/plexus-utils-3.2.1.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/maven-model-3.8.1.jar"/>
@@ -14,15 +15,15 @@
 	<classpathentry exported="true" kind="lib" path="lib/poi-ooxml-3.11-20141221.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/poi-ooxml-schemas-3.11-20141221.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/xmlbeans-2.6.0.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8">
-		<attributes>
-			<attribute name="module" value="true"/>
-		</attributes>
-	</classpathentry>
 	<classpathentry combineaccessrules="false" kind="src" path="/microbat_instrumentator"/>
 	<classpathentry exported="true" kind="lib" path="lib/java-mutation-framework-0.0.1-SNAPSHOT.jar" sourcepath="/java-mutation-framework"/>
 	<classpathentry kind="lib" path="lib/maven-invoker-3.2.0.jar"/>
 	<classpathentry kind="lib" path="lib/maven-shared-utils-3.3.4.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/5"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
