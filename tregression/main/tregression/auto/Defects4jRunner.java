@@ -73,6 +73,8 @@ public class Defects4jRunner extends ProjectsRunner {
 				result.traceLen = Long.valueOf(trace.size());
 				result.isOmissionBug = trial.getBugType() == EmpiricalTrial.OVER_SKIP;
 				result.rootCauseOrder = trial.getRootcauseNode() == null ? -1 : trial.getRootcauseNode().getOrder();
+				result.traceCollectionTime = trial.getTraceCollectionTime();
+				result.traceMatchingTime = trial.getTraceMatchTime();
 				result.simulationTime = trial.getSimulationTime();
 				for (DeadEndRecord record : trial.getDeadEndRecordList()) {
 					SolutionPattern solutionPattern = record.getSolutionPattern();
