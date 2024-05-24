@@ -342,6 +342,7 @@ public class TrialGenerator0 {
 					t.setTestcase(tc.testClass + "#" + tc.testMethod);
 					t.setTraceCollectionTime(buggyTrace.getConstructTime() + correctTrace.getConstructTime());
 					t.setTraceMatchTime(matchTime);
+					t.setSimulationTime(simulationTime);
 					t.setBuggyTrace(buggyTrace);
 					t.setFixedTrace(correctTrace);
 					t.setPairList(pairList);

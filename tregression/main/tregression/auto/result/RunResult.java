@@ -1,13 +1,5 @@
 package tregression.auto.result;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.util.*;
-
 public class RunResult {
 	
 	public String projectName = " ";
@@ -17,6 +9,7 @@ public class RunResult {
 	public boolean isOmissionBug = false;
 //	public String solutionName = " ";
 	public String errorMessage = " ";
+	public int simulationTime = -1;
 	
 	public final static String DELIMITER = ",";
 
@@ -32,6 +25,7 @@ public class RunResult {
 		this.isOmissionBug = result.isOmissionBug;
 //		this.solutionName = result.solutionName;
 		this.errorMessage = result.errorMessage;
+		this.simulationTime = result.simulationTime;
 	}
 	
 	public boolean isSuccess() {
@@ -63,6 +57,9 @@ public class RunResult {
 		final String errMsg = tokens[5];
 		result.errorMessage = errMsg == " " ? null : errMsg;
 		
+		final String simulationTime = tokens[6];
+		result.simulationTime = Integer.valueOf(simulationTime);
+
 		return result;
 	}
 	
@@ -76,6 +73,7 @@ public class RunResult {
 		this.appendStr(strBuilder, String.valueOf(this.isOmissionBug));
 //		this.appendStr(strBuilder, this.solutionName);
 		this.appendStr(strBuilder, this.errorMessage);
+		this.appendStr(strBuilder, String.valueOf(simulationTime));
 		return strBuilder.toString();
 	}
 	
@@ -94,6 +92,7 @@ public class RunResult {
 		builder.append("isOmissionBug: " + this.isOmissionBug + "\n");
 //		builder.append("SolutationName: " + this.solutionName + "\n");
 		builder.append("Error Message: " + this.errorMessage + "\n");
+		builder.append("Simulation Time: " + this.simulationTime + "\n");
 		builder.append("--------------------------------\n");
 		return builder.toString();
 	}

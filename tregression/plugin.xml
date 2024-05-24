@@ -263,7 +263,7 @@
                   style="push">
             </command>
             <command
-                  commandId="tregression.simulate"
+                  commandId="tregression.collectDefects4jData"
                   icon="icons/after.ico"
                   style="push">
             </command>
