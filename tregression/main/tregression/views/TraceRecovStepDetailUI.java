@@ -54,49 +54,13 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		submitButton.addMouseListener(fListener);
 
 		/* Added by hongshuwang */
-		Button variableExpansionButton = new Button(slicingGroup, SWT.NONE);
-		variableExpansionButton.setText("Expand Variables");
-		variableExpansionButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
-		VariableExpansionListener vListener = new VariableExpansionListener();
-		variableExpansionButton.addMouseListener(vListener);
-		
 		Button contextAnalysisButton = new Button(slicingGroup, SWT.NONE);
 		contextAnalysisButton.setText("Analyse Context");
 		contextAnalysisButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
 		ContextAnalysisListener cListener = new ContextAnalysisListener();
 		contextAnalysisButton.addMouseListener(cListener);
 	}
-	
-	class VariableExpansionListener implements MouseListener {
 
-		public void mouseUp(MouseEvent e) {
-		}
-
-		public void mouseDoubleClick(MouseEvent e) {
-		}
-
-		public void mouseDown(MouseEvent e) {
-			Object[] objList = readVariableTreeViewer.getCheckedElements();
-			if (objList.length != 0) {
-				Object obj = objList[0];
-				if (obj instanceof VarValue) {
-					VarValue readVar = (VarValue) obj;
-
-					/* Variable Expansion */
-					/* Expand the selected variable and replace the original variable with the
-					 * expanded variable. */
-					VariableSkeleton variable = VarSkeletonBuilder.getVariableStructure(readVar.getType());
-					if (variable != null) {
-						currentNode.getReadVariables().remove(readVar);
-						currentNode.addReadVariable(variable.toVarValue(readVar));
-
-						readVariableTreeViewer.refresh();
-					}
-				}
-			}
-		}
-	}
-	
 	class ContextAnalysisListener implements MouseListener {
 
 		public void mouseUp(MouseEvent e) {
@@ -113,6 +77,18 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 				Object obj = objList[0];
 				if (obj instanceof VarValue) {
 					VarValue readVar = (VarValue) obj;
+
+					/* Variable Expansion */
+					/*
+					 * Expand the selected variable and replace the original variable with the
+					 * expanded variable.
+					 */
+					VariableSkeleton variable = VarSkeletonBuilder.getVariableStructure(readVar.getType());
+					if (variable != null) {
+						currentNode.getReadVariables().remove(readVar);
+						readVar = variable.toVarValue(readVar);
+						currentNode.addReadVariable(readVar);
+					}
 
 					/* Context Scope Analysis */
 					VariableGraph.reset();
