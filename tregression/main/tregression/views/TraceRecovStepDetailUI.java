@@ -88,20 +88,21 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 						currentNode.getReadVariables().remove(readVar);
 						readVar = variable.toVarValue(readVar);
 						currentNode.addReadVariable(readVar);
+						readVariableTreeViewer.refresh();
 					}
 
 					/* Context Scope Analysis */
 					VariableGraph.reset();
-					trace.findRecoveredDataDependency(currentNode, readVar);
+					trace.recoverDataDependency(currentNode, readVar);
 
 					/* Execution Simulation */
 					/* Simulate execution by calling LLM model */
-					try {
-						ExecutionSimulator executionSimulator = new ExecutionSimulator();
-						executionSimulator.sendRequests();
-					} catch (IOException ioException) {
-						ioException.printStackTrace();
-					}
+//					try {
+//						ExecutionSimulator executionSimulator = new ExecutionSimulator();
+//						executionSimulator.sendRequests();
+//					} catch (IOException ioException) {
+//						ioException.printStackTrace();
+//					}
 
 					readVariableTreeViewer.refresh();
 				}
