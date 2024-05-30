@@ -10,6 +10,7 @@ import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
+import tregression.empiricalstudy.config.TraceRecovMutationConfig;
 import tregression.empiricalstudy.solutionpattern.SolutionPattern;
 
 public class Defects4jRunner extends ProjectsRunner {
@@ -48,7 +49,7 @@ public class Defects4jRunner extends ProjectsRunner {
 			result.projectName = projectName;
 			result.bugID = Integer.valueOf(bugID_str);
 			
-			final ProjectConfig config = Defects4jProjectConfig.getConfig(projectName, bugID_str);
+			final ProjectConfig config = TraceRecovMutationConfig.getConfig(projectName, bugID_str);
 			if(config == null) {
 				result.errorMessage = ProjectsRunner.genMsg("Cannot generate project config");
 				return result;
