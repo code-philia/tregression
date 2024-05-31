@@ -78,7 +78,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 				if (obj instanceof VarValue) {
 					VarValue readVar = (VarValue) obj;
 
-					/* Variable Expansion */
+					/* 1. Variable Expansion */
 					/*
 					 * Expand the selected variable and replace the original variable with the
 					 * expanded variable.
@@ -91,12 +91,18 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 						readVariableTreeViewer.refresh();
 					}
 
-					/* Context Scope Analysis */
+					/* 2. Context Scope Analysis */
+					/*
+					 * Build a variable graph.
+					 */
 					VariableGraph.reset();
 					trace.recoverDataDependency(currentNode, readVar);
 
-					/* Execution Simulation */
-					/* Simulate execution by calling LLM model */
+					/* 3. Execution Simulation */
+					/*
+					 * Identify additional linking steps and simulate execution by calling LLM
+					 * model.
+					 */
 					try {
 						ExecutionSimulator executionSimulator = new ExecutionSimulator();
 						executionSimulator.recoverLinkageSteps();
