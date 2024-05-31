@@ -97,12 +97,13 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 
 					/* Execution Simulation */
 					/* Simulate execution by calling LLM model */
-//					try {
-//						ExecutionSimulator executionSimulator = new ExecutionSimulator();
-//						executionSimulator.sendRequests();
-//					} catch (IOException ioException) {
-//						ioException.printStackTrace();
-//					}
+					try {
+						ExecutionSimulator executionSimulator = new ExecutionSimulator();
+						executionSimulator.recoverLinkageSteps();
+						executionSimulator.sendRequests();
+					} catch (IOException ioException) {
+						ioException.printStackTrace();
+					}
 
 					readVariableTreeViewer.refresh();
 				}
