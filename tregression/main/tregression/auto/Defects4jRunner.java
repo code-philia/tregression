@@ -1,19 +1,14 @@
 package tregression.auto;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.List;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
+import microbat.agent.TraceAgentRunner;
 import microbat.model.trace.Trace;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
-import tregression.empiricalstudy.TrialGenerator0;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.empiricalstudy.solutionpattern.SolutionPattern;
@@ -21,7 +16,7 @@ import tregression.empiricalstudy.solutionpattern.SolutionPattern;
 public class Defects4jRunner extends ProjectsRunner {
 	
 	private List<String> outOfMemoryFilters = new ArrayList<>();
-	
+
 	public Defects4jRunner(String basePath, String resultPath) {
 		this(basePath, resultPath, 5);
 	}
@@ -46,6 +41,9 @@ public class Defects4jRunner extends ProjectsRunner {
 		}
 		
 		final String projectID = projectName + ":" + bugID_str;
+		TraceAgentRunner.projectName = projectName;
+		TraceAgentRunner.projectID = bugID_str;
+
 		if (this.outOfMemoryFilters.contains(projectID)) {
 			result.projectName = projectName;
 			result.bugID = Integer.valueOf(bugID_str);
@@ -64,7 +62,7 @@ public class Defects4jRunner extends ProjectsRunner {
 			final String fixFolder = Paths.get(basePath, projectName, bugID_str, "fix").toString();
 			List<EmpiricalTrial> trials = this.generateTrials(bugFolder, fixFolder, config);
 			if (trials == null || trials.isEmpty()) {
-				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
+//				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
 				return result;
 			}
 			

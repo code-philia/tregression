@@ -263,8 +263,8 @@
                   style="push">
             </command>
             <command
-                  commandId="tregression.simulate"
-                  icon="icons/after.ico"
+                  commandId="tregression.collectDefects4jData"
+                  icon="icons/evaluation.png"
                   style="push">
             </command>
          </toolbar>

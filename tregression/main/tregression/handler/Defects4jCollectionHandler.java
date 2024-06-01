@@ -1,11 +1,5 @@
 package tregression.handler;
 
-import tregression.auto.*;
-
-
-import java.nio.file.Paths;
-
-
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -15,6 +9,8 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
 import microbat.util.JavaUtil;
+import tregression.auto.Defects4jRunner;
+import tregression.auto.ProjectsRunner;
 
 public class Defects4jCollectionHandler extends AbstractHandler {
 
@@ -35,9 +31,9 @@ public class Defects4jCollectionHandler extends AbstractHandler {
 	}
 	
 	private void execute() {
-		final String basePath = "E:\\david\\Defects4j";
-		final String resultPath = Paths.get(basePath, "result_1.txt").toString();
-		final ProjectsRunner runner = new Defects4jRunner(basePath, resultPath);
+		final String basePath = "D:\\Defects4j";
+//		final String resultPath = Paths.get("D:\\TraceRecov\\results.txt").toString();
+		final ProjectsRunner runner = new Defects4jRunner(basePath, "");
 		runner.run();
 	}
 }

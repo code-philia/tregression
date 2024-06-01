@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -73,9 +72,9 @@ public abstract class ProjectsRunner {
                 }
                 
                 final String id = projectName + ":" + bugID_str;
-                if (!this.targetBugs.isEmpty() && !this.targetBugs.contains(id)) {
-                	continue;
-                }
+//                if (!this.targetBugs.isEmpty() && !this.targetBugs.contains(id)) {
+//                	continue;
+//                }
 
 
                 RunResult result = this.runProject(projectName, bugID_str);

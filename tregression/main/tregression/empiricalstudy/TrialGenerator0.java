@@ -8,11 +8,9 @@ import java.util.List;
 import java.util.Scanner;
 
 import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
 import microbat.preference.AnalysisScopePreference;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.UserFeedback;
-import microbat.util.Settings;
 import sav.common.core.utils.SingleTimer;
 import sav.strategies.dto.AppJavaClassPath;
 import tregression.SimulationFailException;
@@ -26,7 +24,6 @@ import tregression.separatesnapshots.AppClassPathInitializer;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.separatesnapshots.RunningResult;
 import tregression.separatesnapshots.TraceCollector0;
-import tregression.tracematch.ControlPathBasedTraceMatcher;
 import tregression.views.Visualizer;
 
 public class TrialGenerator0 {
@@ -95,7 +92,10 @@ public class TrialGenerator0 {
 //				if(!trial.isDump()){
 //					break;					
 //				}
-				if(trial.isSuccessful()){
+				if (trial == null) {
+					return null;
+				}
+				if (trial.isSuccessful()) {
 					break;					
 				}
 			}
@@ -230,130 +230,130 @@ public class TrialGenerator0 {
 			List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
 			List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 			
-			while(!isDataFlowComplete && trialNum<trialLimit){
-				trialNum++;
-				
-				Settings.compilationUnitMap.clear();
-				Settings.iCompilationUnitMap.clear();
+//			while(!isDataFlowComplete && trialNum<trialLimit){
+//				trialNum++;
+//				
+//				Settings.compilationUnitMap.clear();
+//				Settings.iCompilationUnitMap.clear();
 				buggyRS = buggyCollector.run(buggyPath, tc, config, isRunInTestCaseMode, 
 						allowMultiThread, includedClassNames, excludedClassNames);
-				if (buggyRS.getRunningType() != NORMAL) {
-					trial = EmpiricalTrial.createDumpTrial(getProblemType(buggyRS.getRunningType()));
-					return trial;
-				}
-
-				Settings.compilationUnitMap.clear();
-				Settings.iCompilationUnitMap.clear();
-				correctRs = correctCollector.run(fixPath, tc, config, isRunInTestCaseMode, 
-						allowMultiThread, includedClassNames, excludedClassNames);
-				if (correctRs.getRunningType() != NORMAL) {
-					trial = EmpiricalTrial.createDumpTrial(getProblemType(correctRs.getRunningType()));
-					return trial;
-				}
-				
-				if (buggyRS != null && correctRs != null) {
-					cachedBuggyRS = buggyRS;
-					cachedCorrectRS = correctRs;
-
-					System.out.println("start matching trace..., buggy trace length: " + buggyRS.getRunningTrace().size()
-							+ ", correct trace length: " + correctRs.getRunningTrace().size());
-					time1 = System.currentTimeMillis();
-					diffMatcher = new DiffMatcher(config.srcSourceFolder, config.srcTestFolder, buggyPath, fixPath);
-					diffMatcher.matchCode();
-
-					ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
-					pairList = traceMatcher.matchTraceNodePair(buggyRS.getRunningTrace(), correctRs.getRunningTrace(),
-							diffMatcher);
-					time2 = System.currentTimeMillis();
-					matchTime = (int) (time2 - time1);
-					System.out.println("finish matching trace, taking " + matchTime + "ms");
-
-					cachedDiffMatcher = diffMatcher;
-					cachedPairList = pairList;
-				}
-				
-				Trace buggyTrace = buggyRS.getRunningTrace();
-				Trace correctTrace = correctRs.getRunningTrace();
-				
-				if (requireVisualization) {
-					Visualizer visualizer = new Visualizer();
-					visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
-				}
-				
-				RootCauseFinder rootcauseFinder = new RootCauseFinder();
-				rootcauseFinder.setRootCauseBasedOnDefects4J(pairList, diffMatcher, buggyTrace, correctTrace);
-				
-				Simulator simulator = new Simulator(useSliceBreaker, enableRandom, breakLimit);
-				simulator.prepare(buggyTrace, correctTrace, pairList, diffMatcher);
-				if(rootcauseFinder.getRealRootCaseList().isEmpty()){
-					trial = EmpiricalTrial.createDumpTrial("cannot find real root cause");
-					StepOperationTuple tuple = new StepOperationTuple(simulator.getObservedFault(), 
-							new UserFeedback(UserFeedback.UNCLEAR), simulator.getObservedFault(), DebugState.UNCLEAR);
-					trial.getCheckList().add(tuple);
-					
-					return trial;
-				}
-				
-				if(simulator.getObservedFault()==null){
-					trial = EmpiricalTrial.createDumpTrial("cannot find observable fault");
-					return trial;
-				}
-				
-				rootcauseFinder.checkRootCause(simulator.getObservedFault(), buggyTrace, correctTrace, pairList, diffMatcher);
-				TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, buggyTrace, correctTrace);
-				
-				if(rootCause==null){
-					
-//					System.out.println("[Search Lib Class] Cannot find the root cause, I am searching for library classes...");
+//				if (buggyRS.getRunningType() != NORMAL) {
+//					trial = EmpiricalTrial.createDumpTrial(getProblemType(buggyRS.getRunningType()));
+//					return trial;
+//				}
+//
+//				Settings.compilationUnitMap.clear();
+//				Settings.iCompilationUnitMap.clear();
+//				correctRs = correctCollector.run(fixPath, tc, config, isRunInTestCaseMode, 
+//						allowMultiThread, includedClassNames, excludedClassNames);
+//				if (correctRs.getRunningType() != NORMAL) {
+//					trial = EmpiricalTrial.createDumpTrial(getProblemType(correctRs.getRunningType()));
+//					return trial;
+//				}
+//				
+//				if (buggyRS != null && correctRs != null) {
+//					cachedBuggyRS = buggyRS;
+//					cachedCorrectRS = correctRs;
+//
+//					System.out.println("start matching trace..., buggy trace length: " + buggyRS.getRunningTrace().size()
+//							+ ", correct trace length: " + correctRs.getRunningTrace().size());
+//					time1 = System.currentTimeMillis();
+//					diffMatcher = new DiffMatcher(config.srcSourceFolder, config.srcTestFolder, buggyPath, fixPath);
+//					diffMatcher.matchCode();
+//
+//					ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
+//					pairList = traceMatcher.matchTraceNodePair(buggyRS.getRunningTrace(), correctRs.getRunningTrace(),
+//							diffMatcher);
+//					time2 = System.currentTimeMillis();
+//					matchTime = (int) (time2 - time1);
+//					System.out.println("finish matching trace, taking " + matchTime + "ms");
+//
+//					cachedDiffMatcher = diffMatcher;
+//					cachedPairList = pairList;
+//				}
+//				
+//				Trace buggyTrace = buggyRS.getRunningTrace();
+//				Trace correctTrace = correctRs.getRunningTrace();
+//				
+//				if (requireVisualization) {
+//					Visualizer visualizer = new Visualizer();
+//					visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
+//				}
+//				
+//				RootCauseFinder rootcauseFinder = new RootCauseFinder();
+//				rootcauseFinder.setRootCauseBasedOnDefects4J(pairList, diffMatcher, buggyTrace, correctTrace);
+//				
+//				Simulator simulator = new Simulator(useSliceBreaker, enableRandom, breakLimit);
+//				simulator.prepare(buggyTrace, correctTrace, pairList, diffMatcher);
+//				if(rootcauseFinder.getRealRootCaseList().isEmpty()){
+//					trial = EmpiricalTrial.createDumpTrial("cannot find real root cause");
+//					StepOperationTuple tuple = new StepOperationTuple(simulator.getObservedFault(), 
+//							new UserFeedback(UserFeedback.UNCLEAR), simulator.getObservedFault(), DebugState.UNCLEAR);
+//					trial.getCheckList().add(tuple);
 //					
-//					List<TraceNode> buggySteps = rootcauseFinder.getStopStepsOnBuggyTrace();
-//					List<TraceNode> correctSteps = rootcauseFinder.getStopStepsOnCorrectTrace();
+//					return trial;
+//				}
+//				
+//				if(simulator.getObservedFault()==null){
+//					trial = EmpiricalTrial.createDumpTrial("cannot find observable fault");
+//					return trial;
+//				}
+//				
+//				rootcauseFinder.checkRootCause(simulator.getObservedFault(), buggyTrace, correctTrace, pairList, diffMatcher);
+//				TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, buggyTrace, correctTrace);
+//				
+//				if(rootCause==null){
 //					
-//					List<String> newIncludedClassNames = new ArrayList<>();
-//					List<String> newIncludedBuggyClassNames = RegressionUtil.identifyIncludedClassNames(buggySteps, buggyRS.getPrecheckInfo(), rootcauseFinder.getRegressionNodeList());
-//					List<String> newIncludedCorrectClassNames = RegressionUtil.identifyIncludedClassNames(correctSteps, correctRs.getPrecheckInfo(), rootcauseFinder.getCorrectNodeList());
-//					newIncludedClassNames.addAll(newIncludedBuggyClassNames);
-//					newIncludedClassNames.addAll(newIncludedCorrectClassNames);
-//					boolean includedClassChanged = false;
-//					for(String name: newIncludedClassNames){
-//						if(!includedClassNames.contains(name)){
-//							includedClassNames.add(name);
-//							includedClassChanged = true;
-//						}
-//					}
+////					System.out.println("[Search Lib Class] Cannot find the root cause, I am searching for library classes...");
+////					
+////					List<TraceNode> buggySteps = rootcauseFinder.getStopStepsOnBuggyTrace();
+////					List<TraceNode> correctSteps = rootcauseFinder.getStopStepsOnCorrectTrace();
+////					
+////					List<String> newIncludedClassNames = new ArrayList<>();
+////					List<String> newIncludedBuggyClassNames = RegressionUtil.identifyIncludedClassNames(buggySteps, buggyRS.getPrecheckInfo(), rootcauseFinder.getRegressionNodeList());
+////					List<String> newIncludedCorrectClassNames = RegressionUtil.identifyIncludedClassNames(correctSteps, correctRs.getPrecheckInfo(), rootcauseFinder.getCorrectNodeList());
+////					newIncludedClassNames.addAll(newIncludedBuggyClassNames);
+////					newIncludedClassNames.addAll(newIncludedCorrectClassNames);
+////					boolean includedClassChanged = false;
+////					for(String name: newIncludedClassNames){
+////						if(!includedClassNames.contains(name)){
+////							includedClassNames.add(name);
+////							includedClassChanged = true;
+////						}
+////					}
+////					
+////					if(!includedClassChanged) {
+////						trialNum = trialLimit + 1;
+////					}
+////					else {
+////						continue;						
+////					}
+//				}
+//				
+//				isDataFlowComplete = true;
+//				System.out.println("start simulating debugging...");
+//				time1 = System.currentTimeMillis();
+//				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(buggyTrace, correctTrace, diffMatcher, 0);
+//				time2 = System.currentTimeMillis();
+//				int simulationTime = (int) (time2 - time1);
+//				System.out.println("finish simulating debugging, taking " + simulationTime / 1000 + "s");
+//				
+//				for (EmpiricalTrial t : trials0) {
+//					t.setTestcase(tc.testClass + "#" + tc.testMethod);
+//					t.setTraceCollectionTime(buggyTrace.getConstructTime() + correctTrace.getConstructTime());
+//					t.setTraceMatchTime(matchTime);
+//					t.setBuggyTrace(buggyTrace);
+//					t.setFixedTrace(correctTrace);
+//					t.setPairList(pairList);
+//					t.setDiffMatcher(diffMatcher);
 //					
-//					if(!includedClassChanged) {
-//						trialNum = trialLimit + 1;
-//					}
-//					else {
-//						continue;						
-//					}
-				}
-				
-				isDataFlowComplete = true;
-				System.out.println("start simulating debugging...");
-				time1 = System.currentTimeMillis();
-				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(buggyTrace, correctTrace, diffMatcher, 0);
-				time2 = System.currentTimeMillis();
-				int simulationTime = (int) (time2 - time1);
-				System.out.println("finish simulating debugging, taking " + simulationTime / 1000 + "s");
-				
-				for (EmpiricalTrial t : trials0) {
-					t.setTestcase(tc.testClass + "#" + tc.testMethod);
-					t.setTraceCollectionTime(buggyTrace.getConstructTime() + correctTrace.getConstructTime());
-					t.setTraceMatchTime(matchTime);
-					t.setBuggyTrace(buggyTrace);
-					t.setFixedTrace(correctTrace);
-					t.setPairList(pairList);
-					t.setDiffMatcher(diffMatcher);
-					
-					PatternIdentifier identifier = new PatternIdentifier();
-					identifier.identifyPattern(t);
-				}
-
-				trial = trials0.get(0);
-				return trial;
-			}
+//					PatternIdentifier identifier = new PatternIdentifier();
+//					identifier.identifyPattern(t);
+//				}
+//
+//				trial = trials0.get(0);
+//				return trial;
+//			}
 
 		}
 

@@ -37,6 +37,9 @@ public class TraceCollector0 {
 		RunningInfo info = null;
 		try {
 			info = exectuor.run();
+			if (info == null) {
+				return null;
+			}
 		} catch (StepLimitException e) {
 			e.printStackTrace();
 		}
