@@ -1,6 +1,7 @@
 package tregression.views;
 
 import java.io.IOException;
+import java.util.Arrays;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -77,6 +78,8 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 				Object obj = objList[0];
 				if (obj instanceof VarValue) {
 					VarValue readVar = (VarValue) obj;
+					
+					ExecutionSimulator executionSimulator = new ExecutionSimulator();
 
 					/* 1. Variable Expansion */
 					/*
@@ -84,11 +87,16 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					 * expanded variable.
 					 */
 					VariableSkeleton variable = VarSkeletonBuilder.getVariableStructure(readVar.getType());
+					try {
+						executionSimulator.expandVariable(readVar, Arrays.asList(variable), currentNode);
+					} catch (IOException e1) {
+						e1.printStackTrace();
+					}
+					
 					if (variable != null) {
 						currentNode.getReadVariables().remove(readVar);
 						readVar = variable.toVarValue(readVar);
 						currentNode.addReadVariable(readVar);
-						readVariableTreeViewer.refresh();
 					}
 
 					/* 2. Context Scope Analysis */
@@ -104,7 +112,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					 * model.
 					 */
 					try {
-						ExecutionSimulator executionSimulator = new ExecutionSimulator();
+						
 						executionSimulator.recoverLinkageSteps();
 						executionSimulator.sendRequests();
 					} catch (IOException ioException) {
