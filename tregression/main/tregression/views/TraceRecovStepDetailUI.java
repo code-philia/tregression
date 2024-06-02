@@ -88,7 +88,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					 */
 					VariableSkeleton variable = VarSkeletonBuilder.getVariableStructure(readVar.getType());
 					try {
-						executionSimulator.expandVariable(readVar, Arrays.asList(variable), currentNode);
+						variable = executionSimulator.expandVariable(readVar, Arrays.asList(variable), currentNode);
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
@@ -99,25 +99,25 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 						currentNode.addReadVariable(readVar);
 					}
 
-					/* 2. Context Scope Analysis */
-					/*
-					 * Build a variable graph.
-					 */
-					VariableGraph.reset();
-					trace.recoverDataDependency(currentNode, readVar);
-
-					/* 3. Execution Simulation */
-					/*
-					 * Identify additional linking steps and simulate execution by calling LLM
-					 * model.
-					 */
-					try {
-						
-						executionSimulator.recoverLinkageSteps();
-						executionSimulator.sendRequests();
-					} catch (IOException ioException) {
-						ioException.printStackTrace();
-					}
+//					/* 2. Context Scope Analysis */
+//					/*
+//					 * Build a variable graph.
+//					 */
+//					VariableGraph.reset();
+//					trace.recoverDataDependency(currentNode, readVar);
+//
+//					/* 3. Execution Simulation */
+//					/*
+//					 * Identify additional linking steps and simulate execution by calling LLM
+//					 * model.
+//					 */
+//					try {
+//						
+//						executionSimulator.recoverLinkageSteps();
+//						executionSimulator.sendRequests();
+//					} catch (IOException ioException) {
+//						ioException.printStackTrace();
+//					}
 
 					readVariableTreeViewer.refresh();
 				}
