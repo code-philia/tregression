@@ -88,16 +88,11 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					 */
 					VariableSkeleton variable = VarSkeletonBuilder.getVariableStructure(readVar.getType());
 					try {
-						variable = executionSimulator.expandVariable(readVar, Arrays.asList(variable), currentNode);
+						executionSimulator.expandVariable(readVar, Arrays.asList(variable), currentNode);
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
 					
-					if (variable != null) {
-						currentNode.getReadVariables().remove(readVar);
-						readVar = variable.toVarValue(readVar);
-						currentNode.addReadVariable(readVar);
-					}
 
 //					/* 2. Context Scope Analysis */
 //					/*
