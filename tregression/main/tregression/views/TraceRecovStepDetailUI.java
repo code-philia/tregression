@@ -86,6 +86,8 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					 */
 					VariableSkeleton variable = VarSkeletonBuilder.getVariableStructure(readVar.getType());
 					try {
+						System.out.println("***Variable Expansion***");
+						System.out.println();
 						ExecutionSimulator executionSimulator = new ExecutionSimulator();
 						executionSimulator.expandVariable(readVar, Arrays.asList(variable), currentNode);
 					} catch (IOException ioException) {
