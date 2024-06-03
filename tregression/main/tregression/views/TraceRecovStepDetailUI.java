@@ -3,6 +3,10 @@ package tregression.views;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -126,28 +130,50 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 							VarValue readVar = (VarValue) obj;
 							suspiciousNode = trace.findDataDependency(currentNode, readVar);
 							if (suspiciousNode == null) {
-								// find parent node
-								VarValue rootVar = readVar;
-								while (!currentNode.getReadVariables().contains(rootVar)) {
-									rootVar = rootVar.getParents().get(0); // TODO: multiple parents?
-								}
+								
+								
+								Job job = new Job("Recovering Data Dependencies") {
+					                @Override
+					                protected IStatus run(IProgressMonitor monitor) {
+					                	// find parent node
+										VarValue rootVar = readVar;
+										while (!currentNode.getReadVariables().contains(rootVar)) {
+											rootVar = rootVar.getParents().get(0); // TODO: multiple parents?
+										}
 
-								new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar, rootVar);
+										new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar, rootVar);
+										TraceNode targetNode = trace.findDataDependency(currentNode, readVar);
+										
+										if (targetNode != null) {
+											traceView.recordVisitedNode(currentNode);
+											jumpToNode(trace, targetNode);
+										}
+										
+					                    return Status.OK_STATUS;
+					                }
+					            };
+					            job.schedule(); // Start the job
+					            
+								
 								readVariableTreeViewer.refresh();
 								
-								suspiciousNode = trace.findDataDependency(currentNode, readVar);
 							}
 						}
 					}
 				} else if (controlButton.getSelection()) {
 					suspiciousNode = currentNode.getInvocationMethodOrDominator();
+					
+					if (suspiciousNode != null) {
+						traceView.recordVisitedNode(currentNode);
+						jumpToNode(trace, suspiciousNode);
+					}
 				}
 
-				if (suspiciousNode != null) {
-					traceView.recordVisitedNode(currentNode);
-					jumpToNode(trace, suspiciousNode);
-				}
+				
 			}
+			
+			
+			
 		}
 
 		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
