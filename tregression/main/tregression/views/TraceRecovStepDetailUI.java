@@ -133,6 +133,8 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 								}
 
 								new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar, rootVar);
+								readVariableTreeViewer.refresh();
+								
 								suspiciousNode = trace.findDataDependency(currentNode, readVar);
 							}
 						}
