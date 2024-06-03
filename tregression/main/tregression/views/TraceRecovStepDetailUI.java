@@ -11,9 +11,13 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.ui.PlatformUI;
+
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.tracerecov.TraceRecoverer;
 import microbat.tracerecov.VariableGraph;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.varexpansion.VarSkeletonBuilder;
@@ -51,7 +55,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		Button submitButton = new Button(slicingGroup, SWT.NONE);
 		submitButton.setText("Go");
 		submitButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
-		FeedbackSubmitListener fListener = new FeedbackSubmitListener();
+		DependencyRecoveryBasedFeedbackSubmitListener fListener = new DependencyRecoveryBasedFeedbackSubmitListener();
 		submitButton.addMouseListener(fListener);
 
 		/* Added by hongshuwang */
@@ -80,8 +84,8 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					VarValue readVar = (VarValue) obj;
 					
 					ExecutionSimulator executionSimulator = new ExecutionSimulator();
-
-					/* 1. Variable Expansion */
+					
+					
 					/*
 					 * Expand the selected variable and replace the original variable with the
 					 * expanded variable.
@@ -92,31 +96,72 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					} catch (IOException e1) {
 						e1.printStackTrace();
 					}
-					
-
-//					/* 2. Context Scope Analysis */
-//					/*
-//					 * Build a variable graph.
-//					 */
-//					VariableGraph.reset();
-//					trace.recoverDataDependency(currentNode, readVar);
-//
-//					/* 3. Execution Simulation */
-//					/*
-//					 * Identify additional linking steps and simulate execution by calling LLM
-//					 * model.
-//					 */
-//					try {
-//						
-//						executionSimulator.recoverLinkageSteps();
-//						executionSimulator.sendRequests();
-//					} catch (IOException ioException) {
-//						ioException.printStackTrace();
-//					}
 
 					readVariableTreeViewer.refresh();
 				}
 			}
+		}
+	}
+	
+	class DependencyRecoveryBasedFeedbackSubmitListener implements MouseListener{
+		public void mouseUp(MouseEvent e) {}
+		public void mouseDoubleClick(MouseEvent e) {}
+		
+		private void openChooseFeedbackDialog(){
+			MessageBox box = new MessageBox(PlatformUI.getWorkbench()
+					.getDisplay().getActiveShell());
+			box.setMessage("Please tell me whether this step is correct or not!");
+			box.open();
+		}
+		
+		public void mouseDown(MouseEvent e) {
+			
+			//for(int i=66644; i<=67830; i++){
+				TraceNode n = traceView.getTrace().getExecutionList().get(1);
+				for(VarValue var: n.getReadVariables()){
+					if(var.getVarName().contains("code")){
+						//System.out.println(n.getOrder()+":" + var.getVarName());
+					}
+				}
+			//}
+			
+			if (feedback == null) {
+				openChooseFeedbackDialog();
+			} 
+			else {
+				Trace trace = traceView.getTrace();
+				
+				TraceNode suspiciousNode = null;
+				if(dataButton.getSelection()){
+					Object[] objList = readVariableTreeViewer.getCheckedElements();
+					if(objList.length!=0) {
+						Object obj = objList[0];
+						if(obj instanceof VarValue) {
+							VarValue readVar = (VarValue)obj;
+							suspiciousNode = trace.findDataDependency(currentNode, readVar);
+							if(suspiciousNode == null) {
+								
+								//TODO taking the root variable node
+								
+								new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar, null);
+								suspiciousNode = trace.findDataDependency(currentNode, readVar);
+							}
+						}
+					}
+				}
+				else if(controlButton.getSelection()){
+					suspiciousNode = currentNode.getInvocationMethodOrDominator();
+				}
+				
+				if(suspiciousNode != null){
+					traceView.recordVisitedNode(currentNode);
+					jumpToNode(trace, suspiciousNode);	
+				}
+			}
+		}
+		
+		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
+			traceView.jumpToNode(trace, suspiciousNode.getOrder(), true);
 		}
 	}
 }

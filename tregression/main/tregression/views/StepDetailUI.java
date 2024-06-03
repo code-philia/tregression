@@ -67,7 +67,7 @@ public class StepDetailUI {
 	
 	public UserInterestedVariables interestedVariables = new UserInterestedVariables();
 	
-	private UserFeedback feedback = new UserFeedback();
+	protected UserFeedback feedback = new UserFeedback();
 	
 	class FeedbackSubmitListener implements MouseListener{
 		public void mouseUp(MouseEvent e) {}
