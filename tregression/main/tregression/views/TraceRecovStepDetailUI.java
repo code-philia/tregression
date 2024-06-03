@@ -18,7 +18,6 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.tracerecov.TraceRecoverer;
-import microbat.tracerecov.VariableGraph;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.varexpansion.VarSkeletonBuilder;
 import microbat.tracerecov.varexpansion.VariableSkeleton;
@@ -75,26 +74,22 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		}
 
 		public void mouseDown(MouseEvent e) {
-			Trace trace = traceView.getTrace();
-
 			Object[] objList = readVariableTreeViewer.getCheckedElements();
 			if (objList.length != 0) {
 				Object obj = objList[0];
 				if (obj instanceof VarValue) {
 					VarValue readVar = (VarValue) obj;
-					
-					ExecutionSimulator executionSimulator = new ExecutionSimulator();
-					
-					
+
 					/*
 					 * Expand the selected variable and replace the original variable with the
 					 * expanded variable.
 					 */
 					VariableSkeleton variable = VarSkeletonBuilder.getVariableStructure(readVar.getType());
 					try {
+						ExecutionSimulator executionSimulator = new ExecutionSimulator();
 						executionSimulator.expandVariable(readVar, Arrays.asList(variable), currentNode);
-					} catch (IOException e1) {
-						e1.printStackTrace();
+					} catch (IOException ioException) {
+						ioException.printStackTrace();
 					}
 
 					readVariableTreeViewer.refresh();
@@ -102,64 +97,57 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 			}
 		}
 	}
-	
-	class DependencyRecoveryBasedFeedbackSubmitListener implements MouseListener{
-		public void mouseUp(MouseEvent e) {}
-		public void mouseDoubleClick(MouseEvent e) {}
-		
-		private void openChooseFeedbackDialog(){
-			MessageBox box = new MessageBox(PlatformUI.getWorkbench()
-					.getDisplay().getActiveShell());
+
+	class DependencyRecoveryBasedFeedbackSubmitListener implements MouseListener {
+		public void mouseUp(MouseEvent e) {
+		}
+
+		public void mouseDoubleClick(MouseEvent e) {
+		}
+
+		private void openChooseFeedbackDialog() {
+			MessageBox box = new MessageBox(PlatformUI.getWorkbench().getDisplay().getActiveShell());
 			box.setMessage("Please tell me whether this step is correct or not!");
 			box.open();
 		}
-		
+
 		public void mouseDown(MouseEvent e) {
-			
-			//for(int i=66644; i<=67830; i++){
-				TraceNode n = traceView.getTrace().getExecutionList().get(1);
-				for(VarValue var: n.getReadVariables()){
-					if(var.getVarName().contains("code")){
-						//System.out.println(n.getOrder()+":" + var.getVarName());
-					}
-				}
-			//}
-			
 			if (feedback == null) {
 				openChooseFeedbackDialog();
-			} 
-			else {
+			} else {
 				Trace trace = traceView.getTrace();
-				
+
 				TraceNode suspiciousNode = null;
-				if(dataButton.getSelection()){
+				if (dataButton.getSelection()) {
 					Object[] objList = readVariableTreeViewer.getCheckedElements();
-					if(objList.length!=0) {
+					if (objList.length != 0) {
 						Object obj = objList[0];
-						if(obj instanceof VarValue) {
-							VarValue readVar = (VarValue)obj;
+						if (obj instanceof VarValue) {
+							VarValue readVar = (VarValue) obj;
 							suspiciousNode = trace.findDataDependency(currentNode, readVar);
-							if(suspiciousNode == null) {
-								
-								//TODO taking the root variable node
-								
-								new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar, null);
+							if (suspiciousNode == null) {
+								// find parent node
+								VarValue rootVar = readVar;
+								while (!currentNode.getReadVariables().contains(rootVar)) {
+									rootVar = rootVar.getParents().get(0); // TODO: multiple parents?
+								}
+
+								new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar, rootVar);
 								suspiciousNode = trace.findDataDependency(currentNode, readVar);
 							}
 						}
 					}
-				}
-				else if(controlButton.getSelection()){
+				} else if (controlButton.getSelection()) {
 					suspiciousNode = currentNode.getInvocationMethodOrDominator();
 				}
-				
-				if(suspiciousNode != null){
+
+				if (suspiciousNode != null) {
 					traceView.recordVisitedNode(currentNode);
-					jumpToNode(trace, suspiciousNode);	
+					jumpToNode(trace, suspiciousNode);
 				}
 			}
 		}
-		
+
 		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
 			traceView.jumpToNode(trace, suspiciousNode.getOrder(), true);
 		}
