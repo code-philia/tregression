@@ -1,7 +1,8 @@
 package tregression.views;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
@@ -82,16 +83,30 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 			if (objList.length != 0) {
 				Object obj = objList[0];
 				if (obj instanceof VarValue) {
-					VarValue readVar = (VarValue) obj;
 
+					List<VariableSkeleton> variableSkeletons = new ArrayList<>();
+
+					VarValue readVar = (VarValue) obj;
 					/*
-					 * Expand the selected variable and replace the original variable with the
-					 * expanded variable.
+					 * Expand the selected variable.
 					 */
-					VariableSkeleton variable = VarSkeletonBuilder.getVariableStructure(readVar.getType());
+					VariableSkeleton parentSkeleton = VarSkeletonBuilder.getVariableStructure(readVar.getType());
+					variableSkeletons.add(parentSkeleton);
+
+					// assume var layer == 1, then only elementArray will be recorded in ArrayList
+					if (!readVar.getChildren().isEmpty()) {
+						VarValue child = readVar.getChildren().get(0);
+						String childType = child.getType();
+						if (childType.contains("[]")) {
+							childType = childType.substring(0, childType.length() - 2); // remove [] at the end
+						}
+						VariableSkeleton childSkeleton = VarSkeletonBuilder.getVariableStructure(childType);
+						variableSkeletons.add(childSkeleton);
+					}
+
 					try {
 						ExecutionSimulator executionSimulator = new ExecutionSimulator();
-						executionSimulator.expandVariable(readVar, Arrays.asList(variable), currentNode);
+						executionSimulator.expandVariable(readVar, variableSkeletons, currentNode);
 					} catch (IOException ioException) {
 						ioException.printStackTrace();
 					}
@@ -130,52 +145,48 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 							VarValue readVar = (VarValue) obj;
 							suspiciousNode = trace.findDataDependency(currentNode, readVar);
 							if (suspiciousNode == null) {
-								
-								
+
 								Job job = new Job("Recovering Data Dependencies") {
-					                @Override
-					                protected IStatus run(IProgressMonitor monitor) {
-					                	// find parent node
+									@Override
+									protected IStatus run(IProgressMonitor monitor) {
+										// find parent node
 										VarValue rootVar = readVar;
 										while (!currentNode.getReadVariables().contains(rootVar)) {
 											rootVar = rootVar.getParents().get(0); // TODO: multiple parents?
 										}
 
-										new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar, rootVar);
+										new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar,
+												rootVar);
 										TraceNode targetNode = trace.findDataDependency(currentNode, readVar);
-										
+
 										if (targetNode != null) {
 											traceView.recordVisitedNode(currentNode);
 											jumpToNode(trace, targetNode);
 										}
-										
-					                    return Status.OK_STATUS;
-					                }
-					            };
-					            job.schedule(); // Start the job
-								
-							}
-							else {
+
+										return Status.OK_STATUS;
+									}
+								};
+								job.schedule(); // Start the job
+
+							} else {
 								traceView.recordVisitedNode(currentNode);
 								jumpToNode(trace, suspiciousNode);
-								readVariableTreeViewer.refresh();								
+								readVariableTreeViewer.refresh();
 							}
 						}
 					}
 				} else if (controlButton.getSelection()) {
 					suspiciousNode = currentNode.getInvocationMethodOrDominator();
-					
+
 					if (suspiciousNode != null) {
 						traceView.recordVisitedNode(currentNode);
 						jumpToNode(trace, suspiciousNode);
 					}
 				}
 
-				
 			}
-			
-			
-			
+
 		}
 
 		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
