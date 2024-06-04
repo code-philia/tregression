@@ -153,10 +153,12 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					                }
 					            };
 					            job.schedule(); // Start the job
-					            
 								
-								readVariableTreeViewer.refresh();
-								
+							}
+							else {
+								traceView.recordVisitedNode(currentNode);
+								jumpToNode(trace, suspiciousNode);
+								readVariableTreeViewer.refresh();								
 							}
 						}
 					}
