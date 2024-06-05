@@ -86,29 +86,9 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 				Object obj = objList[0];
 				if (obj instanceof VarValue) {
 
-					List<VariableSkeleton> variableSkeletons = new ArrayList<>();
-
-					VarValue readVar = (VarValue) obj;
-					/*
-					 * Expand the selected variable.
-					 */
-					VariableSkeleton parentSkeleton = VarSkeletonBuilder.getVariableStructure(readVar.getType());
-					variableSkeletons.add(parentSkeleton);
-
-					// assume var layer == 1, then only elementArray will be recorded in ArrayList
-					if (!readVar.getChildren().isEmpty()) {
-						VarValue child = readVar.getChildren().get(0);
-						String childType = child.getType();
-						if (childType.contains("[]")) {
-							childType = childType.substring(0, childType.length() - 2); // remove [] at the end
-						}
-						VariableSkeleton childSkeleton = VarSkeletonBuilder.getVariableStructure(childType);
-						variableSkeletons.add(childSkeleton);
-					}
-
 					try {
 						ExecutionSimulator executionSimulator = new ExecutionSimulator();
-						executionSimulator.expandVariable(readVar, variableSkeletons, currentNode);
+						executionSimulator.expandVariable((VarValue)obj, currentNode);
 					} catch (IOException ioException) {
 						ioException.printStackTrace();
 					}
@@ -138,7 +118,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 			} else {
 				Trace trace = traceView.getTrace();
 
-				TraceNode suspiciousNode = null;
+				final TraceNode suspiciousNode;
 				if (dataButton.getSelection()) {
 					Object[] objList = readVariableTreeViewer.getCheckedElements();
 					if (objList.length != 0) {
@@ -146,58 +126,22 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 						if (obj instanceof VarValue) {
 							VarValue readVar = (VarValue) obj;
 							suspiciousNode = trace.findDataDependency(currentNode, readVar);
-
-							if (suspiciousNode == null) {
-								Display.getDefault().asyncExec(new Runnable() {
-									@Override
-									public void run() {
-										Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-										if (!shell.isDisposed()) {
-											// find parent node
-											VarValue rootVar = readVar;
-											while (!currentNode.getReadVariables().contains(rootVar)) {
-												rootVar = rootVar.getParents().get(0); // TODO: multiple parents?
-											}
-
-											new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar,
-													rootVar);
-											TraceNode targetNode = trace.findDataDependency(currentNode, readVar);
-
-											if (targetNode != null) {
-												traceView.recordVisitedNode(currentNode);
-												jumpToNode(trace, targetNode);
-											}
-										}
-									}
-								});
-
-//								Job job = new Job("Recovering Data Dependencies") {
-//									@Override
-//									protected IStatus run(IProgressMonitor monitor) {
-//										// find parent node
-//										VarValue rootVar = readVar;
-//										while (!currentNode.getReadVariables().contains(rootVar)) {
-//											rootVar = rootVar.getParents().get(0); // TODO: multiple parents?
-//										}
-//
-//										new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar,
-//												rootVar);
-//										TraceNode targetNode = trace.findDataDependency(currentNode, readVar);
-//
-//										if (targetNode != null) {
+//							Display.getDefault().asyncExec(new Runnable() {
+//								@Override
+//								public void run() {
+//									Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+//									if (!shell.isDisposed()) {
+//										if (suspiciousNode != null) {
 //											traceView.recordVisitedNode(currentNode);
-//											jumpToNode(trace, targetNode);
+//											jumpToNode(trace, suspiciousNode);
 //										}
-//
-//										return Status.OK_STATUS;
 //									}
-//								};
-//								job.schedule(); // Start the job
-							} else {
-								traceView.recordVisitedNode(currentNode);
-								jumpToNode(trace, suspiciousNode);
-								readVariableTreeViewer.refresh();
-							}
+//								}
+//							});
+							traceView.recordVisitedNode(currentNode);
+							jumpToNode(trace, suspiciousNode);
+							readVariableTreeViewer.refresh();
+							
 						}
 					}
 				} else if (controlButton.getSelection()) {
