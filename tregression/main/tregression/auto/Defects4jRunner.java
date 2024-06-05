@@ -1,21 +1,16 @@
 package tregression.auto;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
-import java.util.List;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.List;
 
 import microbat.model.trace.Trace;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
-import tregression.empiricalstudy.TrialGenerator0;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
+import tregression.empiricalstudy.config.TraceRecovMutationConfig;
 import tregression.empiricalstudy.solutionpattern.SolutionPattern;
 
 public class Defects4jRunner extends ProjectsRunner {
@@ -54,7 +49,7 @@ public class Defects4jRunner extends ProjectsRunner {
 			result.projectName = projectName;
 			result.bugID = Integer.valueOf(bugID_str);
 			
-			final ProjectConfig config = Defects4jProjectConfig.getConfig(projectName, bugID_str);
+			final ProjectConfig config = TraceRecovMutationConfig.getConfig(projectName, bugID_str);
 			if(config == null) {
 				result.errorMessage = ProjectsRunner.genMsg("Cannot generate project config");
 				return result;
@@ -79,6 +74,9 @@ public class Defects4jRunner extends ProjectsRunner {
 				result.traceLen = Long.valueOf(trace.size());
 				result.isOmissionBug = trial.getBugType() == EmpiricalTrial.OVER_SKIP;
 				result.rootCauseOrder = trial.getRootcauseNode() == null ? -1 : trial.getRootcauseNode().getOrder();
+				result.traceCollectionTime = trial.getTraceCollectionTime();
+				result.traceMatchingTime = trial.getTraceMatchTime();
+				result.simulationTime = trial.getSimulationTime();
 				for (DeadEndRecord record : trial.getDeadEndRecordList()) {
 					SolutionPattern solutionPattern = record.getSolutionPattern();
 					if (solutionPattern != null) {

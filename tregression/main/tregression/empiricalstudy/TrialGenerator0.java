@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Scanner;
 
 import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
 import microbat.preference.AnalysisScopePreference;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.UserFeedback;
@@ -299,37 +298,6 @@ public class TrialGenerator0 {
 					return trial;
 				}
 				
-				rootcauseFinder.checkRootCause(simulator.getObservedFault(), buggyTrace, correctTrace, pairList, diffMatcher);
-				TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, buggyTrace, correctTrace);
-				
-				if(rootCause==null){
-					
-//					System.out.println("[Search Lib Class] Cannot find the root cause, I am searching for library classes...");
-//					
-//					List<TraceNode> buggySteps = rootcauseFinder.getStopStepsOnBuggyTrace();
-//					List<TraceNode> correctSteps = rootcauseFinder.getStopStepsOnCorrectTrace();
-//					
-//					List<String> newIncludedClassNames = new ArrayList<>();
-//					List<String> newIncludedBuggyClassNames = RegressionUtil.identifyIncludedClassNames(buggySteps, buggyRS.getPrecheckInfo(), rootcauseFinder.getRegressionNodeList());
-//					List<String> newIncludedCorrectClassNames = RegressionUtil.identifyIncludedClassNames(correctSteps, correctRs.getPrecheckInfo(), rootcauseFinder.getCorrectNodeList());
-//					newIncludedClassNames.addAll(newIncludedBuggyClassNames);
-//					newIncludedClassNames.addAll(newIncludedCorrectClassNames);
-//					boolean includedClassChanged = false;
-//					for(String name: newIncludedClassNames){
-//						if(!includedClassNames.contains(name)){
-//							includedClassNames.add(name);
-//							includedClassChanged = true;
-//						}
-//					}
-//					
-//					if(!includedClassChanged) {
-//						trialNum = trialLimit + 1;
-//					}
-//					else {
-//						continue;						
-//					}
-				}
-				
 				isDataFlowComplete = true;
 				System.out.println("start simulating debugging...");
 				time1 = System.currentTimeMillis();
@@ -342,6 +310,7 @@ public class TrialGenerator0 {
 					t.setTestcase(tc.testClass + "#" + tc.testMethod);
 					t.setTraceCollectionTime(buggyTrace.getConstructTime() + correctTrace.getConstructTime());
 					t.setTraceMatchTime(matchTime);
+					t.setSimulationTime(simulationTime);
 					t.setBuggyTrace(buggyTrace);
 					t.setFixedTrace(correctTrace);
 					t.setPairList(pairList);

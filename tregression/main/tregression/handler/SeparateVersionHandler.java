@@ -52,7 +52,7 @@ public class SeparateVersionHandler extends AbstractHandler{
 				
 				System.out.println("working on the " + id + "th bug of " + projectName + " project.");
 				
-				ProjectConfig config = ConfigFactory.createConfig(projectName, id, buggyPath, fixPath);
+				ProjectConfig config = ConfigFactory.createConfig(projectName, id, buggyPath, fixPath, true);
 				
 				if(config == null) {
 					try {

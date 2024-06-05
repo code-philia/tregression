@@ -264,7 +264,7 @@
             </command>
             <command
                   commandId="tregression.collectDefects4jData"
-                  icon="icons/evaluation.png"
+                  icon="icons/after.ico"
                   style="push">
             </command>
          </toolbar>
