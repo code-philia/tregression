@@ -1,5 +1,6 @@
 package tregression;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,6 +12,8 @@ import microbat.model.value.VirtualValue;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
+import microbat.tracerecov.TraceRecovUtils;
+import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.util.PrimitiveUtils;
 import sav.common.core.Pair;
 import tregression.empiricalstudy.MatchStepFinder;
@@ -44,6 +47,7 @@ public class StepChangeTypeChecker {
 	public StepChangeType getType(TraceNode step, boolean isOnBeforeTrace,
 			PairList pairList, DiffMatcher matcher) {
 		
+		System.out.println("============== At step " + step.getOrder() + " on " + isOnBeforeTrace + " trace");
 		
 		TraceNode matchedStep = MatchStepFinder.findMatchedStep(isOnBeforeTrace, step, pairList);
 		
@@ -59,6 +63,126 @@ public class StepChangeTypeChecker {
 		else{
 			List<Pair<VarValue, VarValue>> wrongVariableList = 
 					checkWrongVariable(isOnBeforeTrace, step, matchedStep, pairList, matcher);
+			
+			List<Pair<VarValue, VarValue>> expandedWrongVariableList = 
+					checkExpansion(wrongVariableList, buggyTrace, correctTrace, isOnBeforeTrace, matchedStep, step, pairList, matcher);
+			
+			wrongVariableList.addAll(expandedWrongVariableList);
+			
+			
+			if(wrongVariableList.isEmpty()){
+				return new StepChangeType(StepChangeType.IDT, matchedStep);
+			}
+			else{
+				return new StepChangeType(StepChangeType.DAT, matchedStep, wrongVariableList);
+			}
+		}
+
+	}
+	
+	private List<Pair<VarValue, VarValue>> checkExpansion(List<Pair<VarValue, VarValue>> wrongVariableList, 
+			Trace buggyTrace, Trace correctTrace, boolean isOnBeforeTrace, TraceNode matchedStep, TraceNode currentStep, PairList pairList, DiffMatcher matcher) {
+		
+		List<Pair<VarValue, VarValue>> list = new ArrayList<>();
+		
+		for(Pair<VarValue, VarValue> pair: wrongVariableList){
+			VarValue readVar1 = isOnBeforeTrace ? pair.first() : pair.second();
+			Trace trace1 = getCorrespondingTrace(isOnBeforeTrace, buggyTrace, correctTrace);
+			TraceNode dataDom1 = trace1.findDataDependency(currentStep, readVar1);
+			
+			
+//			Trace trace2 = getCorrespondingTrace(!isOnBeforeTrace, buggyTrace, correctTrace);
+			VarValue readVar2 = MatchStepFinder.findMatchVariable(readVar1, matchedStep);
+//			TraceNode dataDom2 = trace2.findDataDependency(matchedStep, readVar2);
+			
+			if(TraceRecovUtils.shouldBeChecked(readVar1.getType()) 
+					&& !readVar1.getStringValue().equals(readVar2.getStringValue())
+					&& isUnrecorded(readVar1.getType())
+					) {
+				
+				StepChangeType changeType = getType0(dataDom1, isOnBeforeTrace, pairList, matcher);
+				if(changeType.getType() == StepChangeType.IDT) {
+					ExecutionSimulator simulator = new ExecutionSimulator();
+					try {
+						simulator.expandVariable(readVar1, currentStep);
+						readVar1.setExpanded(true);
+						simulator.expandVariable(readVar2, matchedStep);
+						readVar2.setExpanded(true);
+						
+						List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2);
+						
+						list.addAll(diffList);
+						
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+				
+				
+				System.currentTimeMillis();
+				
+			}
+
+			System.currentTimeMillis();
+		}
+		
+		
+		return list;
+	}
+
+	private List<Pair<VarValue, VarValue>> diffVarValue(boolean isOnBefore, VarValue readVar1, VarValue readVar2) {
+		
+		List<Pair<VarValue, VarValue>> wrongVariableList = new ArrayList<Pair<VarValue,VarValue>>();
+		
+		for(VarValue child1: readVar1.getAllDescedentChildren()) {
+			
+			for(VarValue child2: readVar2.getAllDescedentChildren()) {
+				
+				if(child1.getVarName().equals(child2.getVarName()) && 
+						!child1.getStringValue().equals(child2.getStringValue())) {
+					
+					
+					if(isOnBefore){
+						Pair<VarValue, VarValue> pair = Pair.of(child1, child2);
+						wrongVariableList.add(pair);
+					}
+					else{
+						Pair<VarValue, VarValue> pair = Pair.of(child2, child1);
+						wrongVariableList.add(pair);
+					}
+				}
+			}
+		}
+		
+		return wrongVariableList;
+	}
+	
+
+	private boolean isUnrecorded(String type) {
+		// TODO Auto-generated method stub
+		return type.contains("java");
+	}
+	
+	
+	public StepChangeType getType0(TraceNode step, boolean isOnBeforeTrace,
+			PairList pairList, DiffMatcher matcher) {
+		
+		
+		TraceNode matchedStep = MatchStepFinder.findMatchedStep(isOnBeforeTrace, step, pairList);
+		
+		boolean isSourceDiff = matcher.checkSourceDiff(step.getBreakPoint(), isOnBeforeTrace);
+		if(isSourceDiff){
+			return new StepChangeType(StepChangeType.SRC, matchedStep);
+		}
+		
+		
+		if (matchedStep == null) {
+			return new StepChangeType(StepChangeType.CTL, matchedStep);
+		}
+		else{
+			List<Pair<VarValue, VarValue>> wrongVariableList = 
+					checkWrongVariable(isOnBeforeTrace, step, matchedStep, pairList, matcher);
+			
 			if(wrongVariableList.isEmpty()){
 				return new StepChangeType(StepChangeType.IDT, matchedStep);
 			}
