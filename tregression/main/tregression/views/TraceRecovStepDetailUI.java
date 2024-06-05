@@ -15,8 +15,10 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.MessageBox;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 import microbat.model.trace.Trace;
@@ -145,29 +147,53 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 							VarValue readVar = (VarValue) obj;
 							suspiciousNode = trace.findDataDependency(currentNode, readVar);
 							if (suspiciousNode == null) {
-
-								Job job = new Job("Recovering Data Dependencies") {
+								
+								Display.getDefault().asyncExec(new Runnable() {
 									@Override
-									protected IStatus run(IProgressMonitor monitor) {
-										// find parent node
-										VarValue rootVar = readVar;
-										while (!currentNode.getReadVariables().contains(rootVar)) {
-											rootVar = rootVar.getParents().get(0); // TODO: multiple parents?
-										}
+						            public void run() {
+										Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+						                if (!shell.isDisposed()) {
+						                	// find parent node
+											VarValue rootVar = readVar;
+											while (!currentNode.getReadVariables().contains(rootVar)) {
+												rootVar = rootVar.getParents().get(0); // TODO: multiple parents?
+											}
 
-										new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar,
-												rootVar);
-										TraceNode targetNode = trace.findDataDependency(currentNode, readVar);
+											new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar,
+													rootVar);
+											TraceNode targetNode = trace.findDataDependency(currentNode, readVar);
 
-										if (targetNode != null) {
-											traceView.recordVisitedNode(currentNode);
-											jumpToNode(trace, targetNode);
-										}
-
-										return Status.OK_STATUS;
-									}
-								};
-								job.schedule(); // Start the job
+											if (targetNode != null) {
+												traceView.recordVisitedNode(currentNode);
+												jumpToNode(trace, targetNode);
+											}
+						                }
+						            }
+								});
+								
+								
+//								Job job = new Job("Recovering Data Dependencies") {
+//									@Override
+//									protected IStatus run(IProgressMonitor monitor) {
+//										// find parent node
+//										VarValue rootVar = readVar;
+//										while (!currentNode.getReadVariables().contains(rootVar)) {
+//											rootVar = rootVar.getParents().get(0); // TODO: multiple parents?
+//										}
+//
+//										new TraceRecoverer().recoverDataDependency(trace, currentNode, readVar,
+//												rootVar);
+//										TraceNode targetNode = trace.findDataDependency(currentNode, readVar);
+//
+//										if (targetNode != null) {
+//											traceView.recordVisitedNode(currentNode);
+//											jumpToNode(trace, targetNode);
+//										}
+//
+//										return Status.OK_STATUS;
+//									}
+//								};
+//								job.schedule(); // Start the job
 
 							} else {
 								traceView.recordVisitedNode(currentNode);
