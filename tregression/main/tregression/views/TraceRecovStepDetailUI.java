@@ -146,14 +146,14 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 						if (obj instanceof VarValue) {
 							VarValue readVar = (VarValue) obj;
 							suspiciousNode = trace.findDataDependency(currentNode, readVar);
+
 							if (suspiciousNode == null) {
-								
 								Display.getDefault().asyncExec(new Runnable() {
 									@Override
-						            public void run() {
+									public void run() {
 										Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-						                if (!shell.isDisposed()) {
-						                	// find parent node
+										if (!shell.isDisposed()) {
+											// find parent node
 											VarValue rootVar = readVar;
 											while (!currentNode.getReadVariables().contains(rootVar)) {
 												rootVar = rootVar.getParents().get(0); // TODO: multiple parents?
@@ -167,11 +167,10 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 												traceView.recordVisitedNode(currentNode);
 												jumpToNode(trace, targetNode);
 											}
-						                }
-						            }
+										}
+									}
 								});
-								
-								
+
 //								Job job = new Job("Recovering Data Dependencies") {
 //									@Override
 //									protected IStatus run(IProgressMonitor monitor) {
@@ -194,7 +193,6 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 //									}
 //								};
 //								job.schedule(); // Start the job
-
 							} else {
 								traceView.recordVisitedNode(currentNode);
 								jumpToNode(trace, suspiciousNode);
