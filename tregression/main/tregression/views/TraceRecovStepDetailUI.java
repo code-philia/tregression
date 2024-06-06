@@ -82,6 +82,8 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		}
 
 		public void mouseDown(MouseEvent e) {
+			Settings.isEnableGPTInference = true;
+			
 			Object[] objList = readVariableTreeViewer.getCheckedElements();
 			if (objList.length != 0) {
 				Object obj = objList[0];
@@ -115,7 +117,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 
 		public void mouseDown(MouseEvent e) {
 			
-			Settings.enableLoopInference = true;
+			Settings.isEnableGPTInference = true;
 			
 			
 			if (feedback == null) {
