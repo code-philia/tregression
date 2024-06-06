@@ -3,6 +3,8 @@ package tregression;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -82,7 +84,6 @@ public class StepChangeTypeChecker {
 	
 	private List<Pair<VarValue, VarValue>> checkExpansion(List<Pair<VarValue, VarValue>> wrongVariableList, 
 			Trace buggyTrace, Trace correctTrace, boolean isOnBeforeTrace, TraceNode matchedStep, TraceNode currentStep, PairList pairList, DiffMatcher matcher) {
-		
 		List<Pair<VarValue, VarValue>> list = new ArrayList<>();
 		
 		for(Pair<VarValue, VarValue> pair: wrongVariableList){
@@ -157,7 +158,7 @@ public class StepChangeTypeChecker {
 	
 
 	private boolean isUnrecorded(String type, TraceNode step) {
-		return type.contains("java") && step.isCallingAPI();
+		return type.contains("java");
 	}
 	
 	
@@ -305,15 +306,18 @@ public class StepChangeTypeChecker {
 				boolean isReferenceValueMatch = isReferenceValueMatch((ReferenceValue)thisVar, (ReferenceValue)thatVar, 
 						thisDom, thatDom, isOnBeforeTrace, pairList, matcher);
 				
-				boolean saveValue = true;
+				boolean sameValue = true;
 				if (thisVar.getStringValue() == null || thatVar.getStringValue() == null) {
-					saveValue = thisVar.getStringValue() == null && thatVar.getStringValue() == null;
-				} else {
-					saveValue = thisVar.getStringValue().equals(thatVar.getStringValue());
+					sameValue = thisVar.getStringValue() == null && thatVar.getStringValue() == null;
+				} 
+				else if (isObjectId(thisVar.getStringValue()) || isObjectId(thatVar.getStringValue())) {
+					sameValue = true;
+ 				} else {
+					sameValue = thisVar.getStringValue().equals(thatVar.getStringValue());
 				}
 				
 				if(isReferenceValueMatch){
-					return new VarMatch(true, saveValue, thatVar);
+					return new VarMatch(true, sameValue, thatVar);
 				}
 			}
 			else {
@@ -338,6 +342,19 @@ public class StepChangeTypeChecker {
 		
 		return new VarMatch(true, false, matchedVar);
 	}
+	
+	private boolean isObjectId(String input) {
+        // Regular expression pattern for ClassName@ObjectId
+        String regex = "^[a-z]+\\.[a-z]+(\\.[a-z]+)*\\.[A-Z][a-zA-Z]*\\$[A-Z][a-zA-Z]*@[0-9a-fA-F]+$";
+
+        // Compile the pattern
+        Pattern pattern = Pattern.compile(regex);
+
+        // Create a matcher for the input string
+        Matcher matcher = pattern.matcher(input);
+
+        return matcher.matches();
+    }
 	
 	private VarMatch matchWrittenVariable(boolean isOnBeforeTrace, 
 			VarValue thisVar, TraceNode thisStep, TraceNode thatStep, PairList pairList, DiffMatcher matcher) {
