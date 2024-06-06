@@ -28,6 +28,7 @@ import microbat.tracerecov.TraceRecoverer;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.varexpansion.VarSkeletonBuilder;
 import microbat.tracerecov.varexpansion.VariableSkeleton;
+import microbat.util.Settings;
 
 /**
  * A subclass of StepDetailUI with context scope analysis.
@@ -113,6 +114,10 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		}
 
 		public void mouseDown(MouseEvent e) {
+			
+			Settings.enableLoopInference = true;
+			
+			
 			if (feedback == null) {
 				openChooseFeedbackDialog();
 			} else {
@@ -138,9 +143,13 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 //									}
 //								}
 //							});
-							traceView.recordVisitedNode(currentNode);
-							jumpToNode(trace, suspiciousNode);
-							readVariableTreeViewer.refresh();
+							
+							if(suspiciousNode != null) {
+								traceView.recordVisitedNode(currentNode);
+								jumpToNode(trace, suspiciousNode);
+								readVariableTreeViewer.refresh();								
+							}
+							
 							
 						}
 					}

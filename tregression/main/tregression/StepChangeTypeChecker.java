@@ -17,6 +17,7 @@ import microbat.model.variable.VirtualVar;
 import microbat.tracerecov.TraceRecovUtils;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.util.PrimitiveUtils;
+import microbat.util.Settings;
 import sav.common.core.Pair;
 import tregression.empiricalstudy.MatchStepFinder;
 import tregression.model.PairList;
@@ -66,11 +67,12 @@ public class StepChangeTypeChecker {
 			List<Pair<VarValue, VarValue>> wrongVariableList = 
 					checkWrongVariable(isOnBeforeTrace, step, matchedStep, pairList, matcher);
 			
-			List<Pair<VarValue, VarValue>> expandedWrongVariableList = 
-					checkExpansion(wrongVariableList, buggyTrace, correctTrace, isOnBeforeTrace, matchedStep, step, pairList, matcher);
-			
-			wrongVariableList.addAll(expandedWrongVariableList);
-			
+			if(Settings.isEnableGPTInference) {
+				List<Pair<VarValue, VarValue>> expandedWrongVariableList = 
+						checkExpansion(wrongVariableList, buggyTrace, correctTrace, isOnBeforeTrace, matchedStep, step, pairList, matcher);
+				
+				wrongVariableList.addAll(expandedWrongVariableList);				
+			}
 			
 			if(wrongVariableList.isEmpty()){
 				return new StepChangeType(StepChangeType.IDT, matchedStep);
