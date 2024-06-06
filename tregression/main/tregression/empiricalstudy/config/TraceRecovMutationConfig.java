@@ -87,6 +87,9 @@ public class TraceRecovMutationConfig extends ProjectConfig {
 				config = new TraceRecovMutationConfig("src"+File.separator+"test"+File.separator+"java", "src"+File.separator+"main"+File.separator+"java", "build"+File.separator+"tests", "build"+File.separator+"classes", "build", projectName, regressionID);
 			}
 		}
+		else if(projectName.equals("QuixBugs")) {
+			config = new TraceRecovMutationConfig("src"+File.separator+"test"+File.separator+"java", "src"+File.separator+"main"+File.separator+"java", "target"+File.separator+"test-classes", "target"+File.separator+"classes", "target", projectName, regressionID); 
+		}
 		
 		return config;
 	}
