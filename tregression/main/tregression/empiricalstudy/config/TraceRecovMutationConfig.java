@@ -57,12 +57,7 @@ public class TraceRecovMutationConfig extends ProjectConfig {
 			config = new MavenProjectConfig("src"+File.separator+"test", "src"+File.separator+"java", "target"+File.separator+"tests", "target"+File.separator+"classes", "target", projectName, regressionID);
 		}
 		else if (projectName.equals("Math")) {
-			if(bugID<85){
-				config = new TraceRecovMutationConfig("src"+File.separator+"test"+File.separator+"java", "src"+File.separator+"main"+File.separator+"java", "target"+File.separator+"test-classes", "target"+File.separator+"classes", "target", projectName, regressionID);	
-			}
-			else{
-				config = new TraceRecovMutationConfig("src"+File.separator+"test", "src"+File.separator+"java", "target"+File.separator+"test-classes", "target"+File.separator+"classes", "target", projectName, regressionID);
-			}
+			config = new TraceRecovMutationConfig("src"+File.separator+"test"+File.separator+"java", "src"+File.separator+"main"+File.separator+"java", "target"+File.separator+"test-classes", "target"+File.separator+"classes", "target", projectName, regressionID);
 		}
 		else if (projectName.equals("Mockito")) {
 			if(bugID<12 || bugID==20 || bugID==21 || bugID==18 || bugID==19){
