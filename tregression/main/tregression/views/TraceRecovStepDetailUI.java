@@ -82,6 +82,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		}
 
 		public void mouseDown(MouseEvent e) {
+			
 			Settings.isEnableGPTInference = true;
 			
 			Object[] objList = readVariableTreeViewer.getCheckedElements();
@@ -95,6 +96,8 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					} catch (IOException ioException) {
 						ioException.printStackTrace();
 					}
+					
+					Settings.isEnableGPTInference = false;
 
 					readVariableTreeViewer.refresh();
 				}
@@ -145,6 +148,8 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 //									}
 //								}
 //							});
+							
+							Settings.isEnableGPTInference = false;
 							
 							if(suspiciousNode != null) {
 								traceView.recordVisitedNode(currentNode);
