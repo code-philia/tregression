@@ -97,33 +97,31 @@ public class StepChangeTypeChecker {
 			
 			if(TraceRecovUtils.shouldBeChecked(readVar1.getType()) 
 					&& !readVar1.getStringValue().equals(readVar2.getStringValue())
-					&& isUnrecorded(readVar1.getType())
+					&& isUnrecorded(readVar1.getType(),currentStep)
 					) {
-				
-				StepChangeType changeType = getType0(dataDom1, isOnBeforeTrace, pairList, matcher);
-				if(changeType.getType() == StepChangeType.IDT) {
-					ExecutionSimulator simulator = new ExecutionSimulator();
-					try {
-						simulator.expandVariable(readVar1, currentStep);
-						readVar1.setExpanded(true);
-						simulator.expandVariable(readVar2, matchedStep);
-						readVar2.setExpanded(true);
-						
-						List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2);
-						
-						list.addAll(diffList);
-						
-					} catch (IOException e) {
-						e.printStackTrace();
+				if (dataDom1 != null) {
+					StepChangeType changeType = getType0(dataDom1, isOnBeforeTrace, pairList, matcher);
+					if(changeType.getType() == StepChangeType.IDT) {
+						ExecutionSimulator simulator = new ExecutionSimulator();
+						try {
+							if (!TraceRecovUtils.isIterator(readVar1.getType())) {
+								simulator.expandVariable(readVar1, currentStep);
+								readVar1.setExpanded(true);
+								simulator.expandVariable(readVar2, matchedStep);
+								readVar2.setExpanded(true);
+								
+								List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2);
+								
+								list.addAll(diffList);
+							}
+
+						} catch (IOException e) {
+							e.printStackTrace();
+						}
 					}
 				}
-				
-				
-				System.currentTimeMillis();
-				
 			}
 
-			System.currentTimeMillis();
 		}
 		
 		
@@ -158,9 +156,8 @@ public class StepChangeTypeChecker {
 	}
 	
 
-	private boolean isUnrecorded(String type) {
-		// TODO Auto-generated method stub
-		return type.contains("java");
+	private boolean isUnrecorded(String type, TraceNode step) {
+		return type.contains("java") && step.isCallingAPI();
 	}
 	
 	

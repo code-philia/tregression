@@ -186,6 +186,9 @@ public class RootCauseFinder {
 					trace = getCorrespondingTrace(stepW.isOnBefore, buggyTrace, correctTrace);
 					
 					TraceNode dataDom = trace.findDataDependency(step, readVar);
+					if (dataDom == null) {
+						continue;
+					}
 					addWorkNode(workList, dataDom, stepW.isOnBefore);
 					addCausality(dataDom, stepW.isOnBefore, causalityGraph, resultNode, readVar);
 					
