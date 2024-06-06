@@ -302,14 +302,21 @@ public class StepChangeTypeChecker {
 		VarValue matchedVar = null;
 		for(VarValue thatVar: synonymVarList){
 			matchedVar = thatVar;
-			
-			TraceNode thisDom = thisTrace.findDataDependency(thisStep, thisVar);
-			TraceNode thatDom = thatTrace.findDataDependency(thatStep, thatVar);
-			if(thatVar instanceof ReferenceValue && thisVar instanceof ReferenceValue) {
+			TraceNode thisDom = thisTrace.findProducer(thisVar, thisStep);
+			TraceNode thatDom = thatTrace.findProducer(thatVar, thatStep);
+ 			if(thatVar instanceof ReferenceValue && thisVar instanceof ReferenceValue) {
 				boolean isReferenceValueMatch = isReferenceValueMatch((ReferenceValue)thisVar, (ReferenceValue)thatVar, 
 						thisDom, thatDom, isOnBeforeTrace, pairList, matcher);
+				
+				boolean saveValue = true;
+				if (thisVar.getStringValue() == null || thatVar.getStringValue() == null) {
+					saveValue = thisVar.getStringValue() == null && thatVar.getStringValue() == null;
+				} else {
+					saveValue = thisVar.getStringValue().equals(thatVar.getStringValue());
+				}
+				
 				if(isReferenceValueMatch){
-					return new VarMatch(true, true, thatVar);
+					return new VarMatch(true, saveValue, thatVar);
 				}
 			}
 			else {
