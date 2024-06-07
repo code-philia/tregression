@@ -100,7 +100,7 @@ public class StepChangeTypeChecker {
 			
 			if(TraceRecovUtils.shouldBeChecked(readVar1.getType()) 
 					&& !readVar1.getStringValue().equals(readVar2.getStringValue())
-					&& isUnrecorded(readVar1.getType(),currentStep)
+					&& TraceRecovUtils.isUnrecorded(readVar1.getType())
 					) {
 				if (dataDom1 != null) {
 					StepChangeType changeType = getType0(dataDom1, isOnBeforeTrace, pairList, matcher);
@@ -157,12 +157,6 @@ public class StepChangeTypeChecker {
 		
 		return wrongVariableList;
 	}
-	
-
-	private boolean isUnrecorded(String type, TraceNode step) {
-		return type.contains("java");
-	}
-	
 	
 	public StepChangeType getType0(TraceNode step, boolean isOnBeforeTrace,
 			PairList pairList, DiffMatcher matcher) {
