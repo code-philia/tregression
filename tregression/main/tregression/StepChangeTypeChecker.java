@@ -19,6 +19,7 @@ import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.util.PrimitiveUtils;
 import microbat.util.Settings;
 import sav.common.core.Pair;
+import sav.strategies.dto.AppJavaClassPath;
 import tregression.empiricalstudy.MatchStepFinder;
 import tregression.model.PairList;
 import tregression.model.TraceNodePair;
@@ -98,9 +99,11 @@ public class StepChangeTypeChecker {
 			VarValue readVar2 = MatchStepFinder.findMatchVariable(readVar1, matchedStep);
 //			TraceNode dataDom2 = trace2.findDataDependency(matchedStep, readVar2);
 			
+			AppJavaClassPath appJavaClassPath = trace1.getAppJavaClassPath();
+			
 			if(TraceRecovUtils.shouldBeChecked(readVar1.getType()) 
 					&& !readVar1.getStringValue().equals(readVar2.getStringValue())
-					&& TraceRecovUtils.isUnrecorded(readVar1.getType())
+					&& TraceRecovUtils.isUnrecorded(readVar1.getType(), appJavaClassPath)
 					) {
 				if (dataDom1 != null) {
 					StepChangeType changeType = getType0(dataDom1, isOnBeforeTrace, pairList, matcher);
