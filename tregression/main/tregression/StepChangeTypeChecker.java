@@ -95,9 +95,9 @@ public class StepChangeTypeChecker {
 			TraceNode dataDom1 = trace1.findDataDependency(currentStep, readVar1);
 			
 			
-//			Trace trace2 = getCorrespondingTrace(!isOnBeforeTrace, buggyTrace, correctTrace);
+			Trace trace2 = getCorrespondingTrace(!isOnBeforeTrace, buggyTrace, correctTrace);
 			VarValue readVar2 = MatchStepFinder.findMatchVariable(readVar1, matchedStep);
-//			TraceNode dataDom2 = trace2.findDataDependency(matchedStep, readVar2);
+			TraceNode dataDom2 = trace2.findDataDependency(matchedStep, readVar2);
 			
 			AppJavaClassPath appJavaClassPath = trace1.getAppJavaClassPath();
 			
@@ -105,9 +105,12 @@ public class StepChangeTypeChecker {
 					&& !readVar1.getStringValue().equals(readVar2.getStringValue())
 					&& TraceRecovUtils.isUnrecorded(readVar1.getType(), appJavaClassPath)
 					) {
-				if (dataDom1 != null) {
-					StepChangeType changeType = getType0(dataDom1, isOnBeforeTrace, pairList, matcher);
-					if(changeType.getType() == StepChangeType.IDT) {
+						if (dataDom1 != null && dataDom2 != null) {
+							StepChangeType changeType1 = getType0(dataDom1, isOnBeforeTrace, pairList, matcher);
+							StepChangeType changeType2 = getType0(dataDom2, !isOnBeforeTrace, pairList, matcher);
+							if (changeType1.getType() == StepChangeType.IDT
+									|| changeType2.getType() == StepChangeType.IDT
+									|| changeType1.getType() != changeType2.getType()) {
 						ExecutionSimulator simulator = new ExecutionSimulator();
 						try {
 							if (!TraceRecovUtils.isIterator(readVar1.getType())) {
