@@ -81,6 +81,9 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		public void mouseDoubleClick(MouseEvent e) {
 		}
 
+		/**
+		 * Variable Expansion
+		 */
 		public void mouseDown(MouseEvent e) {
 			
 			Settings.isEnableGPTInference = true;
@@ -118,6 +121,9 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 			box.open();
 		}
 
+		/**
+		 * Find data dominator with TraceRecov
+		 */
 		public void mouseDown(MouseEvent e) {
 			
 			Settings.isEnableGPTInference = true;
