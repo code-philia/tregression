@@ -1,13 +1,6 @@
 package tregression.views;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -15,19 +8,14 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.MessageBox;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.PlatformUI;
 
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.tracerecov.TraceRecoverer;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
-import microbat.tracerecov.varexpansion.VarSkeletonBuilder;
-import microbat.tracerecov.varexpansion.VariableSkeleton;
 import microbat.util.Settings;
 
 /**
@@ -85,9 +73,9 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		 * Variable Expansion
 		 */
 		public void mouseDown(MouseEvent e) {
-			
+
 			Settings.isEnableGPTInference = true;
-			
+
 			Object[] objList = readVariableTreeViewer.getCheckedElements();
 			if (objList.length != 0) {
 				Object obj = objList[0];
@@ -95,11 +83,11 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 
 					try {
 						ExecutionSimulator executionSimulator = new ExecutionSimulator();
-						executionSimulator.expandVariable((VarValue)obj, currentNode);
+						executionSimulator.expandVariable((VarValue) obj, currentNode);
 					} catch (IOException ioException) {
 						ioException.printStackTrace();
 					}
-					
+
 					Settings.isEnableGPTInference = false;
 
 					readVariableTreeViewer.refresh();
@@ -125,10 +113,9 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		 * Find data dominator with TraceRecov
 		 */
 		public void mouseDown(MouseEvent e) {
-			
+
 			Settings.isEnableGPTInference = true;
-			
-			
+
 			if (feedback == null) {
 				openChooseFeedbackDialog();
 			} else {
@@ -154,16 +141,15 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 //									}
 //								}
 //							});
-							
+
 							Settings.isEnableGPTInference = false;
-							
-							if(suspiciousNode != null) {
+
+							if (suspiciousNode != null) {
 								traceView.recordVisitedNode(currentNode);
 								jumpToNode(trace, suspiciousNode);
-								readVariableTreeViewer.refresh();								
+								readVariableTreeViewer.refresh();
 							}
-							
-							
+
 						}
 					}
 				} else if (controlButton.getSelection()) {
