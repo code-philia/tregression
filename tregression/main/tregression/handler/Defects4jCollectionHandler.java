@@ -33,8 +33,8 @@ public class Defects4jCollectionHandler extends AbstractHandler {
 	}
 	
 	private void execute() {
-		final String basePath = "/Users/yunruipei/Desktop/TargetProj";
-		final String resultPath = Paths.get("/Users/yunruipei/Desktop/TargetProj/mutate2_var_layer_1.txt").toString();
+		final String basePath = "D:\\data_dependency_recovery\\benchmark";
+		final String resultPath = Paths.get("C:\\Users\\Kwy\\Desktop\\ELI\\LeetBugs.txt").toString();
 		final ProjectsRunner runner = new Defects4jRunner(basePath, resultPath);
 		runner.run();
 	}
