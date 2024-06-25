@@ -186,7 +186,7 @@ public class Simulator  {
 			int times = 5;
 			while(observedFaultList.size() < times && node!= null){
 				
-				StepChangeType changeType = checker.getType(node, true, pairList, matcher);
+				StepChangeType changeType = checker.getChangeTypeWithoutVarExpansion(node, true, pairList, matcher);
 				if(changeType.getType()!=StepChangeType.IDT){
 					observedFaultList.add(node);
 				}

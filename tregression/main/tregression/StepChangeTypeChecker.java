@@ -106,8 +106,8 @@ public class StepChangeTypeChecker {
 					&& TraceRecovUtils.isUnrecorded(readVar1.getType(), appJavaClassPath)
 					) {
 						if (dataDom1 != null && dataDom2 != null) {
-							StepChangeType changeType1 = getType0(dataDom1, isOnBeforeTrace, pairList, matcher);
-							StepChangeType changeType2 = getType0(dataDom2, !isOnBeforeTrace, pairList, matcher);
+							StepChangeType changeType1 = getChangeTypeWithoutVarExpansion(dataDom1, isOnBeforeTrace, pairList, matcher);
+							StepChangeType changeType2 = getChangeTypeWithoutVarExpansion(dataDom2, !isOnBeforeTrace, pairList, matcher);
 							if (changeType1.getType() == StepChangeType.IDT
 									|| changeType2.getType() == StepChangeType.IDT
 									|| changeType1.getType() != changeType2.getType()) {
@@ -164,7 +164,7 @@ public class StepChangeTypeChecker {
 		return wrongVariableList;
 	}
 	
-	public StepChangeType getType0(TraceNode step, boolean isOnBeforeTrace,
+	public StepChangeType getChangeTypeWithoutVarExpansion(TraceNode step, boolean isOnBeforeTrace,
 			PairList pairList, DiffMatcher matcher) {
 		
 		
