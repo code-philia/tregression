@@ -67,7 +67,7 @@ public class Simulator  {
 		}
 		
 		while(node != null) {
-			StepChangeType changeType = checker.getType(node, true, pairList, matcher);
+			StepChangeType changeType = checker.getChangeTypeWithoutVarExpansion(node, true, pairList, matcher);
 			if(changeType.getType()==StepChangeType.CTL) {
 				TraceNode cDom = node.getInvocationMethodOrDominator();
 				if(cDom==null){
