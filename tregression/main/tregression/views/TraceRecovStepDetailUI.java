@@ -55,7 +55,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 
 		/* Added by hongshuwang */
 		Button contextAnalysisButton = new Button(slicingGroup, SWT.NONE);
-		contextAnalysisButton.setText("Analyse Context");
+		contextAnalysisButton.setText("Expand Variable");
 		contextAnalysisButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
 		ContextAnalysisListener cListener = new ContextAnalysisListener();
 		contextAnalysisButton.addMouseListener(cListener);
