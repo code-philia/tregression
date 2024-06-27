@@ -11,8 +11,10 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
+import microbat.Activator;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
+import microbat.preference.TraceRecovPreference;
 import microbat.views.TraceView;
 import tregression.StepChangeType;
 import tregression.StepChangeTypeChecker;
@@ -79,20 +81,32 @@ public class StepPropertyView extends ViewPart {
 		layout.numColumns = 1;
 		panel.setLayout(layout);
 		
+		boolean isEnableTraceRecov = Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.ENABLE_TRACERECOV).equals("true");
+		
 		if(view instanceof BuggyTraceView){
 			// Modified by David
 //			buggyDetailUI = new StepDetailUI(view, null, true);
 //			buggyDetailUI = new StepDetailIOUI(view, null, true);
 			
 			/* Modified by hongshuwang */
-			buggyDetailUI = new TraceRecovStepDetailUI(view, null, true);
+			if (isEnableTraceRecov) {
+				buggyDetailUI = new TraceRecovStepDetailUI(view, null, true);
+			} else {
+				buggyDetailUI = new StepDetailUI(view, null, true);
+			}
+			
 			return buggyDetailUI.createDetails(panel);
 		}
 		else if(view instanceof CorrectTraceView){
 //			correctDetailUI = new StepDetailUI(view, null, false);
 			
 			/* Modified by hongshuwang */
-			correctDetailUI = new TraceRecovStepDetailUI(view, null, false);
+			if (isEnableTraceRecov) {
+				correctDetailUI = new TraceRecovStepDetailUI(view, null, true);
+			} else {
+				correctDetailUI = new StepDetailUI(view, null, true);
+			}
+			
 			return correctDetailUI.createDetails(panel);
 		}
 		
