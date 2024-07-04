@@ -53,7 +53,6 @@ public class SeparateVersionHandler extends AbstractHandler{
 				
 				System.out.println("working on the " + id + "th bug of " + projectName + " project.");
 				
-				// change this before you run
 				String isMutatedBugString = Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.USE_MUTATION_CONFIG);
 				boolean isMutatedBug = isMutatedBugString != null && isMutatedBugString.equals("true");
 				ProjectConfig config = ConfigFactory.createConfig(projectName, id, buggyPath, fixPath, isMutatedBug);
