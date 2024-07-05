@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import microbat.Activator;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.ReferenceValue;
@@ -14,8 +15,10 @@ import microbat.model.value.VirtualValue;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
+import microbat.preference.TraceRecovPreference;
 import microbat.tracerecov.TraceRecovUtils;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
+import microbat.tracerecov.executionsimulator.ExecutionSimulatorForPromptCollection;
 import microbat.util.PrimitiveUtils;
 import microbat.util.Settings;
 import sav.common.core.Pair;
@@ -111,25 +114,34 @@ public class StepChangeTypeChecker {
 							if (changeType1.getType() == StepChangeType.IDT
 									|| changeType2.getType() == StepChangeType.IDT
 									|| changeType1.getType() != changeType2.getType()) {
-						ExecutionSimulator simulator = new ExecutionSimulator();
-						try {
-							if (!TraceRecovUtils.isIterator(readVar1.getType())) {
-								simulator.expandVariable(readVar1, currentStep);
-								readVar1.setExpanded(true);
-								simulator.expandVariable(readVar2, matchedStep);
-								readVar2.setExpanded(true);
+						
+								ExecutionSimulator simulator;
+								boolean isCollectingPrompt = Activator.getDefault().getPreferenceStore()
+										.getString(TraceRecovPreference.COLLECT_PROMPT).equals("true");
+								if (isCollectingPrompt) {
+									simulator = new ExecutionSimulatorForPromptCollection();
+								} else {
+									simulator = new ExecutionSimulator();
+								}
+						
+								try {
+									if (!TraceRecovUtils.isIterator(readVar1.getType())) {
+										simulator.expandVariable(readVar1, currentStep);
+										readVar1.setExpanded(true);
+										simulator.expandVariable(readVar2, matchedStep);
+										readVar2.setExpanded(true);
 								
-								List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2);
+										List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2);
 								
-								list.addAll(diffList);
-							}
+										list.addAll(diffList);
+									}
 
-						} catch (IOException e) {
-							e.printStackTrace();
+								} catch (IOException e) {
+									e.printStackTrace();
+								}
+							}
 						}
-					}
 				}
-			}
 
 		}
 		
