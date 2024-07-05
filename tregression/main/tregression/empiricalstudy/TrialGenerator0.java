@@ -7,8 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import microbat.Activator;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
+import microbat.preference.TraceRecovPreference;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.UserFeedback;
 import microbat.util.Settings;
@@ -282,7 +284,15 @@ public class TrialGenerator0 {
 				RootCauseFinder rootcauseFinder = new RootCauseFinder();
 				rootcauseFinder.setRootCauseBasedOnDefects4J(pairList, diffMatcher, buggyTrace, correctTrace);
 				
-				Simulator simulator = new Simulator(useSliceBreaker, enableRandom, breakLimit);
+				Simulator simulator;
+				boolean isCollectingPrompt = Activator.getDefault().getPreferenceStore()
+						.getString(TraceRecovPreference.COLLECT_PROMPT).equals("true");
+				if (isCollectingPrompt) {
+					simulator = new SimulatorForPromptCollection(useSliceBreaker, enableRandom, breakLimit);
+				} else {
+					simulator = new Simulator(useSliceBreaker, enableRandom, breakLimit);
+				}
+				
 				simulator.prepare(buggyTrace, correctTrace, pairList, diffMatcher);
 				if(rootcauseFinder.getRealRootCaseList().isEmpty()){
 					trial = EmpiricalTrial.createDumpTrial("cannot find real root cause");

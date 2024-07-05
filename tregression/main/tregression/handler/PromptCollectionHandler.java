@@ -25,6 +25,12 @@ import tregression.empiricalstudy.training.DED;
 import tregression.empiricalstudy.training.DeadEndData;
 import tregression.preference.TregressionPreference;
 
+/**
+ * This handler is used to collect prompts during a debugging session, and label
+ * them with the expected outputs.
+ * 
+ * @author hongshuwang
+ */
 public class PromptCollectionHandler extends AbstractHandler {
 
 	TrialGenerator0 generator = new TrialGenerator0();
