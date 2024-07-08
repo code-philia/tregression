@@ -1,6 +1,7 @@
 package tregression.views;
 
 import java.io.IOException;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
@@ -17,6 +18,8 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.util.Settings;
+import tregression.reexecutor.Condition;
+import tregression.reexecutor.ConditionalExecutor;
 
 /**
  * A subclass of StepDetailUI with context scope analysis.
@@ -53,12 +56,25 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		DependencyRecoveryBasedFeedbackSubmitListener fListener = new DependencyRecoveryBasedFeedbackSubmitListener();
 		submitButton.addMouseListener(fListener);
 
-		/* Added by hongshuwang */
-		Button contextAnalysisButton = new Button(slicingGroup, SWT.NONE);
-		contextAnalysisButton.setText("Expand Variable");
-		contextAnalysisButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
+		/**
+		 * A button for expanding variable values
+		 *  
+		 * @author Hongshu 
+		 * **/
+		Button variableExpansionByLLMButton = new Button(slicingGroup, SWT.NONE);
+		variableExpansionByLLMButton.setText("Expand Variable By LLM");
+		variableExpansionByLLMButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
 		ContextAnalysisListener cListener = new ContextAnalysisListener();
-		contextAnalysisButton.addMouseListener(cListener);
+		variableExpansionByLLMButton.addMouseListener(cListener);
+		
+		/**
+		 * A button for expanding varaible values by reexecution
+		 */
+		Button variableExpansionByExecButton = new Button(slicingGroup, SWT.NONE);
+		variableExpansionByExecButton.setText("Expand Variable By Execution");
+		variableExpansionByExecButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
+		VariableExpansionByExecListener vListener = new VariableExpansionByExecListener();
+		variableExpansionByExecButton.addMouseListener(vListener);
 	}
 
 	class ContextAnalysisListener implements MouseListener {
@@ -87,6 +103,39 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					} catch (IOException ioException) {
 						ioException.printStackTrace();
 					}
+
+					Settings.isEnableGPTInference = false;
+
+					readVariableTreeViewer.refresh();
+				}
+			}
+		}
+	}
+	
+	class VariableExpansionByExecListener implements MouseListener {
+
+		public void mouseUp(MouseEvent e) {
+		}
+
+		public void mouseDoubleClick(MouseEvent e) {
+		}
+
+		/**
+		 * Variable Expansion
+		 */
+		public void mouseDown(MouseEvent e) {
+
+			Settings.isEnableGPTInference = true;
+
+			Object[] objList = readVariableTreeViewer.getCheckedElements();
+			if (objList.length != 0) {
+				Object obj = objList[0];
+				if (obj instanceof VarValue) {
+
+					Condition condition = new Condition(null, null, null, null);
+					
+					ConditionalExecutor executor = new ConditionalExecutor();
+					executor.expandVariable((VarValue) obj, currentNode);
 
 					Settings.isEnableGPTInference = false;
 
