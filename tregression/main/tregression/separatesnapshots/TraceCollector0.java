@@ -1,7 +1,5 @@
 package tregression.separatesnapshots;
 
-import java.util.List;
-
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.PreCheckInformation;
 import microbat.codeanalysis.runtime.StepLimitException;
@@ -21,8 +19,7 @@ public class TraceCollector0 {
 	}
 	
 	public RunningResult run(String workingDir, TestCase tc, 
-			ProjectConfig config, boolean isRunInTestCaseMode, boolean allowMultiThread, 
-			List<String> includeLibs, List<String> excludeLibs){
+			ProjectConfig config, boolean isRunInTestCaseMode, boolean allowMultiThread){
 		
 		AppJavaClassPath appClassPath = AppClassPathInitializer.initialize(workingDir, tc, config);
 		if(!isRunInTestCaseMode) {
@@ -32,7 +29,7 @@ public class TraceCollector0 {
 		String traceDir = MicroBatUtil.generateTraceDir(config.projectName, config.regressionID);
 		String traceName = isBuggy ? "bug" : "fix";
 		InstrumentationExecutor exectuor = new InstrumentationExecutor(appClassPath,
-				traceDir, traceName, includeLibs, excludeLibs);
+				traceDir, traceName, config.includeLibs, config.excludeLibs, config.condition);
 		
 		RunningInfo info = null;
 		try {

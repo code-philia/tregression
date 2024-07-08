@@ -13,6 +13,7 @@ import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.MessageBox;
 import org.eclipse.ui.PlatformUI;
 
+import microbat.codeanalysis.runtime.Condition;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
@@ -20,7 +21,6 @@ import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.varskeleton.VarSkeletonBuilder;
 import microbat.tracerecov.varskeleton.VariableSkeleton;
 import microbat.util.Settings;
-import tregression.reexecutor.Condition;
 import tregression.reexecutor.ConditionalExecutor;
 
 /**

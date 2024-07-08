@@ -231,13 +231,16 @@ public class TrialGenerator0 {
 			List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
 			List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 			
+			config.includeLibs = includedClassNames;
+			config.excludeLibs = excludedClassNames;
+			
 			while(!isDataFlowComplete && trialNum<trialLimit){
 				trialNum++;
 				
 				Settings.compilationUnitMap.clear();
 				Settings.iCompilationUnitMap.clear();
 				buggyRS = buggyCollector.run(buggyPath, tc, config, isRunInTestCaseMode, 
-						allowMultiThread, includedClassNames, excludedClassNames);
+						allowMultiThread);
 				if (buggyRS.getRunningType() != NORMAL) {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(buggyRS.getRunningType()));
 					return trial;
@@ -246,7 +249,7 @@ public class TrialGenerator0 {
 				Settings.compilationUnitMap.clear();
 				Settings.iCompilationUnitMap.clear();
 				correctRs = correctCollector.run(fixPath, tc, config, isRunInTestCaseMode, 
-						allowMultiThread, includedClassNames, excludedClassNames);
+						allowMultiThread);
 				if (correctRs.getRunningType() != NORMAL) {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(correctRs.getRunningType()));
 					return trial;

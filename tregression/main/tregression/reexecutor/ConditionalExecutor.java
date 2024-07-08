@@ -1,12 +1,10 @@
 package tregression.reexecutor;
 
-import java.util.List;
-
 import microbat.Activator;
+import microbat.codeanalysis.runtime.Condition;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.preference.TraceRecovPreference;
-import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.TrialGenerator0;
 import tregression.empiricalstudy.config.ConfigFactory;
 import tregression.empiricalstudy.config.ProjectConfig;
@@ -19,7 +17,7 @@ public class ConditionalExecutor {
 	TrialGenerator0 generator0 = new TrialGenerator0();
 
 	public ConditionalExecutor(Condition condition) {
-		// TODO Auto-generated constructor stub
+		this.condition = condition;
 	}
 
 	public void expandVariable(VarValue obj, TraceNode currentNode) {
@@ -41,15 +39,10 @@ public class ConditionalExecutor {
 		boolean isMutatedBug = isMutatedBugString != null && isMutatedBugString.equals("true");
 		ProjectConfig config = ConfigFactory.createConfig(projectName, id, buggyPath, fixPath, isMutatedBug);
 		
-		if(config == null) {
-			try {
-				throw new Exception("cannot parse the configuration of the project " + projectName + " with id " + id);						
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+		config.condition = condition;
 		
-		List<EmpiricalTrial> trials = generator0.generateTrials(buggyPath, fixPath, 
+		
+		generator0.generateTrials(buggyPath, fixPath, 
 				false, false, false, 3, true, true, config, testcase);
 		
 		
