@@ -15,7 +15,12 @@ import tregression.preference.TregressionPreference;
 
 public class ConditionalExecutor {
 	
+	private Condition condition;
 	TrialGenerator0 generator0 = new TrialGenerator0();
+
+	public ConditionalExecutor(Condition condition) {
+		// TODO Auto-generated constructor stub
+	}
 
 	public void expandVariable(VarValue obj, TraceNode currentNode) {
 		

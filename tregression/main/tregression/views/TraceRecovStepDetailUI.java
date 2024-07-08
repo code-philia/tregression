@@ -17,6 +17,8 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
+import microbat.tracerecov.varskeleton.VarSkeletonBuilder;
+import microbat.tracerecov.varskeleton.VariableSkeleton;
 import microbat.util.Settings;
 import tregression.reexecutor.Condition;
 import tregression.reexecutor.ConditionalExecutor;
@@ -132,9 +134,21 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 				Object obj = objList[0];
 				if (obj instanceof VarValue) {
 
-					Condition condition = new Condition(null, null, null, null);
+					VarValue selectedVar = (VarValue) obj;
+					String variableName = selectedVar.getVarName();
+					String variableType = selectedVar.getType();
+					String variableValue = selectedVar.getStringValue();
 					
-					ConditionalExecutor executor = new ConditionalExecutor();
+					/*
+					 * Expand the selected variable.
+					 */
+					VariableSkeleton variableSkeleton = VarSkeletonBuilder.getVariableStructure(variableType,
+							currentNode.getTrace().getAppJavaClassPath());
+					String classStructure = variableSkeleton.toString();
+					
+					Condition condition = new Condition(variableName, variableType, variableValue, classStructure);
+					
+					ConditionalExecutor executor = new ConditionalExecutor(condition);
 					executor.expandVariable((VarValue) obj, currentNode);
 
 					Settings.isEnableGPTInference = false;
