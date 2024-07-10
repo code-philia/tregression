@@ -126,9 +126,14 @@ public class StepChangeTypeChecker {
 						
 								try {
 									if (!TraceRecovUtils.isIterator(readVar1.getType())) {
-										simulator.expandVariable(readVar1, currentStep);
+										// Issue #19
+										String responseOnBuggy = simulator.expandVariable(readVar1, currentStep, null);
 										readVar1.setExpanded(true);
-										simulator.expandVariable(readVar2, matchedStep);
+										
+										String preValue = TraceRecovUtils.processInputStringForLLM(readVar1.getStringValue());
+										Pair<String,String> valueResponse = Pair.of(preValue, responseOnBuggy);
+										
+										simulator.expandVariable(readVar2, matchedStep, valueResponse);
 										readVar2.setExpanded(true);
 								
 										List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2);
