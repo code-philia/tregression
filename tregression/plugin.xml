@@ -128,11 +128,6 @@
              id="tregression.simulate"
              name="Simulate Experiment">
        </command>
-       <command
-             defaultHandler="tregression.handler.PromptCollectionHandler"
-             id="tregression.command.collectPrompts"
-             name="Collect and Label Prompts">
-       </command>
  </extension>	
  <extension
          point="org.eclipse.ui.views">
@@ -270,12 +265,6 @@
             <command
                   commandId="tregression.collectDefects4jData"
                   icon="icons/evaluation.png"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.command.collectPrompts"
-                  icon="icons/label.png"
-                  label="Collect and Label Prompts"
                   style="push">
             </command>
          </toolbar>
