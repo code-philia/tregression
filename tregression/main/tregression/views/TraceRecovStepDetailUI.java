@@ -60,15 +60,15 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 
 		/**
 		 * A button for expanding variable values
-		 *  
-		 * @author Hongshu 
-		 * **/
+		 * 
+		 * @author Hongshu
+		 */
 		Button variableExpansionByLLMButton = new Button(slicingGroup, SWT.NONE);
 		variableExpansionByLLMButton.setText("Expand Variable By LLM");
 		variableExpansionByLLMButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
 		ContextAnalysisListener cListener = new ContextAnalysisListener();
 		variableExpansionByLLMButton.addMouseListener(cListener);
-		
+
 		/**
 		 * A button for expanding varaible values by reexecution
 		 */
@@ -113,7 +113,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 			}
 		}
 	}
-	
+
 	class VariableExpansionByExecListener implements MouseListener {
 
 		public void mouseUp(MouseEvent e) {
@@ -127,8 +127,6 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		 */
 		public void mouseDown(MouseEvent e) {
 
-			Settings.isEnableGPTInference = true;
-
 			Object[] objList = readVariableTreeViewer.getCheckedElements();
 			if (objList.length != 0) {
 				Object obj = objList[0];
@@ -138,20 +136,18 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					String variableName = selectedVar.getVarName();
 					String variableType = selectedVar.getType();
 					String variableValue = selectedVar.getStringValue();
-					
+
 					/*
 					 * Expand the selected variable.
 					 */
 					VariableSkeleton variableSkeleton = VarSkeletonBuilder.getVariableStructure(variableType,
 							currentNode.getTrace().getAppJavaClassPath());
 					String classStructure = variableSkeleton.toString();
-					
+
 					Condition condition = new Condition(variableName, variableType, variableValue, classStructure);
-					
+
 					ConditionalExecutor executor = new ConditionalExecutor(condition);
 					executor.expandVariable((VarValue) obj, currentNode);
-
-					Settings.isEnableGPTInference = false;
 
 					readVariableTreeViewer.refresh();
 				}
