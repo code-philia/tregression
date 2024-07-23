@@ -26,6 +26,7 @@ import sav.strategies.dto.AppJavaClassPath;
 import tregression.empiricalstudy.MatchStepFinder;
 import tregression.model.PairList;
 import tregression.model.TraceNodePair;
+import tregression.reexecutor.ReExecutionSimulator;
 import tregression.separatesnapshots.DiffMatcher;
 
 public class StepChangeTypeChecker {
@@ -54,7 +55,7 @@ public class StepChangeTypeChecker {
 	public StepChangeType getType(TraceNode step, boolean isOnBeforeTrace,
 			PairList pairList, DiffMatcher matcher) {
 		
-		System.out.println("============== At step " + step.getOrder() + " on " + isOnBeforeTrace + " trace");
+//		System.out.println("============== At step " + step.getOrder() + " on " + isOnBeforeTrace + " trace");
 		
 		TraceNode matchedStep = MatchStepFinder.findMatchedStep(isOnBeforeTrace, step, pairList);
 		
@@ -77,6 +78,14 @@ public class StepChangeTypeChecker {
 				
 				wrongVariableList.addAll(expandedWrongVariableList);				
 			}
+			else if(Settings.collectGroundTruth) {
+				List<Pair<VarValue, VarValue>> expandedWrongVariableList = 
+						checkExpansionByExcution(wrongVariableList, buggyTrace, correctTrace, isOnBeforeTrace, matchedStep, step, pairList, matcher);
+				
+//				System.out.println("After expanded, found "+expandedWrongVariableList.size()+" more wrong variables.");
+				wrongVariableList.addAll(expandedWrongVariableList);			
+			}
+			
 			
 			if(wrongVariableList.isEmpty()){
 				return new StepChangeType(StepChangeType.IDT, matchedStep);
@@ -125,21 +134,19 @@ public class StepChangeTypeChecker {
 								}
 						
 								try {
-									if (!TraceRecovUtils.isIterator(readVar1.getType())) {
-										// Issue #19
-										String responseOnBuggy = simulator.expandVariable(readVar1, currentStep, null);
-										readVar1.setExpanded(true);
-										
-										String preValue = TraceRecovUtils.processInputStringForLLM(readVar1.getStringValue());
-										Pair<String,String> valueResponse = Pair.of(preValue, responseOnBuggy);
-										
-										simulator.expandVariable(readVar2, matchedStep, valueResponse);
-										readVar2.setExpanded(true);
-								
-										List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2);
-								
-										list.addAll(diffList);
-									}
+//									if (!TraceRecovUtils.isIterator(readVar1.getType())) {
+									String responseOnBuggy = simulator.expandVariable(readVar1, currentStep, null);
+									readVar1.setExpanded(true);
+									
+									String preValue = TraceRecovUtils.processInputStringForLLM(readVar1.getStringValue());
+									Pair<String,String> valueResponse = Pair.of(preValue, responseOnBuggy);
+									
+									simulator.expandVariable(readVar2, matchedStep, valueResponse);
+									readVar2.setExpanded(true);
+							
+									List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2);
+									list.addAll(diffList);
+//									}
 
 								} catch (IOException e) {
 									e.printStackTrace();
@@ -149,8 +156,52 @@ public class StepChangeTypeChecker {
 				}
 
 		}
+		return list;
+	}
+	
+	private List<Pair<VarValue, VarValue>> checkExpansionByExcution(List<Pair<VarValue, VarValue>> wrongVariableList, 
+			Trace buggyTrace, Trace correctTrace, boolean isOnBeforeTrace, TraceNode matchedStep, TraceNode currentStep, PairList pairList, DiffMatcher matcher) {
+		List<Pair<VarValue, VarValue>> list = new ArrayList<>();
 		
-		
+		for(Pair<VarValue, VarValue> pair: wrongVariableList){
+			VarValue readVar1 = isOnBeforeTrace ? pair.first() : pair.second();
+			Trace trace1 = getCorrespondingTrace(isOnBeforeTrace, buggyTrace, correctTrace);
+			TraceNode dataDom1 = trace1.findDataDependency(currentStep, readVar1);
+			
+			
+			Trace trace2 = getCorrespondingTrace(!isOnBeforeTrace, buggyTrace, correctTrace);
+			VarValue readVar2 = MatchStepFinder.findMatchVariable(readVar1, matchedStep);
+			TraceNode dataDom2 = trace2.findDataDependency(matchedStep, readVar2);
+			
+			AppJavaClassPath appJavaClassPath = trace1.getAppJavaClassPath();
+			
+			if(TraceRecovUtils.shouldBeChecked(readVar1.getType()) 
+					&& !readVar1.getStringValue().equals(readVar2.getStringValue())
+					&& TraceRecovUtils.isUnrecorded(readVar1.getType(), appJavaClassPath)
+					) {
+						if (dataDom1 != null && dataDom2 != null) {
+							StepChangeType changeType1 = getChangeTypeWithoutVarExpansion(dataDom1, isOnBeforeTrace, pairList, matcher);
+							StepChangeType changeType2 = getChangeTypeWithoutVarExpansion(dataDom2, !isOnBeforeTrace, pairList, matcher);
+							if (changeType1.getType() == StepChangeType.IDT
+									|| changeType2.getType() == StepChangeType.IDT
+									|| changeType1.getType() != changeType2.getType()) {
+						
+								ReExecutionSimulator re_simulator = new ReExecutionSimulator();
+//								if (!TraceRecovUtils.isIterator(readVar1.getType())) {
+								re_simulator.expandVariable(readVar1, currentStep,true);
+								readVar1.setExpanded(true);
+								
+								re_simulator.expandVariable(readVar2, matchedStep,false);
+								readVar2.setExpanded(true);
+						
+								List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2);
+								list.addAll(diffList);
+//								}
+
+						}
+				}
+			}
+		}
 		return list;
 	}
 

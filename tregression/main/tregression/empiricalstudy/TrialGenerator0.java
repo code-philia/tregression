@@ -200,22 +200,6 @@ public class TrialGenerator0 {
 		if (cachedBuggyRS != null && cachedCorrectRS != null && isReuse) {
 			buggyRS = cachedBuggyRS;
 			correctRs = cachedCorrectRS;
-
-//			System.out.println("start matching trace..., buggy trace length: " + buggyRS.getRunningTrace().size()
-//					+ ", correct trace length: " + correctRs.getRunningTrace().size());
-//			time1 = System.currentTimeMillis();
-//			diffMatcher = new DiffMatcher(config.srcSourceFolder, config.srcTestFolder, buggyPath, fixPath);
-//			diffMatcher.matchCode();
-//
-//			ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
-//			pairList = traceMatcher.matchTraceNodePair(buggyRS.getRunningTrace(), correctRs.getRunningTrace(),
-//					diffMatcher);
-//			time2 = System.currentTimeMillis();
-//			matchTime = (int) (time2 - time1);
-//			System.out.println("finish matching trace, taking " + matchTime + "ms");
-//			cachedDiffMatcher = diffMatcher;
-//			cachedPairList = pairList;
-
 			diffMatcher = cachedDiffMatcher;
 			pairList = cachedPairList;
 			
