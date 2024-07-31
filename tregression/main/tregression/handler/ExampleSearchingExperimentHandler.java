@@ -8,29 +8,22 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
-import microbat.tracerecov.autoprompt.AutoPromptEngineer;
+import microbat.tracerecov.autoprompt.ExampleSearcher;
 
-public class AutoPromptEngineeringHandler extends AbstractHandler {
-
+public class ExampleSearchingExperimentHandler extends AbstractHandler {
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-
 		Job job = new Job("Search Example Experiment") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				AutoPromptEngineer autoPromptEngineer = new AutoPromptEngineer();
-				double originalAvgLoss = autoPromptEngineer.getAverageLoss();
-				String newExample = autoPromptEngineer.adjustVariableExpansionPromptExample();
-				double updatedAvgLoss = autoPromptEngineer.getAverageLoss(newExample);
-
-				System.out.println("Original Average Loss: " + originalAvgLoss);
-				System.out.println("Updated Average Loss: " + updatedAvgLoss);
-
+				ExampleSearcher exampleSearcher = new ExampleSearcher();
+				exampleSearcher.recordLoss();
 				return Status.OK_STATUS;
 			}
 		};
-
+		
+		job.schedule();
+		
 		return null;
 	}
-
 }

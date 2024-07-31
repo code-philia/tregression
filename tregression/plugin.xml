@@ -133,6 +133,11 @@
              id="tregression.autoPromptEngineering"
              name="Auto Prompt Engineering">
        </command>
+       <command
+             defaultHandler="tregression.handler.ExampleSearchingExperimentHandler"
+             id="tregression.exampleSearchingExperiment"
+             name="Example Searching Experiment">
+       </command>
  </extension>	
  <extension
          point="org.eclipse.ui.views">
@@ -273,7 +278,7 @@
                   style="push">
             </command>
             <command
-                  commandId="tregression.autoPromptEngineering"
+                  commandId="tregression.exampleSearchingExperiment"
                   icon="icons/engineering.png"
                   style="push">
             </command>
