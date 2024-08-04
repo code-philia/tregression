@@ -8,7 +8,12 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
+import microbat.Activator;
+import microbat.preference.TraceRecovPreference;
+import microbat.tracerecov.autoprompt.AliasInferenceExampleSearcher;
 import microbat.tracerecov.autoprompt.ExampleSearcher;
+import microbat.tracerecov.autoprompt.PromptType;
+import microbat.tracerecov.autoprompt.VarExpansionExampleSearcher;
 
 public class ExampleSearchingExperimentHandler extends AbstractHandler {
 	@Override
@@ -16,14 +21,29 @@ public class ExampleSearchingExperimentHandler extends AbstractHandler {
 		Job job = new Job("Search Example Experiment") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				ExampleSearcher exampleSearcher = new ExampleSearcher();
+				PromptType promptType = PromptType.valueOf(
+						Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.PROMPT_TYPE));
+				ExampleSearcher exampleSearcher = null;
+
+				switch (promptType) {
+				case VAR_EXPANSION:
+					exampleSearcher = new VarExpansionExampleSearcher();
+				case ALIAS_INFERENCE:
+					exampleSearcher = new AliasInferenceExampleSearcher();
+					// TODO: implement DefInferenceExampleSearcher
+//				case PromptType.DEF_INFERENCE:
+//					exampleSearcher = new DefInferenceExampleSearcher();
+				default:
+					exampleSearcher = new VarExpansionExampleSearcher();
+				}
+
 				exampleSearcher.recordLoss();
 				return Status.OK_STATUS;
 			}
 		};
-		
+
 		job.schedule();
-		
+
 		return null;
 	}
 }
