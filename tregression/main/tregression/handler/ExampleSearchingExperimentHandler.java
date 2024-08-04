@@ -28,9 +28,11 @@ public class ExampleSearchingExperimentHandler extends AbstractHandler {
 				switch (promptType) {
 				case VAR_EXPANSION:
 					exampleSearcher = new VarExpansionExampleSearcher();
+					break;
 				case ALIAS_INFERENCE:
 					exampleSearcher = new AliasInferenceExampleSearcher();
-					// TODO: implement DefInferenceExampleSearcher
+					break;
+				// TODO: implement DefInferenceExampleSearcher
 //				case PromptType.DEF_INFERENCE:
 //					exampleSearcher = new DefInferenceExampleSearcher();
 				default:
