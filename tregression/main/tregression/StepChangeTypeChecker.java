@@ -105,10 +105,12 @@ public class StepChangeTypeChecker {
 			VarValue readVar1 = isOnBeforeTrace ? pair.first() : pair.second();
 			Trace trace1 = getCorrespondingTrace(isOnBeforeTrace, buggyTrace, correctTrace);
 			TraceNode dataDom1 = trace1.findDataDependency(currentStep, readVar1);
-			
-			
+
 			Trace trace2 = getCorrespondingTrace(!isOnBeforeTrace, buggyTrace, correctTrace);
 			VarValue readVar2 = MatchStepFinder.findMatchVariable(readVar1, matchedStep);
+			if (readVar2 == null) {
+				continue;
+			}
 			TraceNode dataDom2 = trace2.findDataDependency(matchedStep, readVar2);
 			
 			AppJavaClassPath appJavaClassPath = trace1.getAppJavaClassPath();
