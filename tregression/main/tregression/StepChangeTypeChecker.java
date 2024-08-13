@@ -72,7 +72,7 @@ public class StepChangeTypeChecker {
 			List<Pair<VarValue, VarValue>> wrongVariableList = 
 					checkWrongVariable(isOnBeforeTrace, step, matchedStep, pairList, matcher);
 			
-			if(Settings.isEnableGPTInference) {
+			if(Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.ENABLE_LLM) == "true") {
 				List<Pair<VarValue, VarValue>> expandedWrongVariableList = 
 						checkExpansion(wrongVariableList, buggyTrace, correctTrace, isOnBeforeTrace, matchedStep, step, pairList, matcher);
 				
