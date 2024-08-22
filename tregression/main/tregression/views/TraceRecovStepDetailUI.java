@@ -1,6 +1,7 @@
 package tregression.views;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -66,20 +67,38 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		Button variableExpansionByLLMButton = new Button(slicingGroup, SWT.NONE);
 		variableExpansionByLLMButton.setText("Expand Variable By LLM");
 		variableExpansionByLLMButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
-		ContextAnalysisListener cListener = new ContextAnalysisListener();
-		variableExpansionByLLMButton.addMouseListener(cListener);
+		VarExpansionByLLMListener varExpansionByLLMListener = new VarExpansionByLLMListener();
+		variableExpansionByLLMButton.addMouseListener(varExpansionByLLMListener);
 
 		/**
-		 * A button for expanding varaible values by reexecution
+		 * A button for expanding variable values by re-execution.
 		 */
 		Button variableExpansionByExecButton = new Button(slicingGroup, SWT.NONE);
 		variableExpansionByExecButton.setText("Expand Variable By Execution");
 		variableExpansionByExecButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
-		VariableExpansionByExecListener vListener = new VariableExpansionByExecListener();
-		variableExpansionByExecButton.addMouseListener(vListener);
+		VariableExpansionByExecListener variableExpansionByExecListener = new VariableExpansionByExecListener();
+		variableExpansionByExecButton.addMouseListener(variableExpansionByExecListener);
+
+		/**
+		 * A button to find the data dominatee of the current step.
+		 */
+		Button dataDominateeButton = new Button(slicingGroup, SWT.NONE);
+		dataDominateeButton.setText("data dominatee");
+		dataDominateeButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
+		DataDominateeListener dataDominateeListener = new DataDominateeListener();
+		dataDominateeButton.addMouseListener(dataDominateeListener);
+
+		/**
+		 * A button to find the control dominatee of the current step.
+		 */
+		Button controlDominateeButton = new Button(slicingGroup, SWT.NONE);
+		controlDominateeButton.setText("control dominatee");
+		controlDominateeButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
+		ControlDominateeListener controlDominateeListener = new ControlDominateeListener();
+		controlDominateeButton.addMouseListener(controlDominateeListener);
 	}
 
-	class ContextAnalysisListener implements MouseListener {
+	class VarExpansionByLLMListener implements MouseListener {
 
 		public void mouseUp(MouseEvent e) {
 		}
@@ -228,4 +247,89 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 			traceView.jumpToNode(trace, suspiciousNode.getOrder(), true);
 		}
 	}
+
+	class DataDominateeListener implements MouseListener {
+		public void mouseUp(MouseEvent e) {
+		}
+
+		public void mouseDoubleClick(MouseEvent e) {
+		}
+
+		/**
+		 * Find data dominatee
+		 */
+		public void mouseDown(MouseEvent e) {
+			Trace trace = traceView.getTrace();
+			final TraceNode suspiciousNode;
+
+			Object[] objList = readVariableTreeViewer.getCheckedElements();
+			if (objList.length != 0) {
+				Object obj = objList[0];
+				if (obj instanceof VarValue) {
+					VarValue readVar = (VarValue) obj;
+					List<TraceNode> dataDependentees = trace.findDataDependentee(currentNode, readVar);
+					if (!dataDependentees.isEmpty()) {
+						System.out.print("\nData dominatees:\n");
+						for (TraceNode dataDependentee : dataDependentees) {
+							System.out.print(dataDependentee.getOrder());
+							System.out.print(" ");
+						}
+
+						suspiciousNode = dataDependentees.get(0);
+
+						if (suspiciousNode != null) {
+							traceView.recordVisitedNode(currentNode);
+							jumpToNode(trace, suspiciousNode);
+							readVariableTreeViewer.refresh();
+						}
+					}
+
+				}
+			}
+
+		}
+
+		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
+			traceView.jumpToNode(trace, suspiciousNode.getOrder(), true);
+		}
+	}
+
+	class ControlDominateeListener implements MouseListener {
+		public void mouseUp(MouseEvent e) {
+		}
+
+		public void mouseDoubleClick(MouseEvent e) {
+		}
+
+		/**
+		 * Find control dominatee
+		 */
+		public void mouseDown(MouseEvent e) {
+
+			Trace trace = traceView.getTrace();
+			final TraceNode suspiciousNode;
+
+			List<TraceNode> controlDependentees = currentNode.getControlDominatees();
+
+			if (!controlDependentees.isEmpty()) {
+				System.out.print("\nControl dominatees:\n");
+				for (TraceNode controlDependentee : controlDependentees) {
+					System.out.print(controlDependentee.getOrder());
+					System.out.print(" ");
+				}
+
+				suspiciousNode = controlDependentees.get(0);
+
+				if (suspiciousNode != null) {
+					traceView.recordVisitedNode(currentNode);
+					jumpToNode(trace, suspiciousNode);
+				}
+			}
+		}
+
+		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
+			traceView.jumpToNode(trace, suspiciousNode.getOrder(), true);
+		}
+	}
+
 }
