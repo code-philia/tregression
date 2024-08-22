@@ -204,6 +204,12 @@ public class StepChangeTypeChecker {
 		}
 		return list;
 	}
+		public void printVar(VarValue v,int depth) {
+		System.out.println(String.valueOf(" ").repeat(depth*4)+v.getVarName()+": "+v.getVarID()+"  "+v.getAliasVarID());
+		for(VarValue child:v.getChildren()) {
+			printVar(child,depth+1);
+		}
+	}
 
 	private List<Pair<VarValue, VarValue>> diffVarValue(boolean isOnBefore, VarValue readVar1, VarValue readVar2) {
 		

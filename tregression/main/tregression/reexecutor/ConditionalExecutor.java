@@ -9,6 +9,7 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.preference.TraceRecovPreference;
 import microbat.tracerecov.executionsimulator.ExecutionSimulationFileLogger;
+import microbat.tracerecov.executionsimulator.VariableExpansionUtils;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.TraceGenerator;
 import tregression.empiricalstudy.TrialGenerator0;
@@ -16,6 +17,8 @@ import tregression.empiricalstudy.config.ConfigFactory;
 import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.handler.PathConfiguration;
 import tregression.preference.TregressionPreference;
+import tregression.views.BuggyTraceView;
+import tregression.views.TregressionViews;
 
 public class ConditionalExecutor {
 
@@ -31,6 +34,7 @@ public class ConditionalExecutor {
 		this.condition = condition;
 	}
 
+	// expand variable on buggy trace (through button)
 	public void expandVariable(VarValue obj, TraceNode currentNode) {
 		String projectPath = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.PROJECT_NAME);
 		String bugID = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.BUG_ID);
@@ -66,7 +70,8 @@ public class ConditionalExecutor {
 //		gtLogger.collectGT(condition, fixedTrace);
 	}
 	
-	public String expandVariable(boolean isOnBuggy) {
+	public void expandVariable(VarValue targetVar, boolean isOnBuggy) {
+		/* prepare for re-execution */
 		String projectPath = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.PROJECT_NAME);
 		String bugID = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.BUG_ID);
 
@@ -90,13 +95,57 @@ public class ConditionalExecutor {
 		Trace trace = traceGenerator.generateTrace(buggyPath, fixPath, config, testcase, isOnBuggy);
 		if(trace == null) {
 			System.out.println("__ERROR__ Re-execution failed!");
-			return null;
+			return;
 		}
 		
 		/* write results to file */
 		ExecutionSimulationFileLogger gtLogger = new ExecutionSimulationFileLogger();
 		String groundTruthStr = gtLogger.collectGT(condition, trace);
+		if(groundTruthStr == null) {
+				System.out.println("__ERROR__ Re-execution failed!");
+				return;
+			}
+		VariableExpansionUtils.processResponse(targetVar, groundTruthStr);
 		
-		return groundTruthStr;
+		/* fill in information to variable on previous trace*/
+		VarValue matchedVarValue = condition.getMatchedVarValue(trace);
+		if(matchedVarValue == null) {
+			System.out.println("__ERROR__ Re-execution failed!");
+			return;
+		}
+		VarValue.migrateInfoToNewVar(matchedVarValue,targetVar);
+	}
+	
+	public void expandLibCall(boolean isOnBuggy) {
+		/* prepare for re-execution */
+		String projectPath = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.PROJECT_NAME);
+		String bugID = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.BUG_ID);
+
+		String buggyPath = PathConfiguration.getBuggyPath(projectPath, bugID);
+		String fixPath = PathConfiguration.getCorrectPath(projectPath, bugID);
+
+		String projectName = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.PROJECT_NAME);
+		String id = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.BUG_ID);
+
+		String testcase = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.TEST_CASE);
+
+		System.out.println("Re-execution on buggy trace? "+isOnBuggy);
+
+		String isMutatedBugString = Activator.getDefault().getPreferenceStore()
+				.getString(TraceRecovPreference.USE_MUTATION_CONFIG);
+		boolean isMutatedBug = isMutatedBugString != null && isMutatedBugString.equals("true");
+		ProjectConfig config = ConfigFactory.createConfig(projectName, id, buggyPath, fixPath, isMutatedBug);
+		config.condition = condition;
+		
+		/* re-execute */
+		Trace trace = traceGenerator.generateTrace(buggyPath, fixPath, config, testcase, isOnBuggy);
+		if(trace == null) {
+			System.out.println("__ERROR__ Re-execution failed!");
+			return;
+		}
+		
+		BuggyTraceView buggyView = TregressionViews.getBuggyTraceView();
+		buggyView.setMainTrace(trace);
+		buggyView.updateData();
 	}
 }

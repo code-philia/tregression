@@ -1,6 +1,7 @@
 package tregression.views;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -17,11 +18,13 @@ import microbat.codeanalysis.runtime.Condition;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
+import microbat.tracerecov.executionsimulator.ExampleConstructor;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.varskeleton.VarSkeletonBuilder;
 import microbat.tracerecov.varskeleton.VariableSkeleton;
 import microbat.util.Settings;
 import tregression.reexecutor.ConditionalExecutor;
+import tregression.reexecutor.TraceRecovererRe;
 
 /**
  * A subclass of StepDetailUI with context scope analysis.
@@ -70,13 +73,22 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		variableExpansionByLLMButton.addMouseListener(cListener);
 
 		/**
-		 * A button for expanding varaible values by reexecution
+		 * A button for expanding variable values by reexecution
 		 */
 		Button variableExpansionByExecButton = new Button(slicingGroup, SWT.NONE);
 		variableExpansionByExecButton.setText("Expand Variable By Execution");
 		variableExpansionByExecButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
 		VariableExpansionByExecListener vListener = new VariableExpansionByExecListener();
 		variableExpansionByExecButton.addMouseListener(vListener);
+		
+		/**
+		 * A button for expanding library call by reexecution
+		 */
+		Button libCallExpansionByExecButton = new Button(slicingGroup, SWT.NONE);
+		libCallExpansionByExecButton.setText("Construct Example");
+		libCallExpansionByExecButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
+		LibCallExpansionByExecListener libCallListener = new LibCallExpansionByExecListener();
+		libCallExpansionByExecButton.addMouseListener(libCallListener);
 	}
 
 	class ContextAnalysisListener implements MouseListener {
@@ -147,11 +159,49 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 					Condition condition = new Condition(variableName, variableType, variableValue, classStructure);
 
 					ConditionalExecutor executor = new ConditionalExecutor(condition);
-					executor.expandVariable((VarValue) obj, currentNode);
+					executor.expandVariable((VarValue) obj, true);
 
 					readVariableTreeViewer.refresh();
 				}
 			}
+		}
+	}
+	
+	class LibCallExpansionByExecListener implements MouseListener {
+
+		public void mouseUp(MouseEvent e) {
+		}
+
+		public void mouseDoubleClick(MouseEvent e) {
+		}
+
+		/**
+		 * Library Call Expansion
+		 */
+		public void mouseDown(MouseEvent e) {
+			Object[] objList = readVariableTreeViewer.getCheckedElements();
+			if (objList.length != 0) {
+				Object obj = objList[0];
+				if (obj instanceof VarValue) {
+					VarValue selectedVar = (VarValue) obj;
+					String variableName = selectedVar.getVarName();
+					String variableType = selectedVar.getType();
+					String variableValue = selectedVar.getStringValue();
+
+					ExampleConstructor.constructExample("list", "java.util.ArrayList", "[1, 2, 3]");
+//					ExampleConstructor.constructExample(variableName,variableType,variableValue);
+				}
+			}
+			
+			
+			
+			//TODO get ext lib calls at current step
+//			ArrayList<String> extLibCall = new ArrayList<>();
+//			extLibCall.add("java.util.ArrayList#addAll");
+//			Condition condition = new Condition(extLibCall);
+//			
+//			ConditionalExecutor executor = new ConditionalExecutor(condition);
+//			executor.expandLibCall(true);
 		}
 	}
 
@@ -187,43 +237,45 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 						Object obj = objList[0];
 						if (obj instanceof VarValue) {
 							VarValue readVar = (VarValue) obj;
-							suspiciousNode = trace.findDataDependency(currentNode, readVar);
-//							Display.getDefault().asyncExec(new Runnable() {
-//								@Override
-//								public void run() {
-//									Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
-//									if (!shell.isDisposed()) {
-//										if (suspiciousNode != null) {
-//											traceView.recordVisitedNode(currentNode);
-//											jumpToNode(trace, suspiciousNode);
+							
+							if(Settings.collectGroundTruth == true) {
+								TraceRecovererRe traceRecovererRe = new TraceRecovererRe(trace);
+								suspiciousNode = traceRecovererRe.findDataDependency(currentNode, readVar);
+							}
+							else {
+								suspiciousNode = trace.findDataDependency(currentNode, readVar);
+//								Display.getDefault().asyncExec(new Runnable() {
+//									@Override
+//									public void run() {
+//										Shell shell = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getShell();
+//										if (!shell.isDisposed()) {
+//											if (suspiciousNode != null) {
+//												traceView.recordVisitedNode(currentNode);
+//												jumpToNode(trace, suspiciousNode);
+//											}
 //										}
 //									}
 //								}
 //							});
-
-							Settings.isEnableGPTInference = false;
-
-							if (suspiciousNode != null) {
-								traceView.recordVisitedNode(currentNode);
-								jumpToNode(trace, suspiciousNode);
-								readVariableTreeViewer.refresh();
+								Settings.isEnableGPTInference = false;
+								if (suspiciousNode != null) {
+									traceView.recordVisitedNode(currentNode);
+									jumpToNode(trace, suspiciousNode);
+									readVariableTreeViewer.refresh();
+								}
 							}
-
+						}
+					} else if (controlButton.getSelection()) {
+						suspiciousNode = currentNode.getInvocationMethodOrDominator();
+	
+						if (suspiciousNode != null) {
+							traceView.recordVisitedNode(currentNode);
+							jumpToNode(trace, suspiciousNode);
 						}
 					}
-				} else if (controlButton.getSelection()) {
-					suspiciousNode = currentNode.getInvocationMethodOrDominator();
-
-					if (suspiciousNode != null) {
-						traceView.recordVisitedNode(currentNode);
-						jumpToNode(trace, suspiciousNode);
-					}
 				}
-
 			}
-
 		}
-
 		private void jumpToNode(Trace trace, TraceNode suspiciousNode) {
 			traceView.jumpToNode(trace, suspiciousNode.getOrder(), true);
 		}

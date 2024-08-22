@@ -66,7 +66,13 @@ public class TraceRecovererRe {
 
 		// alias and definition inferencing
 		inferAliasRelationsRe(trace, start, end, rootVar, criticalVariables, variablesToCheck, relevantSteps);
-//		inferDefinition(trace, rootVar, targetVar, criticalVariables, relevantSteps);
+		
+		relevantSteps.clear();
+		for(int i = start;i<=end;i++) {
+			relevantSteps.add(i);
+		}
+		
+		inferDefinition(trace, rootVar, targetVar, criticalVariables, relevantSteps);
 	}
 	
 	/**
@@ -314,5 +320,28 @@ public class TraceRecovererRe {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Definition Inference: BACKWARD ITERATION
+	 * 
+	 * iterate through steps in scope, infer definition
+	 */
+	private void inferDefinition(Trace trace, VarValue rootVar, VarValue targetVar, List<VarValue> criticalVariables, List<Integer> relevantSteps) {
+
+		int startIndex = relevantSteps.size() - 1;
+		for (int i = startIndex; i >= 0; i--) {
+			int stepOrder = relevantSteps.get(i);
+			TraceNode step = trace.getTraceNode(stepOrder);
+			if (step.isCallingAPI()) {
+				// INFER DEFINITION STEP
+				boolean def = this.executionSimulator.inferDefinition(step, rootVar, targetVar, criticalVariables);
+
+				if (def && !step.getWrittenVariables().contains(targetVar)) {
+					step.getWrittenVariables().add(targetVar);
+					break;
+				}
+			}
+		}
 	}
 }

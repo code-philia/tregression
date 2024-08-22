@@ -30,6 +30,7 @@ public class TraceGenerator {
 			}
 			
 			for(TestCase tc: tcList) {
+				System.out.println("In genereateTrace :"+tc);
 				runningResult = analyzeTestCase(buggyPath,fixPath,tc,config,isOnBuggy);
 				if(runningResult!=null) {
 					return runningResult.getRunningTrace();
@@ -71,7 +72,7 @@ public class TraceGenerator {
 		
 		String path = isOnBuggy?buggyPath:fixPath;
 		
-		runningResult = traceCollector.run(path, tc, config, true, true);
+		runningResult = traceCollector.run(path, tc, config, false, true);
 		if (runningResult.getRunningType() != NORMAL) {
 			return null;
 		}

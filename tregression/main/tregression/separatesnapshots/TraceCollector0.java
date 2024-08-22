@@ -37,7 +37,6 @@ public class TraceCollector0 {
 		} catch (StepLimitException e) {
 			e.printStackTrace();
 		}
-		
 		PreCheckInformation precheckInfo = exectuor.getPrecheckInfo();
 		System.out.println("There are " + precheckInfo.getStepNum() + " steps in this trace");
 		if(precheckInfo.isOverLong()) {
