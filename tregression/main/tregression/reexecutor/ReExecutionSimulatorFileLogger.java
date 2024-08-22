@@ -57,7 +57,7 @@ public class ReExecutionSimulatorFileLogger {
 		/* source code */
 		int lineNo = step.getLineNumber();
 		String location = step.getBreakPoint().getFullJavaFilePath();
-		String sourceCode = TraceRecovUtils.processInputStringForLLM(TraceRecovUtils.getSourceCode(location, lineNo).trim());
+		String sourceCode = TraceRecovUtils.processInputStringForLLM(TraceRecovUtils.getSourceCodeOfALine(location, lineNo).trim());
 
 		/* all variables */
 		Set<VarValue> variablesInStep = step.getAllVariables();
