@@ -82,7 +82,7 @@ public class Simulator  {
 					}
 				}
 				
-				StepChangeType cDomType = checker.getType(cDom, true, pairList, matcher);
+				StepChangeType cDomType = checker.getChangeTypeWithoutVarExpansion(cDom, true, pairList, matcher);
 				if(cDomType.getType()==StepChangeType.IDT){
 					TraceNode stepOverPrev = node.getStepOverPrevious();
 					if(stepOverPrev!=null){
