@@ -96,12 +96,14 @@ public class StepChangeTypeChecker {
 		}
 
 	}
-	
-	private List<Pair<VarValue, VarValue>> checkExpansion(List<Pair<VarValue, VarValue>> wrongVariableList, 
-			Trace buggyTrace, Trace correctTrace, boolean isOnBeforeTrace, TraceNode matchedStep, TraceNode currentStep, PairList pairList, DiffMatcher matcher) {
+
+	private List<Pair<VarValue, VarValue>> checkExpansion(List<Pair<VarValue, VarValue>> wrongVariableList,
+			Trace buggyTrace, Trace correctTrace, boolean isOnBeforeTrace, TraceNode matchedStep, TraceNode currentStep,
+			PairList pairList, DiffMatcher matcher) {
+
 		List<Pair<VarValue, VarValue>> list = new ArrayList<>();
-		
-		for(Pair<VarValue, VarValue> pair: wrongVariableList){
+
+		for (Pair<VarValue, VarValue> pair : wrongVariableList) {
 			VarValue readVar1 = isOnBeforeTrace ? pair.first() : pair.second();
 			Trace trace1 = getCorrespondingTrace(isOnBeforeTrace, buggyTrace, correctTrace);
 			TraceNode dataDom1 = trace1.findDataDependency(currentStep, readVar1);
@@ -112,52 +114,54 @@ public class StepChangeTypeChecker {
 				continue;
 			}
 			TraceNode dataDom2 = trace2.findDataDependency(matchedStep, readVar2);
-			
-			AppJavaClassPath appJavaClassPath = trace1.getAppJavaClassPath();
-			
-			if(TraceRecovUtils.shouldBeChecked(readVar1.getType()) 
+
+			if (TraceRecovUtils.shouldBeChecked(readVar1.getType())
 					&& !readVar1.getStringValue().equals(readVar2.getStringValue())
-					&& TraceRecovUtils.isUnrecorded(readVar1.getType(), appJavaClassPath)
-					) {
-						if (dataDom1 != null && dataDom2 != null) {
-							StepChangeType changeType1 = getChangeTypeWithoutVarExpansion(dataDom1, isOnBeforeTrace, pairList, matcher);
-							StepChangeType changeType2 = getChangeTypeWithoutVarExpansion(dataDom2, !isOnBeforeTrace, pairList, matcher);
-							if (changeType1.getType() == StepChangeType.IDT
-									|| changeType2.getType() == StepChangeType.IDT
-									|| changeType1.getType() != changeType2.getType()) {
-						
-								ExecutionSimulator simulator;
-								boolean isCollectingPrompt = Activator.getDefault().getPreferenceStore()
-										.getString(TraceRecovPreference.COLLECT_PROMPT).equals("true");
-								if (isCollectingPrompt) {
-									simulator = new ExecutionSimulatorForPromptCollection();
-								} else {
-									simulator = new ExecutionSimulator();
-								}
-						
-								try {
-//									if (!TraceRecovUtils.isIterator(readVar1.getType())) {
-									String responseOnBuggy = simulator.expandVariable(readVar1, currentStep, null);
-									readVar1.setExpanded(true);
-									
-									String preValue = TraceRecovUtils.processInputStringForLLM(readVar1.getStringValue());
-									Pair<String,String> valueResponse = Pair.of(preValue, responseOnBuggy);
-									
-									simulator.expandVariable(readVar2, matchedStep, valueResponse);
-									readVar2.setExpanded(true);
-							
-									List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2);
-									list.addAll(diffList);
-//									}
+//					&& TraceRecovUtils.isUnrecorded(readVar1.getType(), appJavaClassPath)
+			) {
+				boolean deadEndOnBothTraces = dataDom1 == null && dataDom2 == null;
 
-								} catch (IOException e) {
-									e.printStackTrace();
-								}
-							}
-						}
+				StepChangeType changeType1 = null;
+				StepChangeType changeType2 = null;
+				if (dataDom1 != null && dataDom2 != null) {
+					changeType1 = getChangeTypeWithoutVarExpansion(dataDom1, isOnBeforeTrace, pairList, matcher);
+					changeType2 = getChangeTypeWithoutVarExpansion(dataDom2, !isOnBeforeTrace, pairList, matcher);
 				}
+				boolean changeTypesAreValid = changeType1 != null && changeType2 != null;
+				boolean shouldExpandBasedOnChangeTypes = changeTypesAreValid
+						&& (changeType1.getType() == StepChangeType.IDT || changeType2.getType() == StepChangeType.IDT
+								|| changeType1.getType() != changeType2.getType());
 
+				if (deadEndOnBothTraces || shouldExpandBasedOnChangeTypes) {
+					ExecutionSimulator simulator;
+					boolean isCollectingPrompt = Activator.getDefault().getPreferenceStore()
+							.getString(TraceRecovPreference.COLLECT_PROMPT).equals("true");
+					if (isCollectingPrompt) {
+						simulator = new ExecutionSimulatorForPromptCollection();
+					} else {
+						simulator = new ExecutionSimulator();
+					}
+
+					try {
+						String responseOnBuggy = simulator.expandVariable(readVar1, currentStep, null);
+						readVar1.setExpanded(true);
+
+						String preValue = TraceRecovUtils.processInputStringForLLM(readVar1.getStringValue());
+						Pair<String, String> valueResponse = Pair.of(preValue, responseOnBuggy);
+
+						simulator.expandVariable(readVar2, matchedStep, valueResponse);
+						readVar2.setExpanded(true);
+						
+						List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2, deadEndOnBothTraces);
+						
+						list.addAll(diffList);
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+				}
+			}
 		}
+
 		return list;
 	}
 	
@@ -208,32 +212,36 @@ public class StepChangeTypeChecker {
 	}
 
 	private List<Pair<VarValue, VarValue>> diffVarValue(boolean isOnBefore, VarValue readVar1, VarValue readVar2) {
-		
-		List<Pair<VarValue, VarValue>> wrongVariableList = new ArrayList<Pair<VarValue,VarValue>>();
-		
-		for(VarValue child1: readVar1.getAllDescedentChildren()) {
-			
-			for(VarValue child2: readVar2.getAllDescedentChildren()) {
-				
-				if(child1.getVarName().equals(child2.getVarName()) && 
-						!child1.getStringValue().equals(child2.getStringValue())) {
-					
-					
-					if(isOnBefore){
-						Pair<VarValue, VarValue> pair = Pair.of(child1, child2);
-						wrongVariableList.add(pair);
-					}
-					else{
-						Pair<VarValue, VarValue> pair = Pair.of(child2, child1);
-						wrongVariableList.add(pair);
+		return diffVarValue(isOnBefore, readVar1, readVar2, false);
+	}
+
+	private List<Pair<VarValue, VarValue>> diffVarValue(boolean isOnBefore, VarValue readVar1, VarValue readVar2,
+			boolean deadEndOnBothTraces) {
+
+		List<Pair<VarValue, VarValue>> wrongVariableList = new ArrayList<Pair<VarValue, VarValue>>();
+
+		for (VarValue child1 : readVar1.getAllDescedentChildren()) {
+
+			for (VarValue child2 : readVar2.getAllDescedentChildren()) {
+
+				if (child1.getVarName().equals(child2.getVarName())) {
+					// TODO: any problem with using `deadEndOnBothTraces` here?
+					if (deadEndOnBothTraces || !child1.getStringValue().equals(child2.getStringValue())) {
+						if (isOnBefore) {
+							Pair<VarValue, VarValue> pair = Pair.of(child1, child2);
+							wrongVariableList.add(pair);
+						} else {
+							Pair<VarValue, VarValue> pair = Pair.of(child2, child1);
+							wrongVariableList.add(pair);
+						}
 					}
 				}
 			}
 		}
-		
+
 		return wrongVariableList;
 	}
-	
+
 	public StepChangeType getChangeTypeWithoutVarExpansion(TraceNode step, boolean isOnBeforeTrace,
 			PairList pairList, DiffMatcher matcher) {
 		
