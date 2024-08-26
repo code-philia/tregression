@@ -166,15 +166,6 @@ public abstract class IndexTreeMatcher implements Matcher{
 	}
 	
 	private double sim(IndexTreeNode itNodeBefore, IndexTreeNode itNodeAfter) {
-		
-		if(itNodeBefore.getChildren().isEmpty() && !itNodeAfter.getChildren().isEmpty()) {
-			return 0;
-		}
-		
-		if(!itNodeBefore.getChildren().isEmpty() && itNodeAfter.getChildren().isEmpty()) {
-			return 0;
-		}
-		
 		BreakPoint pointBefore = itNodeBefore.getBreakPoint();
 		BreakPoint pointAfter = itNodeAfter.getBreakPoint();
 		
