@@ -136,7 +136,7 @@ public class Defects4jDebugRunner extends ProjectsDebugRunner {
 						return agent.startDebug(new DebugResult(result));
 					});
 					try {
-						debugResult = future.get(30, TimeUnit.MINUTES);
+						debugResult = future.get(60, TimeUnit.MINUTES);
 					} catch (Exception e) {
 						debugResult.errorMessage = e.toString();
 					} finally {
