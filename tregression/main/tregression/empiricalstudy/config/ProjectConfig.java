@@ -58,4 +58,11 @@ public class ProjectConfig {
 
 		return list;
 	}
+	
+	public String toString() {
+		return "srcTestFolder: "+srcTestFolder+
+				"\nsrcSourceFolder: "+srcSourceFolder+
+				"\nbytecodeTestFolder: "+bytecodeTestFolder+
+				"\nbytecodeSourceFolder: "+bytecodeSourceFolder+"\n";
+	}
 }

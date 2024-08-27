@@ -18,7 +18,7 @@ public class ConfigFactory {
 		return null;
 	}
 
-	private static boolean isDefects4JProject(String projectName) {
+	public static boolean isDefects4JProject(String projectName) {
 		return projectName.equals("Chart") || projectName.equals("Cli") || projectName.equals("Closure") 
 				|| projectName.equals("Codec") || projectName.equals("Collections") || projectName.equals("Compress")
 				|| projectName.equals("Csv") || projectName.equals("Gson") || projectName.equals("JacksonCore") 
