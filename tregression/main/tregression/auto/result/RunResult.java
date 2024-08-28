@@ -12,6 +12,7 @@ public class RunResult {
 	public int traceCollectionTime = -1;
 	public int traceMatchingTime = -1;
 	public int simulationTime = -1;
+	public String debuggingTrace = " ";
 	
 	public final static String DELIMITER = ",";
 
@@ -30,6 +31,7 @@ public class RunResult {
 		this.traceCollectionTime = result.traceCollectionTime;
 		this.traceMatchingTime = result.traceMatchingTime;
 		this.simulationTime = result.simulationTime;
+		this.debuggingTrace = result.debuggingTrace;
 	}
 	
 	public boolean isSuccess() {
@@ -69,6 +71,9 @@ public class RunResult {
 
 		final String simulationTime = tokens[8];
 		result.simulationTime = Integer.valueOf(simulationTime);
+		
+		final String debuggingTrace = tokens[9];
+		result.debuggingTrace = debuggingTrace == " " ? null : debuggingTrace;
 
 		return result;
 	}
@@ -86,6 +91,7 @@ public class RunResult {
 		this.appendStr(strBuilder, String.valueOf(traceCollectionTime));
 		this.appendStr(strBuilder, String.valueOf(traceMatchingTime));
 		this.appendStr(strBuilder, String.valueOf(simulationTime));
+		this.appendStr(strBuilder, this.debuggingTrace);
 		return strBuilder.toString();
 	}
 	
@@ -107,6 +113,7 @@ public class RunResult {
 		builder.append("Trace Collection Time: " + this.traceCollectionTime + "\n");
 		builder.append("Trace Matching Time: " + this.traceMatchingTime + "\n");
 		builder.append("Simulation Time: " + this.simulationTime + "\n");
+		builder.append("Debugging Trace: " + this.debuggingTrace + "\n");
 		builder.append("--------------------------------\n");
 		return builder.toString();
 	}

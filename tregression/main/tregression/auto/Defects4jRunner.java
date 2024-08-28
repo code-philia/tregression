@@ -77,6 +77,8 @@ public class Defects4jRunner extends ProjectsRunner {
 				result.traceCollectionTime = trial.getTraceCollectionTime();
 				result.traceMatchingTime = trial.getTraceMatchTime();
 				result.simulationTime = trial.getSimulationTime();
+				result.debuggingTrace = trial.getDebuggingTrace().replace(",", ";");
+				
 				for (DeadEndRecord record : trial.getDeadEndRecordList()) {
 					SolutionPattern solutionPattern = record.getSolutionPattern();
 					if (solutionPattern != null) {
