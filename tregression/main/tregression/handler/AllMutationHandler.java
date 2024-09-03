@@ -12,10 +12,13 @@ import org.eclipse.core.runtime.jobs.Job;
 
 import microbat.util.JavaUtil;
 import tregression.auto.Defects4jRunner;
+import tregression.auto.MutationTregressionRunner;
 import tregression.auto.ProjectsRunner;
 
-public class Defects4jCollectionHandler extends AbstractHandler {
-
+/*
+ * See Defects4jCollectionHandler
+ */
+public class AllMutationHandler extends AbstractHandler{
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		JavaUtil.sourceFile2CUMap.clear();
@@ -33,9 +36,12 @@ public class Defects4jCollectionHandler extends AbstractHandler {
 	}
 	
 	private void execute() {
-		final String basePath = "D:\\MutationProjects_new";
-		final String resultPath = Paths.get("C:\\Users\\Kwy\\Desktop\\result\\mutation_new_baselinetxt").toString();
-		final ProjectsRunner runner = new Defects4jRunner(basePath, resultPath);
+		final String projectsBasePath = "D:\\MutationDataset\\OriginalProjects";
+		final String mutationFileBasePath = "D:\\MutationDataset\\MutationFiles";
+		final String workingBasePath = "D:\\MutationWorkSpace";
+		final String resultPath = Paths.get("C:\\Users\\Kwy\\Desktop\\result\\mutation_1_baseline.txt").toString();
+		
+		final ProjectsRunner runner = new MutationTregressionRunner(projectsBasePath,mutationFileBasePath,workingBasePath,resultPath);
 		runner.run();
 	}
 }
