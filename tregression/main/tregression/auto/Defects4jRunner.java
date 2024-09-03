@@ -5,12 +5,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 import microbat.model.trace.Trace;
+import microbat.recommendation.UserFeedback;
+import sav.common.core.Pair;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
+import tregression.empiricalstudy.RootCauseNode;
 import tregression.empiricalstudy.config.ConfigFactory;
 import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.empiricalstudy.solutionpattern.SolutionPattern;
+import tregression.model.StepOperationTuple;
 
 public class Defects4jRunner extends ProjectsRunner {
 	
@@ -79,6 +83,33 @@ public class Defects4jRunner extends ProjectsRunner {
 				result.traceMatchingTime = trial.getTraceMatchTime();
 				result.simulationTime = trial.getSimulationTime();
 				result.debuggingTrace = trial.getDebuggingTrace().replace(",", ";").replace("\n", "#").replace("\r", "#");
+				
+				// check if data dependency is missing
+				boolean isMissingDataDependency = false;
+				List<RootCauseNode> rootCauseList = trial.getRootCauseFinder().getRealRootCaseList();
+				List<StepOperationTuple> debuggingTrace = trial.getCheckList();
+				List<Pair<Integer, Integer>> steps = new ArrayList<>();
+				int previousStep = -1;
+				boolean isPreviousStepDataSlicing = false;
+				for (StepOperationTuple tuple : debuggingTrace) {
+					int stepNo = tuple.getNode().getOrder();
+					if (previousStep != -1) {
+						Pair<Integer, Integer> pair = Pair.of(previousStep, stepNo);
+						steps.add(pair);
+						for (RootCauseNode rcNode : rootCauseList) {
+							int rootCauseNo = rcNode.getRoot().getOrder();
+							if (pair.first() > rootCauseNo && pair.second() < rootCauseNo && isPreviousStepDataSlicing) {
+								isMissingDataDependency = true;
+							}
+						}
+					}
+					previousStep = stepNo;
+					isPreviousStepDataSlicing = tuple.getUserFeedback().getFeedbackType()
+							.equals(UserFeedback.WRONG_VARIABLE_VALUE);
+				}
+
+				result.debuggingSteps = steps.size();
+				result.isMissingDataDependency = isMissingDataDependency;
 				
 				for (DeadEndRecord record : trial.getDeadEndRecordList()) {
 					SolutionPattern solutionPattern = record.getSolutionPattern();
