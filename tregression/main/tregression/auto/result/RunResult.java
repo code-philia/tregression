@@ -14,7 +14,6 @@ public class RunResult {
 	public int simulationTime = -1;
 	public String debuggingTrace = " ";
 	public int debuggingSteps = -1;
-	public boolean isMissingDataDependency = false;
 	
 	public final static String DELIMITER = ",";
 
@@ -35,7 +34,6 @@ public class RunResult {
 		this.simulationTime = result.simulationTime;
 		this.debuggingTrace = result.debuggingTrace;
 		this.debuggingSteps = result.debuggingSteps;
-		this.isMissingDataDependency = result.isMissingDataDependency;
 	}
 	
 	public boolean isSuccess() {
@@ -81,9 +79,6 @@ public class RunResult {
 		
 		final String debuggingStep_str = tokens[10];
 		result.debuggingSteps = Integer.valueOf(debuggingStep_str);
-		
-		final String isMissingDataDependency = tokens[11];
-		result.isMissingDataDependency = Boolean.valueOf(isMissingDataDependency);
 
 		return result;
 	}
@@ -103,7 +98,6 @@ public class RunResult {
 		this.appendStr(strBuilder, String.valueOf(simulationTime));
 		this.appendStr(strBuilder, this.debuggingTrace);
 		this.appendStr(strBuilder, String.valueOf(this.debuggingSteps));
-		this.appendStr(strBuilder, String.valueOf(this.isMissingDataDependency));
 		return strBuilder.toString();
 	}
 	
@@ -127,7 +121,6 @@ public class RunResult {
 		builder.append("Simulation Time: " + this.simulationTime + "\n");
 		builder.append("Debugging Trace: " + this.debuggingTrace + "\n");
 		builder.append("Debugging Steps: " + this.debuggingSteps + "\n");
-		builder.append("Is Missing Data Dependency: " + this.isMissingDataDependency + "\n");
 		builder.append("--------------------------------\n");
 		return builder.toString();
 	}
