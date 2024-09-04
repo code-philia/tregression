@@ -6,11 +6,10 @@ import java.util.List;
 
 import microbat.model.trace.Trace;
 import microbat.recommendation.UserFeedback;
-import sav.common.core.Pair;
+import microbat.tracerecov.executionsimulator.LLMTimer;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
-import tregression.empiricalstudy.RootCauseNode;
 import tregression.empiricalstudy.config.ConfigFactory;
 import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.empiricalstudy.solutionpattern.SolutionPattern;
@@ -37,6 +36,7 @@ public class Defects4jRunner extends ProjectsRunner {
 	@Override
 	public RunResult runProject(String projectName, String bugID_str) {
 		RunResult result = new RunResult();
+		LLMTimer.reset();
 		try {
 			Integer.valueOf(bugID_str);
 		} catch (NumberFormatException e) {
@@ -82,6 +82,9 @@ public class Defects4jRunner extends ProjectsRunner {
 				result.traceCollectionTime = trial.getTraceCollectionTime();
 				result.traceMatchingTime = trial.getTraceMatchTime();
 				result.simulationTime = trial.getSimulationTime();
+				result.varExpansionTime = LLMTimer.varExpansionTime;
+				result.aliasInferTime = LLMTimer.aliasInferTime;
+				result.defInferTime = LLMTimer.defInferTime;
 				result.debuggingTrace = trial.getDebuggingTrace().replace(",", ";").replace("\n", "#").replace("\r", "#");
 
 				List<StepOperationTuple> steps = trial.getCheckList();

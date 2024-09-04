@@ -12,6 +12,9 @@ public class RunResult {
 	public int traceCollectionTime = -1;
 	public int traceMatchingTime = -1;
 	public int simulationTime = -1;
+	public int varExpansionTime = -1;
+	public int aliasInferTime = -1;
+	public int defInferTime = -1;
 	public String debuggingTrace = " ";
 	public int debuggingSteps = -1;
 	
@@ -32,6 +35,9 @@ public class RunResult {
 		this.traceCollectionTime = result.traceCollectionTime;
 		this.traceMatchingTime = result.traceMatchingTime;
 		this.simulationTime = result.simulationTime;
+		this.varExpansionTime = result.varExpansionTime;
+		this.aliasInferTime = result.aliasInferTime;
+		this.defInferTime = result.defInferTime;
 		this.debuggingTrace = result.debuggingTrace;
 		this.debuggingSteps = result.debuggingSteps;
 	}
@@ -74,10 +80,19 @@ public class RunResult {
 		final String simulationTime = tokens[8];
 		result.simulationTime = Integer.valueOf(simulationTime);
 		
-		final String debuggingTrace = tokens[9];
+		final String varExpansionTime = tokens[9];
+		result.varExpansionTime = Integer.valueOf(varExpansionTime);
+
+		final String aliasInferTime = tokens[10];
+		result.aliasInferTime = Integer.valueOf(aliasInferTime);
+
+		final String defInferTime = tokens[11];
+		result.defInferTime = Integer.valueOf(defInferTime);
+		
+		final String debuggingTrace = tokens[12];
 		result.debuggingTrace = debuggingTrace == " " ? null : debuggingTrace;
 		
-		final String debuggingStep_str = tokens[10];
+		final String debuggingStep_str = tokens[13];
 		result.debuggingSteps = Integer.valueOf(debuggingStep_str);
 
 		return result;
@@ -96,6 +111,9 @@ public class RunResult {
 		this.appendStr(strBuilder, String.valueOf(traceCollectionTime));
 		this.appendStr(strBuilder, String.valueOf(traceMatchingTime));
 		this.appendStr(strBuilder, String.valueOf(simulationTime));
+		this.appendStr(strBuilder, String.valueOf(varExpansionTime));
+		this.appendStr(strBuilder, String.valueOf(aliasInferTime));
+		this.appendStr(strBuilder, String.valueOf(defInferTime));
 		this.appendStr(strBuilder, this.debuggingTrace);
 		this.appendStr(strBuilder, String.valueOf(this.debuggingSteps));
 		return strBuilder.toString();
@@ -119,6 +137,9 @@ public class RunResult {
 		builder.append("Trace Collection Time: " + this.traceCollectionTime + "\n");
 		builder.append("Trace Matching Time: " + this.traceMatchingTime + "\n");
 		builder.append("Simulation Time: " + this.simulationTime + "\n");
+		builder.append("Variable Expansion Time: " + this.varExpansionTime + "\n");
+		builder.append("Alias Inference Time: " + this.aliasInferTime + "\n");
+		builder.append("Definition Inference Time: " + this.defInferTime + "\n");
 		builder.append("Debugging Trace: " + this.debuggingTrace + "\n");
 		builder.append("Debugging Steps: " + this.debuggingSteps + "\n");
 		builder.append("--------------------------------\n");
