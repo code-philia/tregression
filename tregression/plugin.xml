@@ -34,6 +34,11 @@
              name="Run All Defects4j Projects">
        </command>
        <command
+             defaultHandler="tregression.handler.AllMutationHandler"
+             id="tregression.command.runAllMutationProjects"
+             name="Run All Mutation Projects">
+       </command>
+       <command
              defaultHandler="tregression.handler.RegressionRetrieveHandler"
              id="tregression.command.retrieveRegression"
              name="Retrieve the Bug from exec file">
@@ -202,6 +207,11 @@
             <command
                   commandId="tregression.command.runAllDefects4jProjects"
                   label="Run All Defects4j Projects"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.command.runAllMutationProjects"
+                  label="Run All Mutation Projects"
                   style="push">
             </command>
             <command
