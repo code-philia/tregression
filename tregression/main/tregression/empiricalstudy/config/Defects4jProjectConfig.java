@@ -47,6 +47,7 @@ public class Defects4jProjectConfig extends ProjectConfig{
 		else if (projectName.equals("Gson")) {
 			config = new MavenProjectConfig("gson"+File.separator+"src"+File.separator+"test"+File.separator+"java", "gson"+File.separator+"src"+File.separator+"main"+File.separator+"java", "target"+File.separator+"test-classes", "target"+File.separator+"classes", "target", projectName, regressionID);
 		}
+
 		else if (projectName.equals("JacksonCore") || projectName.equals("JacksonXml") || projectName.equals("Jsoup")) {
 			config = new MavenProjectConfig("src"+File.separator+"test"+File.separator+"java", "src"+File.separator+"main"+File.separator+"java", "target"+File.separator+"test-classes", "target"+File.separator+"classes", "target", projectName, regressionID);
 		}
@@ -104,7 +105,11 @@ public class Defects4jProjectConfig extends ProjectConfig{
 			config = new MavenProjectConfig("src"+File.separator+"test"+File.separator+"java", "src"+File.separator+"main"+File.separator+"java", "target"+File.separator+"test-classes", "target"+File.separator+"classes", "target", projectName, regressionID);
 			List<String> addSrcList = new ArrayList<>();
 			addSrcList.add("target"+File.separator+"generated-sources");
-			config.additionalSourceFolder = addSrcList;
+			config.additionalSourceFolder = addSrcList;}
+
+		else if (projectName.equals("addthis_stream-lib")) {
+			config = new MavenProjectConfig("src"+File.separator+"test"+File.separator+"java", "src"+File.separator+"main"+File.separator+"java", "target"+File.separator+"test-classes", "target"+File.separator+"classes", "target", projectName, regressionID);				
+			
 		}
 		
 		return config;

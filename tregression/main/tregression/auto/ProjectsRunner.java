@@ -43,13 +43,16 @@ public abstract class ProjectsRunner {
         this.maxThreadsCount = 5;
         
         final String targetBugPath = Paths.get(basePath, "bugs.txt").toString();
-        try (BufferedReader reader = new BufferedReader(new FileReader(targetBugPath))) {
-        	String line;
-			while ((line = reader.readLine()) != null) {
-				this.targetBugs.add(line);
-			}
-        } catch (IOException e) {
-        	e.printStackTrace();
+        File targetBugFile = new File(targetBugPath);
+        if(targetBugFile.exists()) {
+            try (BufferedReader reader = new BufferedReader(new FileReader(targetBugPath))) {
+            	String line;
+    			while ((line = reader.readLine()) != null) {
+    				this.targetBugs.add(line);
+    			}
+            } catch (IOException e) {
+            	e.printStackTrace();
+            }
         }
         
      // Read the skipBugs list to skip bug ids that don't want to execute
