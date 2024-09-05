@@ -5,12 +5,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 import microbat.model.trace.Trace;
+import microbat.recommendation.UserFeedback;
+import microbat.tracerecov.executionsimulator.LLMTimer;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.config.ConfigFactory;
 import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.empiricalstudy.solutionpattern.SolutionPattern;
+import tregression.model.StepOperationTuple;
 
 public class Defects4jRunner extends ProjectsRunner {
 	
@@ -33,6 +36,7 @@ public class Defects4jRunner extends ProjectsRunner {
 	@Override
 	public RunResult runProject(String projectName, String bugID_str) {
 		RunResult result = new RunResult();
+		LLMTimer.reset();
 		try {
 			Integer.valueOf(bugID_str);
 		} catch (NumberFormatException e) {
@@ -78,8 +82,17 @@ public class Defects4jRunner extends ProjectsRunner {
 				result.traceCollectionTime = trial.getTraceCollectionTime();
 				result.traceMatchingTime = trial.getTraceMatchTime();
 				result.simulationTime = trial.getSimulationTime();
+				result.varExpansionTime = LLMTimer.varExpansionTime;
+				result.aliasInferTime = LLMTimer.aliasInferTime;
+				result.defInferTime = LLMTimer.defInferTime;
 				result.debuggingTrace = trial.getDebuggingTrace().replace(",", ";").replace("\n", "#").replace("\r", "#");
-				
+
+				List<StepOperationTuple> steps = trial.getCheckList();
+				result.debuggingSteps = (int) steps.stream()
+						.filter(s -> s.getUserFeedback().getFeedbackType().equals(UserFeedback.WRONG_PATH)
+								|| s.getUserFeedback().getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE))
+						.count();
+
 				for (DeadEndRecord record : trial.getDeadEndRecordList()) {
 					SolutionPattern solutionPattern = record.getSolutionPattern();
 					if (solutionPattern != null) {
