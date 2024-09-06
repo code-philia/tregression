@@ -121,7 +121,7 @@ public abstract class ProjectsRunner {
             return generator0.generateTrials(bugFolder, fixFolder, false, false, false, 3, true, true, config, "");
         });
         try {
-            return future.get(60, TimeUnit.MINUTES);
+            return future.get(10, TimeUnit.MINUTES);
         } catch (TimeoutException e) {
             return null;
         } catch (InterruptedException e) {

@@ -2,7 +2,6 @@ package tregression.auto;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -12,11 +11,13 @@ import java.nio.file.StandardCopyOption;
 import java.util.List;
 
 import microbat.model.trace.Trace;
+import microbat.recommendation.UserFeedback;
+import microbat.tracerecov.executionsimulator.LLMTimer;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.config.MutationConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
-import tregression.empiricalstudy.config.TraceRecovMutationConfig;
+import tregression.model.StepOperationTuple;
 
 /*
  * See Defects4jRunner
@@ -89,6 +90,16 @@ public class MutationTregressionRunner extends ProjectsRunner {
 			result.traceCollectionTime = trial.getTraceCollectionTime();
 			result.traceMatchingTime = trial.getTraceMatchTime();
 			result.simulationTime = trial.getSimulationTime();
+			result.varExpansionTime = LLMTimer.varExpansionTime;
+			result.aliasInferTime = LLMTimer.aliasInferTime;
+			result.defInferTime = LLMTimer.defInferTime;
+			result.debuggingTrace = trial.getDebuggingTrace().replace(",", ";").replace("\n", "#").replace("\r", "#");
+
+			List<StepOperationTuple> steps = trial.getCheckList();
+			result.debuggingSteps = (int) steps.stream()
+					.filter(s -> s.getUserFeedback().getFeedbackType().equals(UserFeedback.WRONG_PATH)
+							|| s.getUserFeedback().getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE))
+					.count();
 		}
 
 		// 3. delete the previous bug-fix folder
