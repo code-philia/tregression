@@ -101,7 +101,10 @@ public class TrialGenerator0 {
 //				if(!trial.isDump()){
 //					break;					
 //				}
-				if(trial.isSuccessful()){
+				if (trial == null) {
+					return null;
+				}
+				if (trial.isSuccessful()) {
 					break;					
 				}
 			}
@@ -230,7 +233,7 @@ public class TrialGenerator0 {
 			
 			while(!isDataFlowComplete && trialNum<trialLimit){
 				trialNum++;
-				
+
 				Settings.compilationUnitMap.clear();
 				Settings.iCompilationUnitMap.clear();
 				buggyRS = buggyCollector.run(buggyPath, tc, config, isRunInTestCaseMode, 
@@ -248,13 +251,14 @@ public class TrialGenerator0 {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(correctRs.getRunningType()));
 					return trial;
 				}
-				
+
 				if (buggyRS != null && correctRs != null) {
 					cachedBuggyRS = buggyRS;
 					cachedCorrectRS = correctRs;
 
-					System.out.println("start matching trace..., buggy trace length: " + buggyRS.getRunningTrace().size()
-							+ ", correct trace length: " + correctRs.getRunningTrace().size());
+					System.out
+							.println("start matching trace..., buggy trace length: " + buggyRS.getRunningTrace().size()
+									+ ", correct trace length: " + correctRs.getRunningTrace().size());
 					time1 = System.currentTimeMillis();
 					diffMatcher = new DiffMatcher(config.srcSourceFolder, config.srcTestFolder, buggyPath, fixPath);
 					diffMatcher.matchCode();
@@ -269,34 +273,39 @@ public class TrialGenerator0 {
 					cachedDiffMatcher = diffMatcher;
 					cachedPairList = pairList;
 				}
-				
+
 				Trace buggyTrace = buggyRS.getRunningTrace();
 				Trace correctTrace = correctRs.getRunningTrace();
-				
+
 				if (requireVisualization) {
 					Visualizer visualizer = new Visualizer();
 					visualizer.visualize(buggyTrace, correctTrace, pairList, diffMatcher);
 				}
-				
+
 				RootCauseFinder rootcauseFinder = new RootCauseFinder();
 				rootcauseFinder.setRootCauseBasedOnDefects4J(pairList, diffMatcher, buggyTrace, correctTrace);
-				
+
 				Simulator simulator = new Simulator(useSliceBreaker, enableRandom, breakLimit);
 				simulator.prepare(buggyTrace, correctTrace, pairList, diffMatcher);
-				if(rootcauseFinder.getRealRootCaseList().isEmpty()){
+				if (rootcauseFinder.getRealRootCaseList().isEmpty()) {
 					trial = EmpiricalTrial.createDumpTrial("cannot find real root cause");
-					StepOperationTuple tuple = new StepOperationTuple(simulator.getObservedFault(), 
+					StepOperationTuple tuple = new StepOperationTuple(simulator.getObservedFault(),
 							new UserFeedback(UserFeedback.UNCLEAR), simulator.getObservedFault(), DebugState.UNCLEAR);
 					trial.getCheckList().add(tuple);
-					
+
 					return trial;
 				}
-				
-				if(simulator.getObservedFault()==null){
+
+				if (simulator.getObservedFault() == null) {
 					trial = EmpiricalTrial.createDumpTrial("cannot find observable fault");
 					return trial;
 				}
-				
+
+				rootcauseFinder.checkRootCause(simulator.getObservedFault(), buggyTrace, correctTrace, pairList,
+						diffMatcher);
+				TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, buggyTrace,
+						correctTrace);
+
 				isDataFlowComplete = true;
 				System.out.println("start simulating debugging...");
 				time1 = System.currentTimeMillis();
@@ -304,7 +313,7 @@ public class TrialGenerator0 {
 				time2 = System.currentTimeMillis();
 				int simulationTime = (int) (time2 - time1);
 				System.out.println("finish simulating debugging, taking " + simulationTime / 1000 + "s");
-				
+
 				for (EmpiricalTrial t : trials0) {
 					t.setTestcase(tc.testClass + "#" + tc.testMethod);
 					t.setTraceCollectionTime(buggyTrace.getConstructTime() + correctTrace.getConstructTime());
@@ -314,7 +323,7 @@ public class TrialGenerator0 {
 					t.setFixedTrace(correctTrace);
 					t.setPairList(pairList);
 					t.setDiffMatcher(diffMatcher);
-					
+
 					PatternIdentifier identifier = new PatternIdentifier();
 					identifier.identifyPattern(t);
 				}

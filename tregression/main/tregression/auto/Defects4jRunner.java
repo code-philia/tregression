@@ -4,6 +4,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.agent.TraceAgentRunner;
 import microbat.model.trace.Trace;
 import microbat.recommendation.UserFeedback;
 import microbat.tracerecov.executionsimulator.LLMTimer;
@@ -18,7 +19,7 @@ import tregression.model.StepOperationTuple;
 public class Defects4jRunner extends ProjectsRunner {
 	
 	private List<String> outOfMemoryFilters = new ArrayList<>();
-	
+
 	public Defects4jRunner(String basePath, String resultPath) {
 		this(basePath, resultPath, 5);
 	}
@@ -44,6 +45,9 @@ public class Defects4jRunner extends ProjectsRunner {
 		}
 		
 		final String projectID = projectName + ":" + bugID_str;
+		TraceAgentRunner.projectName = projectName;
+		TraceAgentRunner.projectID = bugID_str;
+
 		if (this.outOfMemoryFilters.contains(projectID)) {
 			result.projectName = projectName;
 			result.bugID = Integer.valueOf(bugID_str);
@@ -64,7 +68,7 @@ public class Defects4jRunner extends ProjectsRunner {
 			
 			List<EmpiricalTrial> trials = this.generateTrials(bugFolder, fixFolder, config);
 			if (trials == null || trials.isEmpty()) {
-				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
+//				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
 				return result;
 			}
 			
