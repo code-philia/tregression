@@ -9,6 +9,7 @@ import java.util.Scanner;
 
 import microbat.Activator;
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
 import microbat.preference.AnalysisScopePreference;
 import microbat.preference.TraceRecovPreference;
 import microbat.recommendation.DebugState;
