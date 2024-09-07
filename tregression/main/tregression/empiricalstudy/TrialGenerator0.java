@@ -7,9 +7,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import microbat.Activator;
 import microbat.model.trace.Trace;
-import microbat.model.trace.TraceNode;
 import microbat.preference.AnalysisScopePreference;
+import microbat.preference.TraceRecovPreference;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.UserFeedback;
 import microbat.util.Settings;
@@ -90,6 +91,11 @@ public class TrialGenerator0 {
 							tc, config, requireVisualization, true, useSliceBreaker, enableRandom, breakLimit);
 				} catch (Exception e) {
 					e.printStackTrace();
+					String errorMessage = e.getMessage();
+					for (StackTraceElement element : e.getStackTrace()) {
+						errorMessage += "#at " + element.toString();
+					}
+					trial = EmpiricalTrial.createDumpTrial(errorMessage);
 					continue;
 				}
 //				if(!trial.isDump()){
@@ -105,6 +111,11 @@ public class TrialGenerator0 {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			String errorMessage = e.getMessage();
+			for (StackTraceElement element : e.getStackTrace()) {
+				errorMessage += "#at " + element.toString();
+			}
+			trial = EmpiricalTrial.createDumpTrial(errorMessage);
 		}
 
 		if (trial == null) {
@@ -202,22 +213,6 @@ public class TrialGenerator0 {
 		if (cachedBuggyRS != null && cachedCorrectRS != null && isReuse) {
 			buggyRS = cachedBuggyRS;
 			correctRs = cachedCorrectRS;
-
-//			System.out.println("start matching trace..., buggy trace length: " + buggyRS.getRunningTrace().size()
-//					+ ", correct trace length: " + correctRs.getRunningTrace().size());
-//			time1 = System.currentTimeMillis();
-//			diffMatcher = new DiffMatcher(config.srcSourceFolder, config.srcTestFolder, buggyPath, fixPath);
-//			diffMatcher.matchCode();
-//
-//			ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
-//			pairList = traceMatcher.matchTraceNodePair(buggyRS.getRunningTrace(), correctRs.getRunningTrace(),
-//					diffMatcher);
-//			time2 = System.currentTimeMillis();
-//			matchTime = (int) (time2 - time1);
-//			System.out.println("finish matching trace, taking " + matchTime + "ms");
-//			cachedDiffMatcher = diffMatcher;
-//			cachedPairList = pairList;
-
 			diffMatcher = cachedDiffMatcher;
 			pairList = cachedPairList;
 			
@@ -233,13 +228,16 @@ public class TrialGenerator0 {
 			List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
 			List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 			
-			while (!isDataFlowComplete && trialNum < trialLimit) {
+			config.includeLibs = includedClassNames;
+			config.excludeLibs = excludedClassNames;
+			
+			while(!isDataFlowComplete && trialNum<trialLimit){
 				trialNum++;
 
 				Settings.compilationUnitMap.clear();
 				Settings.iCompilationUnitMap.clear();
 				buggyRS = buggyCollector.run(buggyPath, tc, config, isRunInTestCaseMode, 
-						allowMultiThread, includedClassNames, excludedClassNames);
+						allowMultiThread);
 				if (buggyRS.getRunningType() != NORMAL) {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(buggyRS.getRunningType()));
 					return trial;
@@ -247,8 +245,8 @@ public class TrialGenerator0 {
 
 				Settings.compilationUnitMap.clear();
 				Settings.iCompilationUnitMap.clear();
-				correctRs = correctCollector.run(fixPath, tc, config, isRunInTestCaseMode, allowMultiThread,
-						includedClassNames, excludedClassNames);
+				correctRs = correctCollector.run(fixPath, tc, config, isRunInTestCaseMode, 
+						allowMultiThread);
 				if (correctRs.getRunningType() != NORMAL) {
 					trial = EmpiricalTrial.createDumpTrial(getProblemType(correctRs.getRunningType()));
 					return trial;
@@ -308,34 +306,6 @@ public class TrialGenerator0 {
 				TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, buggyTrace,
 						correctTrace);
 
-				if (rootCause == null) {
-
-//					System.out.println("[Search Lib Class] Cannot find the root cause, I am searching for library classes...");
-//					
-//					List<TraceNode> buggySteps = rootcauseFinder.getStopStepsOnBuggyTrace();
-//					List<TraceNode> correctSteps = rootcauseFinder.getStopStepsOnCorrectTrace();
-//					
-//					List<String> newIncludedClassNames = new ArrayList<>();
-//					List<String> newIncludedBuggyClassNames = RegressionUtil.identifyIncludedClassNames(buggySteps, buggyRS.getPrecheckInfo(), rootcauseFinder.getRegressionNodeList());
-//					List<String> newIncludedCorrectClassNames = RegressionUtil.identifyIncludedClassNames(correctSteps, correctRs.getPrecheckInfo(), rootcauseFinder.getCorrectNodeList());
-//					newIncludedClassNames.addAll(newIncludedBuggyClassNames);
-//					newIncludedClassNames.addAll(newIncludedCorrectClassNames);
-//					boolean includedClassChanged = false;
-//					for(String name: newIncludedClassNames){
-//						if(!includedClassNames.contains(name)){
-//							includedClassNames.add(name);
-//							includedClassChanged = true;
-//						}
-//					}
-//					
-//					if(!includedClassChanged) {
-//						trialNum = trialLimit + 1;
-//					}
-//					else {
-//						continue;						
-//					}
-				}
-
 				isDataFlowComplete = true;
 				System.out.println("start simulating debugging...");
 				time1 = System.currentTimeMillis();
@@ -348,6 +318,7 @@ public class TrialGenerator0 {
 					t.setTestcase(tc.testClass + "#" + tc.testMethod);
 					t.setTraceCollectionTime(buggyTrace.getConstructTime() + correctTrace.getConstructTime());
 					t.setTraceMatchTime(matchTime);
+					t.setSimulationTime(simulationTime);
 					t.setBuggyTrace(buggyTrace);
 					t.setFixedTrace(correctTrace);
 					t.setPairList(pairList);

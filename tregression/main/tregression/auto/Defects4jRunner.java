@@ -6,12 +6,15 @@ import java.util.List;
 
 import microbat.agent.TraceAgentRunner;
 import microbat.model.trace.Trace;
+import microbat.recommendation.UserFeedback;
+import microbat.tracerecov.executionsimulator.LLMTimer;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
-import tregression.empiricalstudy.config.Defects4jProjectConfig;
+import tregression.empiricalstudy.config.ConfigFactory;
 import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.empiricalstudy.solutionpattern.SolutionPattern;
+import tregression.model.StepOperationTuple;
 
 public class Defects4jRunner extends ProjectsRunner {
 	
@@ -34,6 +37,7 @@ public class Defects4jRunner extends ProjectsRunner {
 	@Override
 	public RunResult runProject(String projectName, String bugID_str) {
 		RunResult result = new RunResult();
+		LLMTimer.reset();
 		try {
 			Integer.valueOf(bugID_str);
 		} catch (NumberFormatException e) {
@@ -52,14 +56,16 @@ public class Defects4jRunner extends ProjectsRunner {
 			result.projectName = projectName;
 			result.bugID = Integer.valueOf(bugID_str);
 			
-			final ProjectConfig config = Defects4jProjectConfig.getConfig(projectName, bugID_str);
+			final String bugFolder = Paths.get(basePath, projectName, bugID_str, "bug").toString();
+			final String fixFolder = Paths.get(basePath, projectName, bugID_str, "fix").toString();
+			
+			final ProjectConfig config = ConfigFactory.createConfig(projectName, bugID_str, bugFolder, fixFolder);
+			
 			if(config == null) {
 				result.errorMessage = ProjectsRunner.genMsg("Cannot generate project config");
 				return result;
 			}
 			
-			final String bugFolder = Paths.get(basePath, projectName, bugID_str, "bug").toString();
-			final String fixFolder = Paths.get(basePath, projectName, bugID_str, "fix").toString();
 			List<EmpiricalTrial> trials = this.generateTrials(bugFolder, fixFolder, config);
 			if (trials == null || trials.isEmpty()) {
 //				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
@@ -77,6 +83,20 @@ public class Defects4jRunner extends ProjectsRunner {
 				result.traceLen = Long.valueOf(trace.size());
 				result.isOmissionBug = trial.getBugType() == EmpiricalTrial.OVER_SKIP;
 				result.rootCauseOrder = trial.getRootcauseNode() == null ? -1 : trial.getRootcauseNode().getOrder();
+				result.traceCollectionTime = trial.getTraceCollectionTime();
+				result.traceMatchingTime = trial.getTraceMatchTime();
+				result.simulationTime = trial.getSimulationTime();
+				result.varExpansionTime = LLMTimer.varExpansionTime;
+				result.aliasInferTime = LLMTimer.aliasInferTime;
+				result.defInferTime = LLMTimer.defInferTime;
+				result.debuggingTrace = trial.getDebuggingTrace().replace(",", ";").replace("\n", "#").replace("\r", "#");
+
+				List<StepOperationTuple> steps = trial.getCheckList();
+				result.debuggingSteps = (int) steps.stream()
+						.filter(s -> s.getUserFeedback().getFeedbackType().equals(UserFeedback.WRONG_PATH)
+								|| s.getUserFeedback().getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE))
+						.count();
+
 				for (DeadEndRecord record : trial.getDeadEndRecordList()) {
 					SolutionPattern solutionPattern = record.getSolutionPattern();
 					if (solutionPattern != null) {

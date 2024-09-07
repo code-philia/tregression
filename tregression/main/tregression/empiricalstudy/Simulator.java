@@ -12,6 +12,7 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.recommendation.ChosenVariableOption;
 import microbat.recommendation.UserFeedback;
+import microbat.util.Settings;
 import sav.common.core.SavException;
 import tregression.SimulationFailException;
 import tregression.StepChangeType;
@@ -22,6 +23,7 @@ import tregression.empiricalstudy.training.TrainingDataTransfer;
 import tregression.model.PairList;
 import tregression.model.StepOperationTuple;
 import tregression.model.TraceNodePair;
+import tregression.reexecutor.TraceRecovererRe;
 import tregression.separatesnapshots.DiffMatcher;
 
 /**
@@ -67,7 +69,7 @@ public class Simulator  {
 		}
 		
 		while(node != null) {
-			StepChangeType changeType = checker.getType(node, true, pairList, matcher);
+			StepChangeType changeType = checker.getChangeTypeWithoutVarExpansion(node, true, pairList, matcher);
 			if(changeType.getType()==StepChangeType.CTL) {
 				TraceNode cDom = node.getInvocationMethodOrDominator();
 				if(cDom==null){
@@ -80,7 +82,7 @@ public class Simulator  {
 					}
 				}
 				
-				StepChangeType cDomType = checker.getType(cDom, true, pairList, matcher);
+				StepChangeType cDomType = checker.getChangeTypeWithoutVarExpansion(cDom, true, pairList, matcher);
 				if(cDomType.getType()==StepChangeType.IDT){
 					TraceNode stepOverPrev = node.getStepOverPrevious();
 					if(stepOverPrev!=null){
@@ -186,7 +188,7 @@ public class Simulator  {
 			int times = 5;
 			while(observedFaultList.size() < times && node!= null){
 				
-				StepChangeType changeType = checker.getType(node, true, pairList, matcher);
+				StepChangeType changeType = checker.getChangeTypeWithoutVarExpansion(node, true, pairList, matcher);
 				if(changeType.getType()!=StepChangeType.IDT){
 					observedFaultList.add(node);
 				}
@@ -207,7 +209,7 @@ public class Simulator  {
 			long end = System.currentTimeMillis();
 			int checkTime = (int) (end-start);
 
-			System.out.println("use slice breaker: " + useSliceBreaker);
+//			System.out.println("use slice breaker: " + useSliceBreaker);
 			if(useSliceBreaker) {
 				trials = startSimulationWithCachedState(observedFault, buggyTrace, correctTrace, getPairList(), matcher, finder);
 			}
@@ -342,6 +344,13 @@ public class Simulator  {
 				checkingList.add(operation);
 				
 				TraceNode dataDom = buggyTrace.findDataDependency(currentNode, readVar);
+				
+				if(Settings.collectGroundTruth) {
+					TraceRecovererRe traceRecovererRe = new TraceRecovererRe(buggyTrace);
+					if(!Settings.isEnableGPTInference) {
+						dataDom = traceRecovererRe.findDataDependency(currentNode, readVar);
+					}
+				}
 				
 				currentNode = dataDom;
 			} else if (changeType.getType() == StepChangeType.CTL) {

@@ -34,6 +34,11 @@
              name="Run All Defects4j Projects">
        </command>
        <command
+             defaultHandler="tregression.handler.AllMutationHandler"
+             id="tregression.command.runAllMutationProjects"
+             name="Run All Mutation Projects">
+       </command>
+       <command
              defaultHandler="tregression.handler.RegressionRetrieveHandler"
              id="tregression.command.retrieveRegression"
              name="Retrieve the Bug from exec file">
@@ -128,6 +133,16 @@
              id="tregression.simulate"
              name="Simulate Experiment">
        </command>
+       <command
+             defaultHandler="tregression.handler.AutoPromptEngineeringHandler"
+             id="tregression.autoPromptEngineering"
+             name="Auto Prompt Engineering">
+       </command>
+       <command
+             defaultHandler="tregression.handler.ExampleSearchingExperimentHandler"
+             id="tregression.exampleSearchingExperiment"
+             name="Example Searching Experiment">
+       </command>
  </extension>	
  <extension
          point="org.eclipse.ui.views">
@@ -205,6 +220,11 @@
                   style="push">
             </command>
             <command
+                  commandId="tregression.command.runAllMutationProjects"
+                  label="Run All Mutation Projects"
+                  style="push">
+            </command>
+            <command
                   commandId="tregression.command.retrieveRegression"
                   label="Retrieve the Bug from DB"
                   style="push">
@@ -265,6 +285,11 @@
             <command
                   commandId="tregression.collectDefects4jData"
                   icon="icons/evaluation.png"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.exampleSearchingExperiment"
+                  icon="icons/engineering.png"
                   style="push">
             </command>
          </toolbar>

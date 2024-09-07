@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import microbat.Activator;
+import microbat.codeanalysis.runtime.Condition;
 import microbat.preference.MicrobatPreference;
 import tregression.empiricalstudy.TestCase;
 
@@ -24,6 +25,11 @@ public class ProjectConfig {
 	
 	public String projectName;
 	public String regressionID;
+	
+	public List<String> includeLibs; 
+	public List<String> excludeLibs;
+	
+	public Condition condition;
 	
 	public ProjectConfig(String srcTestFolder, String srcSourceFolder, String bytecodeTestFolder,
 			String bytecodeSourceFolder, String buildFolder, String projectName, String regressionID) {

@@ -178,11 +178,17 @@ public class RootCauseFinder {
 				}
 			}
 			else if(changeType.getType()==StepChangeType.DAT){
-				for(Pair<VarValue, VarValue> pair: changeType.getWrongVariableList()){
+				
+				List<Pair<VarValue, VarValue>> list = changeType.getWrongVariableList();
+				
+				for(Pair<VarValue, VarValue> pair: list){
 					VarValue readVar = (stepW.isOnBefore)? pair.first() : pair.second();
 					trace = getCorrespondingTrace(stepW.isOnBefore, buggyTrace, correctTrace);
 					
-					TraceNode dataDom = trace.findDataDependency(step, readVar); 
+					TraceNode dataDom = trace.findDataDependency(step, readVar);
+					if (dataDom == null) {
+						continue;
+					}
 					addWorkNode(workList, dataDom, stepW.isOnBefore);
 					addCausality(dataDom, stepW.isOnBefore, causalityGraph, resultNode, readVar);
 					
