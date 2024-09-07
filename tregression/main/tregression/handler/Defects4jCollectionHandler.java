@@ -1,5 +1,7 @@
 package tregression.handler;
 
+import java.nio.file.Paths;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -32,8 +34,8 @@ public class Defects4jCollectionHandler extends AbstractHandler {
 	
 	private void execute() {
 		final String basePath = "D:\\Defects4j";
-//		final String resultPath = Paths.get("D:\\TraceRecov\\results.txt").toString();
-		final ProjectsRunner runner = new Defects4jRunner(basePath, "");
+		final String resultPath = Paths.get("D:\\TraceRecov\\results.txt").toString();
+		final ProjectsRunner runner = new Defects4jRunner(basePath, resultPath);
 		runner.run();
 	}
 }
