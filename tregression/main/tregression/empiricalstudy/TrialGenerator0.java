@@ -89,14 +89,16 @@ public class TrialGenerator0 {
 							tc, config, requireVisualization, true, useSliceBreaker, enableRandom, breakLimit);
 				} catch (Exception e) {
 					e.printStackTrace();
+					String errorMessage = e.getMessage();
+					for (StackTraceElement element : e.getStackTrace()) {
+						errorMessage += "#at " + element.toString();
+					}
+					trial = EmpiricalTrial.createDumpTrial(errorMessage);
 					continue;
 				}
 //				if(!trial.isDump()){
 //					break;					
 //				}
-				if (trial == null) {
-					return null;
-				}
 				if (trial.isSuccessful()) {
 					break;					
 				}
@@ -104,6 +106,11 @@ public class TrialGenerator0 {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			String errorMessage = e.getMessage();
+			for (StackTraceElement element : e.getStackTrace()) {
+				errorMessage += "#at " + element.toString();
+			}
+			trial = EmpiricalTrial.createDumpTrial(errorMessage);
 		}
 
 		if (trial == null) {
@@ -201,22 +208,6 @@ public class TrialGenerator0 {
 		if (cachedBuggyRS != null && cachedCorrectRS != null && isReuse) {
 			buggyRS = cachedBuggyRS;
 			correctRs = cachedCorrectRS;
-
-//			System.out.println("start matching trace..., buggy trace length: " + buggyRS.getRunningTrace().size()
-//					+ ", correct trace length: " + correctRs.getRunningTrace().size());
-//			time1 = System.currentTimeMillis();
-//			diffMatcher = new DiffMatcher(config.srcSourceFolder, config.srcTestFolder, buggyPath, fixPath);
-//			diffMatcher.matchCode();
-//
-//			ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
-//			pairList = traceMatcher.matchTraceNodePair(buggyRS.getRunningTrace(), correctRs.getRunningTrace(),
-//					diffMatcher);
-//			time2 = System.currentTimeMillis();
-//			matchTime = (int) (time2 - time1);
-//			System.out.println("finish matching trace, taking " + matchTime + "ms");
-//			cachedDiffMatcher = diffMatcher;
-//			cachedPairList = pairList;
-
 			diffMatcher = cachedDiffMatcher;
 			pairList = cachedPairList;
 			
@@ -313,6 +304,7 @@ public class TrialGenerator0 {
 					t.setTestcase(tc.testClass + "#" + tc.testMethod);
 					t.setTraceCollectionTime(buggyTrace.getConstructTime() + correctTrace.getConstructTime());
 					t.setTraceMatchTime(matchTime);
+					t.setSimulationTime(simulationTime);
 					t.setBuggyTrace(buggyTrace);
 					t.setFixedTrace(correctTrace);
 					t.setPairList(pairList);
