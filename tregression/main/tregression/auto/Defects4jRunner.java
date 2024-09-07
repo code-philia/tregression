@@ -6,12 +6,14 @@ import java.util.List;
 
 import microbat.agent.TraceAgentRunner;
 import microbat.model.trace.Trace;
+import microbat.recommendation.UserFeedback;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.empiricalstudy.solutionpattern.SolutionPattern;
+import tregression.model.StepOperationTuple;
 
 public class Defects4jRunner extends ProjectsRunner {
 	
@@ -77,6 +79,20 @@ public class Defects4jRunner extends ProjectsRunner {
 				result.traceLen = Long.valueOf(trace.size());
 				result.isOmissionBug = trial.getBugType() == EmpiricalTrial.OVER_SKIP;
 				result.rootCauseOrder = trial.getRootcauseNode() == null ? -1 : trial.getRootcauseNode().getOrder();
+				result.traceCollectionTime = trial.getTraceCollectionTime();
+				result.traceMatchingTime = trial.getTraceMatchTime();
+				result.simulationTime = trial.getSimulationTime();
+				result.varExpansionTime = 0;
+				result.aliasInferTime = 0;
+				result.defInferTime = 0;
+				result.debuggingTrace = trial.getDebuggingTrace().replace(",", ";").replace("\n", "#").replace("\r", "#");
+
+				List<StepOperationTuple> steps = trial.getCheckList();
+				result.debuggingSteps = (int) steps.stream()
+						.filter(s -> s.getUserFeedback().getFeedbackType().equals(UserFeedback.WRONG_PATH)
+								|| s.getUserFeedback().getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE))
+						.count();
+				
 				for (DeadEndRecord record : trial.getDeadEndRecordList()) {
 					SolutionPattern solutionPattern = record.getSolutionPattern();
 					if (solutionPattern != null) {

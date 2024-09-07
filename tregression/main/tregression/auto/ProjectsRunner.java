@@ -72,10 +72,9 @@ public abstract class ProjectsRunner {
                 }
                 
                 final String id = projectName + ":" + bugID_str;
-//                if (!this.targetBugs.isEmpty() && !this.targetBugs.contains(id)) {
-//                	continue;
-//                }
-
+                if (!this.targetBugs.isEmpty() && !this.targetBugs.contains(id)) {
+                	continue;
+                }
 
                 RunResult result = this.runProject(projectName, bugID_str);
                 if (result != null) {

@@ -121,7 +121,13 @@ public class EmpiricalTrial {
 		buffer.append("over skip length: " + this.overskipLength + "\n");
 		buffer.append("explanation size: " + this.totalVisitedNodesNum + "\n");
 		buffer.append("slice breaker reaches bug: " + this.isBreakSlice() + "\n");
-		buffer.append("debugging trace: \n");
+		buffer.append("debugging trace: \n" + this.getDebuggingTrace() + "\n");
+		
+		return buffer.toString();
+	}
+	
+	public String getDebuggingTrace() {
+		StringBuffer buffer = new StringBuffer();
 		if(checkList!=null) {
 			for(StepOperationTuple tuple: checkList) {
 				buffer.append(tuple.toString() + "\n");
