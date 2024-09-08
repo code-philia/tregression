@@ -3,7 +3,15 @@ package tregression.empiricalstudy.config;
 public class ConfigFactory {
 	public static ProjectConfig createConfig(String projectName, String regressionID, String buggyPath,
 			String fixPath) {
-		if (isDefects4JProject(projectName)) {
+		return createConfig(projectName, regressionID, buggyPath, fixPath, false);
+	}
+	
+	public static ProjectConfig createConfig(String projectName, String regressionID, String buggyPath,
+			String fixPath, boolean isMutatedBug) {
+		if (isMutatedBug) {
+			ProjectConfig config = TraceRecovMutationConfig.getConfig(projectName, regressionID);
+			return config;
+		} else if (isDefects4JProject(projectName)) {
 			ProjectConfig config = Defects4jProjectConfig.getConfig(projectName, regressionID);
 			return config;
 		} else if (isMutationDatasetProject(projectName)) {

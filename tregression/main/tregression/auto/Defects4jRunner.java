@@ -4,14 +4,13 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import microbat.agent.TraceAgentRunner;
 import microbat.model.trace.Trace;
 import microbat.recommendation.UserFeedback;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.DeadEndRecord;
 import tregression.empiricalstudy.EmpiricalTrial;
-import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
+import tregression.empiricalstudy.config.TraceRecovMutationConfig;
 import tregression.empiricalstudy.solutionpattern.SolutionPattern;
 import tregression.model.StepOperationTuple;
 
@@ -43,9 +42,6 @@ public class Defects4jRunner extends ProjectsRunner {
 		}
 		
 		final String projectID = projectName + ":" + bugID_str;
-		TraceAgentRunner.projectName = projectName;
-		TraceAgentRunner.projectID = bugID_str;
-
 		if (this.outOfMemoryFilters.contains(projectID)) {
 			result.projectName = projectName;
 			result.bugID = Integer.valueOf(bugID_str);
@@ -54,7 +50,7 @@ public class Defects4jRunner extends ProjectsRunner {
 			result.projectName = projectName;
 			result.bugID = Integer.valueOf(bugID_str);
 			
-			final ProjectConfig config = Defects4jProjectConfig.getConfig(projectName, bugID_str);
+			final ProjectConfig config = TraceRecovMutationConfig.getConfig(projectName, bugID_str);
 			if(config == null) {
 				result.errorMessage = ProjectsRunner.genMsg("Cannot generate project config");
 				return result;
@@ -64,7 +60,7 @@ public class Defects4jRunner extends ProjectsRunner {
 			final String fixFolder = Paths.get(basePath, projectName, bugID_str, "fix").toString();
 			List<EmpiricalTrial> trials = this.generateTrials(bugFolder, fixFolder, config);
 			if (trials == null || trials.isEmpty()) {
-//				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
+				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
 				return result;
 			}
 			
@@ -92,7 +88,6 @@ public class Defects4jRunner extends ProjectsRunner {
 						.filter(s -> s.getUserFeedback().getFeedbackType().equals(UserFeedback.WRONG_PATH)
 								|| s.getUserFeedback().getFeedbackType().equals(UserFeedback.WRONG_VARIABLE_VALUE))
 						.count();
-				
 				for (DeadEndRecord record : trial.getDeadEndRecordList()) {
 					SolutionPattern solutionPattern = record.getSolutionPattern();
 					if (solutionPattern != null) {

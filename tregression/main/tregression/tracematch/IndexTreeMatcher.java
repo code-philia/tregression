@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,13 @@ public abstract class IndexTreeMatcher implements Matcher{
 	
 //	protected Map<Integer, MatchingGraphPair> pairMap = new HashMap<>();
 	protected Map<String, List<String>> lineMap = new HashMap<>();
+	
+	private List<String> LibraryType = Arrays.asList(
+			"java.util.HashSet",
+			"java.util.LinkedHashMap",
+			"java.util.HashMap",
+			"java.util.ArrayList"
+			);
 	
 	@Override
 	public abstract List<MatchingGraphPair> matchList(List<? extends GraphNode> childrenBefore,
@@ -168,6 +176,11 @@ public abstract class IndexTreeMatcher implements Matcher{
 	private double sim(IndexTreeNode itNodeBefore, IndexTreeNode itNodeAfter) {
 		BreakPoint pointBefore = itNodeBefore.getBreakPoint();
 		BreakPoint pointAfter = itNodeAfter.getBreakPoint();
+		
+		if(LibraryType.contains(pointBefore.getClassCanonicalName())) {
+			return 1;
+		}
+		
 		
 		try {
 			String pathBefore = pointBefore.getFullJavaFilePath();

@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.LineNumberReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -36,6 +37,13 @@ public class DiffMatcher {
 	private String fixPath;
 	
 	protected List<FilePairWithDiff> fileDiffList;
+	
+	private List<String> LibraryType = Arrays.asList(
+			"java.util.HashSet",
+			"java.util.LinkedHashMap",
+			"java.util.HashMap",
+			"java.util.ArrayList"
+			);
 	
 	public DiffMatcher(String sourceFolderName, String testFolderName, String buggyPath, String fixPath) {
 		super();
@@ -218,6 +226,11 @@ public class DiffMatcher {
 			srcPoint = targetPoint;
 			targetPoint = tmp;
 		}
+		
+		if(LibraryType.contains(srcPoint.getClassCanonicalName())) {
+			return true;
+		}
+		
 		System.currentTimeMillis();
 		FilePairWithDiff fileDiff = findDiffBySourceFile(srcPoint);
 		if(fileDiff==null){
