@@ -29,6 +29,8 @@ public abstract class ProjectsRunner {
 
     protected List<String> filter = new ArrayList<>();
     protected List<String> targetBugs = new ArrayList<>();
+//  Store bug ids that don't want to execute
+    protected List<String> skipBugs = new ArrayList<>();
 
     public ProjectsRunner(final String basePath, final String resultPath) {
         this(basePath, resultPath, 5);
@@ -51,6 +53,17 @@ public abstract class ProjectsRunner {
             	e.printStackTrace();
             }
         }
+        
+     // Read the skipBugs list to skip bug ids that don't want to execute
+        final String skipBugPath = Paths.get(basePath, "skip_bugs.txt").toString();
+        try (BufferedReader reader = new BufferedReader(new FileReader(skipBugPath))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                this.skipBugs.add(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void run() {
@@ -69,12 +82,19 @@ public abstract class ProjectsRunner {
             	continue;
             }
             for (String bugID_str : projectFolder.list()) {
+            	final String id = projectName + ":" + bugID_str;
+            	// Skip bugs that have already executed
                 if (this.filter.contains(projectName + ":" + bugID_str)) {
-                    ProjectsRunner.printMsg("Skip: " + projectName + " " + bugID_str);
+                    ProjectsRunner.printMsg("Skip (already processed): " + id);
                     continue;
                 }
                 
-                final String id = projectName + ":" + bugID_str;
+                if (this.skipBugs.contains(id)) {
+                    ProjectsRunner.printMsg("Skip (in skipBugs): " + id);
+                    continue;
+                }
+                
+                
                 if (!this.targetBugs.isEmpty() && !this.targetBugs.contains(id)) {
                 	continue;
                 }
