@@ -72,6 +72,9 @@ public class Defects4jRunner extends ProjectsRunner {
 				if (message == null || message.strip().equals("")) {
 					message = e.toString();
 				}
+				for (StackTraceElement element : e.getStackTrace()) {
+					message += "#at " + element.toString();
+				}
 				result.errorMessage = ProjectsRunner.genMsg(message);
 				return result;
 			}

@@ -91,11 +91,14 @@ public class TrialGenerator0 {
 							tc, config, requireVisualization, true, useSliceBreaker, enableRandom, breakLimit);
 				} catch (Exception e) {
 					e.printStackTrace();
-					String errorMessage = e.getMessage();
-					for (StackTraceElement element : e.getStackTrace()) {
-						errorMessage += "#at " + element.toString();
+					String message = e.getMessage();
+					if (message == null || message.strip().equals("")) {
+						message = e.toString();
 					}
-					trial = EmpiricalTrial.createDumpTrial(errorMessage);
+					for (StackTraceElement element : e.getStackTrace()) {
+						message += "#at " + element.toString();
+					}
+					trial = EmpiricalTrial.createDumpTrial(message);
 					continue;
 				}
 //				if(!trial.isDump()){
@@ -108,11 +111,14 @@ public class TrialGenerator0 {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			String errorMessage = e.getMessage();
-			for (StackTraceElement element : e.getStackTrace()) {
-				errorMessage += "#at " + element.toString();
+			String message = e.getMessage();
+			if (message == null || message.strip().equals("")) {
+				message = e.toString();
 			}
-			trial = EmpiricalTrial.createDumpTrial(errorMessage);
+			for (StackTraceElement element : e.getStackTrace()) {
+				message += "#at " + element.toString();
+			}
+			trial = EmpiricalTrial.createDumpTrial(message);
 		}
 
 		if (trial == null) {
