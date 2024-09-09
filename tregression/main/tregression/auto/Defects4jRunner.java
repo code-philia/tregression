@@ -3,6 +3,8 @@ package tregression.auto;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import microbat.model.trace.Trace;
 import microbat.recommendation.UserFeedback;
@@ -62,9 +64,15 @@ public class Defects4jRunner extends ProjectsRunner {
 				return result;
 			}
 			
-			List<EmpiricalTrial> trials = this.generateTrials(bugFolder, fixFolder, config);
+			List<EmpiricalTrial> trials = null;
+			try {
+				trials = this.generateTrials(bugFolder, fixFolder, config);
+			} catch (TimeoutException | InterruptedException | ExecutionException e) {
+				ProjectsRunner.genMsg(e.getMessage());
+			}
+			
 			if (trials == null || trials.isEmpty()) {
-				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
+//				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
 				return result;
 			}
 			

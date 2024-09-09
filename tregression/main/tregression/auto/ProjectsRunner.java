@@ -114,7 +114,7 @@ public abstract class ProjectsRunner {
     public abstract RunResult runProject(final String projectName, final String bugID_str);
 
     protected List<EmpiricalTrial> generateTrials(final String bugFolder, final String fixFolder,
-            final ProjectConfig config) {
+            final ProjectConfig config) throws TimeoutException, InterruptedException, ExecutionException {
         final TrialGenerator0 generator0 = new TrialGenerator0();
         ExecutorService executor = Executors.newSingleThreadExecutor();
         Future<List<EmpiricalTrial>> future = executor.submit(() -> {
@@ -123,11 +123,11 @@ public abstract class ProjectsRunner {
         try {
             return future.get(10, TimeUnit.MINUTES);
         } catch (TimeoutException e) {
-            return null;
+            throw e;
         } catch (InterruptedException e) {
-            return null;
+            throw e;
         } catch (ExecutionException e) {
-            return null;
+            throw e;
         } finally {
             future.cancel(true);
             executor.shutdown();
