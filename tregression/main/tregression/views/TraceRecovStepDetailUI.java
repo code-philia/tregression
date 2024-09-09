@@ -19,6 +19,7 @@ import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
+import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
 import microbat.tracerecov.varskeleton.VarSkeletonBuilder;
 import microbat.tracerecov.varskeleton.VariableSkeleton;
 import microbat.util.Settings;
@@ -119,7 +120,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 				if (obj instanceof VarValue) {
 
 					try {
-						ExecutionSimulator executionSimulator = new ExecutionSimulator();
+						ExecutionSimulator executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
 						executionSimulator.expandVariable((VarValue) obj, currentNode, null);
 					} catch (IOException ioException) {
 						ioException.printStackTrace();

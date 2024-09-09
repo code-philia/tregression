@@ -18,6 +18,7 @@ import microbat.model.variable.VirtualVar;
 import microbat.preference.TraceRecovPreference;
 import microbat.tracerecov.TraceRecovUtils;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
+import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
 import microbat.tracerecov.executionsimulator.ExecutionSimulatorForPromptCollection;
 import microbat.util.PrimitiveUtils;
 import microbat.util.Settings;
@@ -139,7 +140,7 @@ public class StepChangeTypeChecker {
 					if (isCollectingPrompt) {
 						simulator = new ExecutionSimulatorForPromptCollection();
 					} else {
-						simulator = new ExecutionSimulator();
+						simulator = ExecutionSimulatorFactory.getExecutionSimulator();
 					}
 
 					try {
