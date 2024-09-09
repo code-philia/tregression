@@ -68,7 +68,12 @@ public class Defects4jRunner extends ProjectsRunner {
 			try {
 				trials = this.generateTrials(bugFolder, fixFolder, config);
 			} catch (TimeoutException | InterruptedException | ExecutionException e) {
-				ProjectsRunner.genMsg(e.getMessage());
+				String message = e.getMessage();
+				if (message == null || message.strip().equals("")) {
+					message = e.toString();
+				}
+				result.errorMessage = ProjectsRunner.genMsg(message);
+				return result;
 			}
 			
 			if (trials == null || trials.isEmpty()) {
