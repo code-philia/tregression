@@ -132,8 +132,22 @@ public class StepChangeTypeChecker {
 				boolean shouldExpandBasedOnChangeTypes = changeTypesAreValid
 						&& (changeType1.getType() == StepChangeType.IDT || changeType2.getType() == StepChangeType.IDT
 								|| changeType1.getType() != changeType2.getType());
+				
+				boolean expandedEarier = false;
+				for (VarValue child : readVar1.getAllDescedentChildren()) {
+					if (child.getStringValue() != null && child.getStringValue().equals(VarValue.VALUE_TBD)) {
+						expandedEarier = true;
+						break;
+					}
+				}
+				for (VarValue child : readVar2.getAllDescedentChildren()) {
+					if (child.getStringValue() != null && child.getStringValue().equals(VarValue.VALUE_TBD)) {
+						expandedEarier = true;
+						break;
+					}
+				}
 
-				if (deadEndOnBothTraces || shouldExpandBasedOnChangeTypes) {
+				if (deadEndOnBothTraces || shouldExpandBasedOnChangeTypes || expandedEarier) {
 					ExecutionSimulator simulator;
 					boolean isCollectingPrompt = Activator.getDefault().getPreferenceStore()
 							.getString(TraceRecovPreference.COLLECT_PROMPT).equals("true");
