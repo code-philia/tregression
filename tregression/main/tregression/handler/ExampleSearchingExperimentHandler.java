@@ -11,6 +11,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import microbat.Activator;
 import microbat.preference.TraceRecovPreference;
 import microbat.tracerecov.autoprompt.AliasInferenceExampleSearcher;
+import microbat.tracerecov.autoprompt.DefinitionInferenceExampleSearcher;
 import microbat.tracerecov.autoprompt.ExampleSearcher;
 import microbat.tracerecov.autoprompt.PromptType;
 import microbat.tracerecov.autoprompt.VarExpansionExampleSearcher;
@@ -32,9 +33,9 @@ public class ExampleSearchingExperimentHandler extends AbstractHandler {
 				case ALIAS_INFERENCE:
 					exampleSearcher = new AliasInferenceExampleSearcher();
 					break;
-				// TODO: implement DefInferenceExampleSearcher
-//				case PromptType.DEF_INFERENCE:
-//					exampleSearcher = new DefInferenceExampleSearcher();
+				case DEF_INFERENCE:
+					exampleSearcher = new DefinitionInferenceExampleSearcher();
+					break;
 				default:
 					exampleSearcher = new VarExpansionExampleSearcher();
 				}
