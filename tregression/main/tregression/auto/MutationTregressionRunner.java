@@ -9,6 +9,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import microbat.model.trace.Trace;
 import microbat.recommendation.UserFeedback;
@@ -66,9 +68,22 @@ public class MutationTregressionRunner extends ProjectsRunner {
 		String fixFolder = fixFolderPath.toString();
 		String bugFolder = bugFolderPath.toString();
 
-		List<EmpiricalTrial> trials = this.generateTrials(bugFolder, fixFolder, config);
+		List<EmpiricalTrial> trials = null;
+		try {
+			trials = this.generateTrials(bugFolder, fixFolder, config);
+		} catch (TimeoutException | InterruptedException | ExecutionException e) {
+			String message = e.getMessage();
+			if (message == null || message.strip().equals("")) {
+				message = e.toString();
+			}
+			for (StackTraceElement element : e.getStackTrace()) {
+				message += "#at " + element.toString();
+			}
+			result.errorMessage = ProjectsRunner.genMsg(message);
+		}
+		
 		if (trials == null || trials.isEmpty()) {
-			result.errorMessage = ProjectsRunner.genMsg("No trials generated");
+//			result.errorMessage = ProjectsRunner.genMsg("No trials generated");
 			File dir = new File(Paths.get(this.workingBasePath,projectName).toString());
 			deleteDirectory(dir);
 			return result;
