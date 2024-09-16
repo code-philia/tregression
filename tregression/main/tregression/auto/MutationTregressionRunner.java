@@ -40,6 +40,7 @@ public class MutationTregressionRunner extends ProjectsRunner {
 	@Override
 	public RunResult runProject(String projectName, String bugID_str) {
 		RunResult result = new RunResult();
+		LLMTimer.reset();
 		try {
 			Integer.valueOf(bugID_str);
 		} catch (NumberFormatException e) {
