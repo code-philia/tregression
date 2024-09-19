@@ -67,36 +67,36 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 		 */
 		Button variableExpansionByLLMButton = new Button(slicingGroup, SWT.NONE);
 		variableExpansionByLLMButton.setText("Expand Variable By LLM");
-		variableExpansionByLLMButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
+		variableExpansionByLLMButton.setLayoutData(new GridData(SWT.LEFT, SWT.TOP, true, false));
 		VarExpansionByLLMListener varExpansionByLLMListener = new VarExpansionByLLMListener();
 		variableExpansionByLLMButton.addMouseListener(varExpansionByLLMListener);
 
-		/**
-		 * A button for expanding variable values by re-execution.
-		 */
-		Button variableExpansionByExecButton = new Button(slicingGroup, SWT.NONE);
-		variableExpansionByExecButton.setText("Expand Variable By Execution");
-		variableExpansionByExecButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
-		VariableExpansionByExecListener variableExpansionByExecListener = new VariableExpansionByExecListener();
-		variableExpansionByExecButton.addMouseListener(variableExpansionByExecListener);
-
-		/**
-		 * A button to find the data dominatee of the current step.
-		 */
-		Button dataDominateeButton = new Button(slicingGroup, SWT.NONE);
-		dataDominateeButton.setText("data dominatee");
-		dataDominateeButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
-		DataDominateeListener dataDominateeListener = new DataDominateeListener();
-		dataDominateeButton.addMouseListener(dataDominateeListener);
-
-		/**
-		 * A button to find the control dominatee of the current step.
-		 */
-		Button controlDominateeButton = new Button(slicingGroup, SWT.NONE);
-		controlDominateeButton.setText("control dominatee");
-		controlDominateeButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
-		ControlDominateeListener controlDominateeListener = new ControlDominateeListener();
-		controlDominateeButton.addMouseListener(controlDominateeListener);
+//		/**
+//		 * A button for expanding variable values by re-execution.
+//		 */
+//		Button variableExpansionByExecButton = new Button(slicingGroup, SWT.NONE);
+//		variableExpansionByExecButton.setText("Expand Variable By Execution");
+//		variableExpansionByExecButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
+//		VariableExpansionByExecListener variableExpansionByExecListener = new VariableExpansionByExecListener();
+//		variableExpansionByExecButton.addMouseListener(variableExpansionByExecListener);
+//
+//		/**
+//		 * A button to find the data dominatee of the current step.
+//		 */
+//		Button dataDominateeButton = new Button(slicingGroup, SWT.NONE);
+//		dataDominateeButton.setText("data dominatee");
+//		dataDominateeButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
+//		DataDominateeListener dataDominateeListener = new DataDominateeListener();
+//		dataDominateeButton.addMouseListener(dataDominateeListener);
+//
+//		/**
+//		 * A button to find the control dominatee of the current step.
+//		 */
+//		Button controlDominateeButton = new Button(slicingGroup, SWT.NONE);
+//		controlDominateeButton.setText("control dominatee");
+//		controlDominateeButton.setLayoutData(new GridData(SWT.RIGHT, SWT.TOP, true, false));
+//		ControlDominateeListener controlDominateeListener = new ControlDominateeListener();
+//		controlDominateeButton.addMouseListener(controlDominateeListener);
 	}
 
 	class VarExpansionByLLMListener implements MouseListener {
