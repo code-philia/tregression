@@ -26,7 +26,7 @@
        <command
              defaultHandler="tregression.handler.SeparateVersionHandler"
              id="tregression.command.runSeparateVersions"
-             name="Run for Separate Versions">
+             name="Run TraceRecov (integrated into Tregression)">
        </command>
        <command
              defaultHandler="tregression.handler.AllDefects4jHandler"
@@ -181,7 +181,7 @@
             class="tregression.perspectives.TraceComparisonPerspective"
             icon="icons/trace_comparison.png"
             id="tregression.perspective.traceChecking"
-            name="Trace Comparison">
+            name="TraceRecov (integrated into Tregression)">
       </perspective>
    </extension>
    <extension
@@ -189,62 +189,11 @@
       <menuContribution
             allPopups="false"
             locationURI="menu:org.eclipse.ui.main.menu">
-         <menu label="Tregression">
-            <command
-                     commandId="tregression.command.evaluateTrial"
-                     icon="icons/evaluation.png"
-                     label="Trial"
-                     style="push">
-            </command>
-            <command
-                  commandId="tregression.command.evaluateTestCase"
-                  icon="icons/evaluation.png"
-                  label="Test Case"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.command.evaluateAll"
-                  icon="icons/evaluation.png"
-                  label="Evaluate All"
-                  style="push">
-            </command>
+         <menu label="TraceRecov">
             <command
                   commandId="tregression.command.runSeparateVersions"
                   icon="icons/trace_comparison.png"
-                  label="Run for Separate Versions"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.command.runAllDefects4jProjects"
-                  label="Run All Defects4j Projects"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.command.runAllMutationProjects"
-                  label="Run All Mutation Projects"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.command.retrieveRegression"
-                  label="Retrieve the Bug from DB"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.command.retrieveAllDefect4jRegression"
-                  label="Retrieve All Defect4j Regressions"
-                  style="push">
-            </command>
-         </menu>
-         <menu
-               label="Trace Agent">
-            <command
-                  commandId="traceagent.command.runAllDefects4jBugs"
-                  label="Run All Defects4j"
-                  style="push">
-            </command>
-            <command
-                  commandId="traceagent.command.runSingleDefects4jBugs"
-                  label="Run Single Testcase"
+                  label="TraceRecov (integrated into Tregression)"
                   style="push">
             </command>
          </menu>
@@ -257,39 +206,7 @@
             <command
                   commandId="tregression.command.runSeparateVersions"
                   icon="icons/trace_comparison.png"
-                  label="Run for Separate Versions"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.command.retrieveRegression"
-                  icon="icons/recover.png"
-                  label="Recover Trace"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.command.localizationPlayer"
-                  icon="icons/play.png"
-                  label="Show Regression Localization"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.debugpilot"
-                  icon="icons/play_debug_pilot.png"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.stopdebugpilot"
-                  icon="icons/stop_debug_pilot_button.png"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.collectDefects4jData"
-                  icon="icons/evaluation.png"
-                  style="push">
-            </command>
-            <command
-                  commandId="tregression.exampleSearchingExperiment"
-                  icon="icons/engineering.png"
+                  label="TraceRecov (integrated into Tregression)"
                   style="push">
             </command>
          </toolbar>

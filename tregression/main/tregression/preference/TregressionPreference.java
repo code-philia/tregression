@@ -154,50 +154,50 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 		bugIDText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
 		bugIDText.setText(this.defaultBugID);
 		
-		Label testcaseLabel = new Label(compo, SWT.NONE);
-		testcaseLabel.setText("Test Case: ");
-		testCaseText = new Text(compo, SWT.NONE);
-		testCaseText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
-		testCaseText.setText(this.defaultTestCase);
-		
-		Label defects4jFileLabel = new Label(compo, SWT.NONE);
-		defects4jFileLabel.setText("Defects4j benchmark: ");
-		defects4jFileText = new Text(compo, SWT.NONE);
-		defects4jFileText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
-		defects4jFileText.setText(this.defaultDefects4jFile);
+//		Label testcaseLabel = new Label(compo, SWT.NONE);
+//		testcaseLabel.setText("Test Case: ");
+//		testCaseText = new Text(compo, SWT.NONE);
+//		testCaseText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+//		testCaseText.setText(this.defaultTestCase);
+//		
+//		Label defects4jFileLabel = new Label(compo, SWT.NONE);
+//		defects4jFileLabel.setText("Defects4j benchmark: ");
+//		defects4jFileText = new Text(compo, SWT.NONE);
+//		defects4jFileText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+//		defects4jFileText.setText(this.defaultDefects4jFile);
 
 //		this.createAutoFeedbackSettingGroup(compo);
-		this.createSimulationSettingGroup(compo);
+//		this.createSimulationSettingGroup(compo);
 		return compo;
 	}
 
 	@Override
 	public boolean performOk(){
-		this.autoSimulationMethod = AutoSimulationMethod.valueOf(this.simulateMethodTypeCombo.getText());
+//		this.autoSimulationMethod = AutoSimulationMethod.valueOf(this.simulateMethodTypeCombo.getText());
 		
 		IEclipsePreferences preferences = ConfigurationScope.INSTANCE.getNode("tregression.preference");
 		preferences.put(REPO_PATH, this.projectPathText.getText());
 		preferences.put(PROJECT_NAME, this.projectNameText.getText());
 		preferences.put(BUG_ID, this.bugIDText.getText());
-		preferences.put(TEST_CASE, this.testCaseText.getText());
-		preferences.put(DEFECTS4J_FILE, this.defects4jFileText.getText());
-		preferences.put(INPUT_FOLDER_KEY, this.inputFolderText.getText());
-		preferences.put(OUTPUT_PATH_KEY, this.outputFolderText.getText());
-		preferences.put(MISTAKE_PROBABILITY_KEY, this.mistakeProbabilityText.getText());
-		preferences.put(AUTO_SIMULATION_METHOD_KEY, this.autoSimulationMethod.name());
-		preferences.put(TIME_LIMIT_KEY, this.timeLimitText.getText());
+//		preferences.put(TEST_CASE, this.testCaseText.getText());
+//		preferences.put(DEFECTS4J_FILE, this.defects4jFileText.getText());
+//		preferences.put(INPUT_FOLDER_KEY, this.inputFolderText.getText());
+//		preferences.put(OUTPUT_PATH_KEY, this.outputFolderText.getText());
+//		preferences.put(MISTAKE_PROBABILITY_KEY, this.mistakeProbabilityText.getText());
+//		preferences.put(AUTO_SIMULATION_METHOD_KEY, this.autoSimulationMethod.name());
+//		preferences.put(TIME_LIMIT_KEY, this.timeLimitText.getText());
 	
 		
 		Activator.getDefault().getPreferenceStore().putValue(REPO_PATH, this.projectPathText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(PROJECT_NAME, this.projectNameText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(BUG_ID, this.bugIDText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(TEST_CASE, this.testCaseText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(DEFECTS4J_FILE, this.defects4jFileText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(INPUT_FOLDER_KEY, this.inputFolderText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(OUTPUT_PATH_KEY, this.outputFolderText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(MISTAKE_PROBABILITY_KEY, this.mistakeProbabilityText.getText());
-		Activator.getDefault().getPreferenceStore().putValue(AUTO_SIMULATION_METHOD_KEY, this.autoSimulationMethod.name());
-		Activator.getDefault().getPreferenceStore().putValue(TIME_LIMIT_KEY, this.timeLimitText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(TEST_CASE, this.testCaseText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(DEFECTS4J_FILE, this.defects4jFileText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(INPUT_FOLDER_KEY, this.inputFolderText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(OUTPUT_PATH_KEY, this.outputFolderText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(MISTAKE_PROBABILITY_KEY, this.mistakeProbabilityText.getText());
+//		Activator.getDefault().getPreferenceStore().putValue(AUTO_SIMULATION_METHOD_KEY, this.autoSimulationMethod.name());
+//		Activator.getDefault().getPreferenceStore().putValue(TIME_LIMIT_KEY, this.timeLimitText.getText());
 		
 		return true;
 	}
@@ -239,12 +239,12 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 		this.timeLimitText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
 		this.timeLimitText.setText(String.valueOf(this.defaultTimeLimit));
 		
-		Label simulationMethodLabel = new Label(simulationGroup, SWT.NONE);
-		simulationMethodLabel.setText("Testing Approach: ");
-		final String[] autoSimulationMethodNames = Stream.of(AutoSimulationMethod.values()).map(Enum::name).toArray(String[]::new);
-		this.simulateMethodTypeCombo = new Combo(simulationGroup, SWT.DROP_DOWN | SWT.READ_ONLY);
-		this.simulateMethodTypeCombo.setItems(autoSimulationMethodNames);
-		this.simulateMethodTypeCombo.select(this.autoSimulationMethod.ordinal());
+//		Label simulationMethodLabel = new Label(simulationGroup, SWT.NONE);
+//		simulationMethodLabel.setText("Testing Approach: ");
+//		final String[] autoSimulationMethodNames = Stream.of(AutoSimulationMethod.values()).map(Enum::name).toArray(String[]::new);
+//		this.simulateMethodTypeCombo = new Combo(simulationGroup, SWT.DROP_DOWN | SWT.READ_ONLY);
+//		this.simulateMethodTypeCombo.setItems(autoSimulationMethodNames);
+//		this.simulateMethodTypeCombo.select(this.autoSimulationMethod.ordinal());
 		
 		
 	}
