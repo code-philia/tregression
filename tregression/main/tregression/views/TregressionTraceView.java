@@ -6,6 +6,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.action.MenuManager;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.ui.IActionBars;
 
@@ -28,8 +29,10 @@ public abstract class TregressionTraceView extends TraceView {
 			public void menuAboutToShow(IMenuManager manager) {
 				Action forSearchAction = createForSearchAction();
 				Action controlMendingAction = createControlMendingAction();
+				MenuManager expandTraceOptions = createExpandTraceMenu(menuMgr);
 				menuMgr.add(forSearchAction);
 				menuMgr.add(controlMendingAction);
+				menuMgr.add(expandTraceOptions);
 			}
 		});
 		
