@@ -71,7 +71,17 @@ public class Defects4jMistakeDebugPIlotRunner extends ProjectsDebugRunner {
 			
 			final String bugFolder = Paths.get(basePath, projectName, bugID_str, "bug").toString();
 			final String fixFolder = Paths.get(basePath, projectName, bugID_str, "fix").toString();
-			List<EmpiricalTrial> trials = this.generateTrials(bugFolder, fixFolder, config);
+			// List<EmpiricalTrial> trials = this.generateTrials(bugFolder, fixFolder, config);
+			List<EmpiricalTrial> trials = null;
+			try {
+				trials = this.generateTrials(bugFolder, fixFolder, config);
+			} catch (java.util.concurrent.TimeoutException e) {
+				throw new RuntimeException(e);
+			} catch (java.util.concurrent.ExecutionException e) {
+				throw new RuntimeException(e);
+			} catch (InterruptedException e) {
+				throw new RuntimeException(e);
+			}
 			if (trials == null || trials.isEmpty()) {
 				result.errorMessage = ProjectsRunner.genMsg("No trials generated");
 				return result;
