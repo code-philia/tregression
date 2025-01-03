@@ -29,7 +29,10 @@ tasks.jar {
         attributes["Bundle-Name"] = "tracerecov-projs-tracerecov"
         attributes["Bundle-SymbolicName"] = "com.github.code-philia.tracerecov-projs-tracerecov"
         attributes["Bundle-Version"] = "1.0.0.202501030000"
-        attributes["Require-Bundle"] = "org.eclipse.ui"
+        attributes["Bundle-Activator"] = "microbat.Activator"
+        attributes["Bundle-ActivationPolicy"] = "lazy"
+        attributes["Bundle-ClassPath"] = "."
+        attributes["Require-Bundle"] = "org.eclipse.ui, org.eclipse.core.runtime, org.eclipse.ui.console, org.eclipse.jdt.ui, org.eclipse.core.resources;bundle-version=\"3.8.101\", org.eclipse.debug.core;bundle-version=\"3.8.0\", org.eclipse.jdt.debug;bundle-version=\"3.8.0\", org.eclipse.ui.editors, org.eclipse.jdt.core;bundle-version=\"3.9.2\", org.eclipse.jface.text;bundle-version=\"3.8.101\", org.junit, org.eclipse.e4.core.commands;bundle-version=\"0.11.0\", org.eclipse.ui.workbench, org.eclipse.ui.ide;bundle-version=\"3.11.0\", org.eclipse.jdt.launching;bundle-version=\"3.8.0\""
     }
 }
 
