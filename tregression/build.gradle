@@ -1,5 +1,8 @@
 plugins {
+    id "application"
     id "java"
+    id "eclipse"
+    id "com.gradleup.shadow" version "8.3.2"
 }
 
 repositories {
@@ -11,6 +14,22 @@ sourceSets {
         java {
             srcDirs += 'main'
         }
+        resources {
+            srcDirs += 'resources'
+        }
+    }
+}
+
+application {
+    mainClass = 'dummy.DummyMain'
+}
+
+tasks.jar {
+    manifest {
+        attributes["Bundle-Name"] = "tracerecov-projs-tracerecov"
+        attributes["Bundle-SymbolicName"] = "com.github.code-philia.tracerecov-projs-tracerecov"
+        attributes["Bundle-Version"] = "1.0.0.202501030000"
+        attributes["Require-Bundle"] = "org.eclipse.ui"
     }
 }
 
