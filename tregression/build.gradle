@@ -52,6 +52,8 @@ dependencies {
     implementation 'junit:junit:4.13.2'
 
     implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation 'ch.qos.logback:logback-core:1.3.14'
+    implementation 'ch.qos.logback:logback-classic:1.3.14'
 
     implementation 'commons-lang:commons-lang:2.6'
     implementation 'org.apache.maven.shared:maven-invoker:3.3.0'
@@ -81,3 +83,20 @@ configurations.all {
     }
 }
 
+def eclipseDir = System.getenv("ECLIPSE_HOME")
+
+task installToEclipse {
+    doLast {
+        if (eclipseDir == null || eclipseDir.isEmpty()) {
+            throw new GradleException("ECLIPSE_HOME is not set")
+        }
+
+        copy {
+            from shadowJar.outputs.files.singleFile
+            into eclipseDir + "/dropins"
+            // rename { fileName -> "tracerecov-plugin.jar"}
+        }
+    }
+}
+
+installToEclipse.dependsOn shadowJar
