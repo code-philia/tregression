@@ -1,0 +1,57 @@
+In the following code snippet:
+```java
+
+import java.util.ArrayList;
+
+public class SampleTest {
+    public void test() {
+        ArrayList<Integer> list = new ArrayList<>();
+        >>> list.add(1);
+    }
+}
+
+```
+This line of code has read the following variables:
+  Variable: $SampleTest.test.7:8 with value: $[]
+  Variable: $size with value: $0
+  Variable: $elementData with value: $[]
+  Variable: $DEFAULTCAPACITY_EMPTY_ELEMENTDATA with value: $[]
+  Variable: $return_of_java.util.ArrayList#calculateCapacity([Ljava/lang/Object;I)I with value: $10
+  Variable: $elementData with value: $[]
+  Variable: $modCount with value: $0
+  Variable: $elementData with value: $[]
+  Variable: $elementData with value: $[]
+  Variable: $elementData with value: $[]
+  Variable: $return_of_java.util.Arrays#copyOf([Ljava/lang/Object;ILjava/lang/Class;)[Ljava/lang/Object; with value: $[null, null, null, null, null, null, null, null, null, null]
+  Variable: $return_of_java.util.Arrays#copyOf([Ljava/lang/Object;I)[Ljava/lang/Object; with value: $[null, null, null, null, null, null, null, null, null, null]
+  Variable: $elementData with value: $[]
+  Variable: $elementData with value: $[null, null, null, null, null, null, null, null, null, null]
+  Variable: $size with value: $0
+  Variable: $SampleTest.test.7:8 with value: $[]
+  Variable: $return_of_java.util.ArrayList#add(Ljava/lang/Object;)Z with value: $1
+
+This line of code has written the following variables:
+  Variable: $arg0 with value: $1
+  Variable: $arg0 with value: $[]
+  Variable: $arg1 with value: $1
+  Variable: $ConditionResult_14 with value: $1
+  Variable: $return_of_java.util.ArrayList#calculateCapacity([Ljava/lang/Object;I)I with value: $10
+  Variable: $arg0 with value: $10
+  Variable: $modCount with value: $1
+  Variable: $ConditionResult_18 with value: $1
+  Variable: $arg0 with value: $10
+  Variable: $ConditionResult_22 with value: $1
+  Variable: $ConditionResult_24 with value: $0
+  Variable: $arg0 with value: $[]
+  Variable: $arg1 with value: $10
+  Variable: $arg1 with value: $10
+  Variable: $arg0 with value: $[]
+  Variable: $ConditionResult_27 with value: $0
+  Variable: $return_of_java.util.Arrays#copyOf([Ljava/lang/Object;ILjava/lang/Class;)[Ljava/lang/Object; with value: $[null, null, null, null, null, null, null, null, null, null]
+  Variable: $return_of_java.util.Arrays#copyOf([Ljava/lang/Object;I)[Ljava/lang/Object; with value: $[null, null, null, null, null, null, null, null, null, null]
+  Variable: $elementData with value: $[null, null, null, null, null, null, null, null, null, null]
+  Variable: $elementData[0] with value: $1
+  Variable: $size with value: $1
+  Variable: $return_of_java.util.ArrayList#add(Ljava/lang/Object;)Z with value: $1
+
+
