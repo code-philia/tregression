@@ -1,0 +1,102 @@
+plugins {
+    id "application"
+    id "java"
+    id "eclipse"
+    id "com.gradleup.shadow" version "8.3.2"
+}
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    main {
+        java {
+            srcDirs += 'main'
+        }
+        resources {
+            srcDirs += 'resources'
+        }
+    }
+}
+
+application {
+    mainClass = 'dummy.DummyMain'
+}
+
+tasks.jar {
+    manifest {
+        attributes["Bundle-Name"] = "tracerecov-projs-tracerecov"
+        attributes["Bundle-SymbolicName"] = "com.github.code-philia.tracerecov-projs-tracerecov"
+        attributes["Bundle-Version"] = "1.0.0.202501030000"
+        attributes["Bundle-Activator"] = "microbat.Activator"
+        attributes["Bundle-ActivationPolicy"] = "lazy"
+        attributes["Bundle-ClassPath"] = "."
+        attributes["Require-Bundle"] = "org.eclipse.ui, org.eclipse.core.runtime, org.eclipse.ui.console, org.eclipse.jdt.ui, org.eclipse.core.resources;bundle-version=\"3.8.101\", org.eclipse.debug.core;bundle-version=\"3.8.0\", org.eclipse.jdt.debug;bundle-version=\"3.8.0\", org.eclipse.ui.editors, org.eclipse.jdt.core;bundle-version=\"3.9.2\", org.eclipse.jface.text;bundle-version=\"3.8.101\", org.junit, org.eclipse.e4.core.commands;bundle-version=\"0.11.0\", org.eclipse.ui.workbench, org.eclipse.ui.ide;bundle-version=\"3.11.0\", org.eclipse.jdt.launching;bundle-version=\"3.8.0\""
+    }
+}
+
+dependencies {
+    implementation 'org.apache.bcel:bcel:6.0'
+    implementation 'org.json:json:20220924'
+    implementation 'mysql:mysql-connector-java:5.1.44'
+    implementation 'org.apache.poi:poi:3.11'
+    implementation 'org.apache.poi:poi-ooxml:3.11'
+    implementation 'org.apache.poi:poi-ooxml-schemas:3.11'
+    implementation 'org.xerial:sqlite-jdbc:3.32.3.2'
+
+    compileOnly 'org.eclipse.jdt:org.eclipse.jdt.core:3.40.0'
+    compileOnly 'org.eclipse.jdt:org.eclipse.jdt.ui:3.33.200'
+    compileOnly 'org.eclipse.platform:org.eclipse.platform:4.34.0'
+
+    implementation 'junit:junit:4.13.2'
+
+    implementation 'org.slf4j:slf4j-api:2.0.16'
+    implementation 'ch.qos.logback:logback-core:1.3.14'
+    implementation 'ch.qos.logback:logback-classic:1.3.14'
+
+    implementation 'commons-lang:commons-lang:2.6'
+    implementation 'org.apache.maven.shared:maven-invoker:3.3.0'
+
+    compileOnly files("../../local-deps/jdimodel.jar")
+    implementation files("../../local-deps/java-mutation-framework-0.0.1-SNAPSHOT.jar")
+
+    implementation project(':microbat:sav.commons')
+    implementation project(':microbat:mutation')
+    implementation project(':microbat:microbat')
+    implementation project(':microbat:experiment.utils')
+    implementation project(':microbat:microbat_instrumentator')
+}
+
+configurations.all {
+    resolutionStrategy.dependencySubstitution {
+        def os = System.getProperty("os.name").toLowerCase()
+        if (os.contains("windows")) {
+            substitute module('org.eclipse.platform:org.eclipse.swt.${osgi.platform}') using module("org.eclipse.platform:org.eclipse.swt.win32.win32.x86_64:3.114.0")
+        }
+        else if (os.contains("linux")) {
+            substitute module('org.eclipse.platform:org.eclipse.swt.${osgi.platform}') using module("org.eclipse.platform:org.eclipse.swt.gtk.linux.x86_64:3.114.0")
+        }
+        else if (os.contains("mac")) {
+            substitute module('org.eclipse.platform:org.eclipse.swt.${osgi.platform}') using module("org.eclipse.platform:org.eclipse.swt.cocoa.macosx.x86_64:3.114.0")
+        }
+    }
+}
+
+def eclipseDir = System.getenv("ECLIPSE_HOME")
+
+task installToEclipse {
+    doLast {
+        if (eclipseDir == null || eclipseDir.isEmpty()) {
+            throw new GradleException("ECLIPSE_HOME is not set")
+        }
+
+        copy {
+            from shadowJar.outputs.files.singleFile
+            into eclipseDir + "/dropins"
+            // rename { fileName -> "tracerecov-plugin.jar"}
+        }
+    }
+}
+
+installToEclipse.dependsOn shadowJar
