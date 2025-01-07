@@ -236,6 +236,11 @@
                               style="push">
                         </command>
 
+                        <command
+                              commandId="tregression.command.rungptincontextlearning"
+                              label="Run GPT In Context Learning"
+                              style="push">
+                        </command>
                   </menu>
                   <menu
                         label="Trace Agent">
@@ -779,5 +784,14 @@
             point="org.eclipse.ui.preferencePages">
       </extension>
 
+
+      <extension
+            point="org.eclipse.ui.commands">
+            <command
+                  defaultHandler="tregression.handler.RunGPTInContextLearningHandler"
+                  id="tregression.command.rungptincontextlearning"
+                  name="Run GPT In Context Learning">
+            </command>
+      </extension>
 
 </plugin>
