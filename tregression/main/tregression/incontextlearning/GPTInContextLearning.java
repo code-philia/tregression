@@ -27,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.StepLimitException;
 import microbat.compatibilitylayer.CompatibilityLayer;
+import microbat.instrumentation.CommonParams;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
 import sav.strategies.dto.AppJavaClassPath;
@@ -188,6 +189,8 @@ public class GPTInContextLearning {
                 TRACE_FILE_NAME,
                 includeLibs,
                 excludeLibs);
+        executor.getAgentRunner().addAgentParam(CommonParams.OPT_FORCE_EXIT_WITHOUT_WAIT_OTHER_THREADS, "true");
+        executor.getAgentRunner().addAgentParam(CommonParams.OPT_MANUALLY_TEST_RUNNING_CLASS, "SampleTest");
         RunningInfo results = null;
         try {
             results = executor.run();
