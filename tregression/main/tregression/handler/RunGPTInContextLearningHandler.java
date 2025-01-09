@@ -8,7 +8,9 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
-import tregression.incontextlearning.GPTInContextLearning;
+import microbat.model.trace.Trace;
+import tregression.incontextlearning.InContextExecutor;
+import tregression.incontextlearning.InContextExecutor.SourceCodeWritter;
 
 public class RunGPTInContextLearningHandler extends AbstractHandler {
     @Override
@@ -16,7 +18,12 @@ public class RunGPTInContextLearningHandler extends AbstractHandler {
         Job job = new Job("RunGPTInContextLearning") {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
-                new GPTInContextLearning().run();
+                InContextExecutor i = new InContextExecutor(
+                        SourceCodeWritter.fromString(InContextExecutor.getTestSampleSource(1)));
+                Trace trace = i.run();
+                if (trace != null) {
+                    i.visualizeTrace(trace);
+                }
                 return Status.OK_STATUS;
             }
         };

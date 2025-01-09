@@ -3,6 +3,7 @@ plugins {
     id "java"
     id "eclipse"
     id "com.gradleup.shadow" version "8.3.2"
+    id "io.freefair.lombok" version "8.10.2"
 }
 
 repositories {

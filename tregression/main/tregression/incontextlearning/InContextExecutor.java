@@ -36,8 +36,8 @@ import tregression.separatesnapshots.DiffMatcher;
 import tregression.views.BuggyTraceView;
 import tregression.views.TregressionViews;
 
-public class GPTInContextLearning {
-    public static Logger log = LoggerFactory.getLogger(GPTInContextLearning.class);
+public class InContextExecutor {
+    public static Logger log = LoggerFactory.getLogger(InContextExecutor.class);
 
     public static final String IN_CONTEXT_LEARNING_FOLDER = "in-context-learning";
     public static final String SRC_FOLDER = "src";
@@ -48,22 +48,33 @@ public class GPTInContextLearning {
 
     private static AtomicInteger counter = new AtomicInteger(0);
 
-    public CompatibilityLayer compatibilityLayer = CompatibilityLayer.getDefaultCompatibilityLayer();
+    private CompatibilityLayer compatibilityLayer = CompatibilityLayer.getDefaultCompatibilityLayer();
 
-    public String currentWorkingDirName;
-    public String srcDirName;
-    public String binDirName;
-    public String srcFileName;
-    public String traceDirName;
-    public File currentWorkingDir;
-    public File srcDir;
-    public File binDir;
-    public File srcFile;
-    public File traceDir;
+    private String currentWorkingDirName;
+    private String srcDirName;
+    private String binDirName;
+    private String srcFileName;
+    private String traceDirName;
+    private File currentWorkingDir;
+    private File srcDir;
+    private File binDir;
+    private File srcFile;
+    private File traceDir;
 
-    public TestCase testCase;
-    public ProjectConfig d4jConfig;
-    public AppJavaClassPath appClassPath;
+    private TestCase testCase;
+    private ProjectConfig d4jConfig;
+    private AppJavaClassPath appClassPath;
+
+    private SourceCodeWritter sourceCodeWritter;
+
+    @FunctionalInterface
+    public static interface SourceCodeWritter {
+        public void writeSourceCode(FileWriter writer) throws IOException;
+
+        public static SourceCodeWritter fromString(String sourceCode) {
+            return writer -> writer.write(sourceCode);
+        }
+    }
 
     private static int getNextCounter() {
         return counter.getAndIncrement();
@@ -76,7 +87,9 @@ public class GPTInContextLearning {
         return formatted + "-" + getNextCounter();
     }
 
-    public GPTInContextLearning() {
+    public InContextExecutor(SourceCodeWritter sourceCodeWritter) {
+        this.sourceCodeWritter = sourceCodeWritter;
+
         String separator = File.separator;
 
         currentWorkingDirName = compatibilityLayer.getWorkingSpacePath()
@@ -114,24 +127,25 @@ public class GPTInContextLearning {
         log.info("bin path: {}", binDirName);
     }
 
-    public void run() {
+    public Trace run() {
         try {
-            runInner();
+            return runInner();
         } catch (Exception e) {
             log.error("Failed to run gpt.", e);
         }
+        return null;
     }
 
-    public void runInner() {
+    public Trace runInner() {
         writeSrcFile();
         initializeAppClassPath();
         compileFile();
-        runTarget();
+        return runTarget();
     }
 
     public void writeSrcFile() {
         try (FileWriter writer = new FileWriter(srcFile)) {
-            writer.write(getTestSampleSource(1));
+            sourceCodeWritter.writeSourceCode(writer);
         } catch (IOException e) {
             String msg = "Failed to write source file: " + srcFileName;
             log.error(msg, e);
@@ -157,7 +171,7 @@ public class GPTInContextLearning {
     }
 
     public void initializeAppClassPath() {
-        testCase = new TestCase("SampleTest", "test");
+        testCase = new TestCase("SampleTest", "testWrapper");
         d4jConfig = Defects4jProjectConfig.getConfig(
                 compatibilityLayer.getProjectName(),
                 compatibilityLayer.getBugId());
@@ -174,7 +188,7 @@ public class GPTInContextLearning {
         appClassPath.setSourceCodePath(srcDirName);
     }
 
-    public void runTarget() {
+    public Trace runTarget() {
         List<String> includeLibs = new ArrayList<>();
         List<String> excludeLibs = new ArrayList<>();
         includeLibs.add("*");
@@ -195,10 +209,10 @@ public class GPTInContextLearning {
             throw new RuntimeException("Step limit exceeded", e);
         }
 
-        updateTrace(results.getMainTrace());
+        return results.getMainTrace();
     }
 
-    public void updateTrace(Trace trace) {
+    public void visualizeTrace(Trace trace) {
         Display.getDefault().asyncExec(new Runnable() {
             @Override
             public void run() {
@@ -255,7 +269,7 @@ public class GPTInContextLearning {
 
     public static String getTestSampleSource(int idx) {
         try (
-                InputStream is = GPTInContextLearning.class.getClassLoader()
+                InputStream is = InContextExecutor.class.getClassLoader()
                         .getResourceAsStream("run_sample/sample" + idx + "/SampleTest.java")) {
             ReadFromStream readFromStream = new ReadFromStream(is);
             readFromStream.call();
