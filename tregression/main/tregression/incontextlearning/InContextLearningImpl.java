@@ -39,9 +39,14 @@ public class InContextLearningImpl implements InContextLearning {
             throw new IllegalStateException("Execution simulator is not set");
         }
 
+        log.info("executeInContextLearning: imports: {}\ntarget: {}\ntargetLine: {}",
+                imports, targetMethod, targetLineNumber);
         String input = processInputString(imports, targetMethod, targetLineNumber);
+        log.info("Input code: {}", input);
         String gptSystem = getBackgroundContent();
         String gptUser = getQuestionContent(input);
+        log.info("GPT system: {}", gptSystem);
+        log.info("GPT user: {}", gptUser);
 
         String response = null;
         try {
@@ -51,7 +56,10 @@ public class InContextLearningImpl implements InContextLearning {
             return "";
         }
 
+        log.info("Response: {}", response);
+
         InContextLearningCode generatedCode = processCodeGeneratedByLLM(response);
+        log.info("Generated code: {}", generatedCode.getCode());
         InContextExecutor executor = new InContextExecutor(generatedCode);
 
         Trace trace = null;
@@ -63,7 +71,9 @@ public class InContextLearningImpl implements InContextLearning {
         }
 
         InContextLearningVariables variables = postProcessTrace(trace, type, generatedCode);
+        log.info("Variables: {}", variables);
         String explanation = variablesToExplainString(variables);
+        log.info("Explanation: {}", explanation);
 
         return explanation;
     }
@@ -317,7 +327,7 @@ public class InContextLearningImpl implements InContextLearning {
                 if (markerLine != -1) {
                     throw new IllegalArgumentException("Multiple marker lines found in the code block \">>>\"");
                 } else {
-                    markerLine = i;
+                    markerLine = i + 1;
                 }
 
                 sb.append(line.substring(0, markLoc));
