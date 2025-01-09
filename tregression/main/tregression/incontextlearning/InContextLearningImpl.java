@@ -7,12 +7,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import microbat.incontextlearning.InContextLearning;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
@@ -23,11 +20,18 @@ import microbat.tracerecov.executionsimulator.LLMResponseType;
 import microbat.util.StringFormatUtils;
 import tregression.incontextlearning.InContextExecutor.SourceCodeWritter;
 
-@Slf4j
 public class InContextLearningImpl implements InContextLearning {
-    @Getter
-    @Setter
+    private static final Logger log = LoggerFactory.getLogger(InContextLearningImpl.class);
+
     private ExecutionSimulator executionSimulator;
+
+    public ExecutionSimulator getExecutionSimulator() {
+        return executionSimulator;
+    }
+
+    public void setExecutionSimulator(ExecutionSimulator executionSimulator) {
+        this.executionSimulator = executionSimulator;
+    }
 
     @Override
     public String executeInContextLearning(
@@ -101,9 +105,6 @@ public class InContextLearningImpl implements InContextLearning {
         }
     }
 
-    @AllArgsConstructor
-    @Getter
-    @Setter
     public static class InContextLearningVariables {
         private List<VarValue> allWrittenVariables;
         private List<VarValue> allReadVariables;
@@ -116,6 +117,55 @@ public class InContextLearningImpl implements InContextLearning {
             allReadVariables = new ArrayList<>();
             outerWrittenVariables = new ArrayList<>();
             outerReadVariables = new ArrayList<>();
+        }
+
+        public InContextLearningVariables(List<VarValue> allWrittenVariables, List<VarValue> allReadVariables,
+                List<VarValue> outerWrittenVariables, List<VarValue> outerReadVariables, InContextLearningCode code) {
+            this.allWrittenVariables = allWrittenVariables;
+            this.allReadVariables = allReadVariables;
+            this.outerWrittenVariables = outerWrittenVariables;
+            this.outerReadVariables = outerReadVariables;
+            this.code = code;
+        }
+
+        public List<VarValue> getAllWrittenVariables() {
+            return allWrittenVariables;
+        }
+
+        public void setAllWrittenVariables(List<VarValue> allWrittenVariables) {
+            this.allWrittenVariables = allWrittenVariables;
+        }
+
+        public List<VarValue> getAllReadVariables() {
+            return allReadVariables;
+        }
+
+        public void setAllReadVariables(List<VarValue> allReadVariables) {
+            this.allReadVariables = allReadVariables;
+        }
+
+        public List<VarValue> getOuterWrittenVariables() {
+            return outerWrittenVariables;
+        }
+
+        public void setOuterWrittenVariables(List<VarValue> outerWrittenVariables) {
+            this.outerWrittenVariables = outerWrittenVariables;
+        }
+
+        public List<VarValue> getOuterReadVariables() {
+            return outerReadVariables;
+        }
+
+        public void setOuterReadVariables(List<VarValue> outerReadVariables) {
+            this.outerReadVariables = outerReadVariables;
+        }
+
+        public InContextLearningCode getCode() {
+            return code;
+        }
+
+        public void setCode(InContextLearningCode code) {
+            this.code = code;
         }
     }
 
@@ -287,9 +337,6 @@ public class InContextLearningImpl implements InContextLearning {
         return StringFormatUtils.formatString(format, Map.of("original_code", code));
     }
 
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
     public static class InContextLearningCode implements SourceCodeWritter {
         private String code;
         private String codeToView;
@@ -298,6 +345,39 @@ public class InContextLearningImpl implements InContextLearning {
         @Override
         public void writeSourceCode(FileWriter writer) throws IOException {
             writer.write(code);
+        }
+
+        public InContextLearningCode() {
+        }
+
+        public InContextLearningCode(String code, String codeToView, int markerLine) {
+            this.code = code;
+            this.codeToView = codeToView;
+            this.markerLine = markerLine;
+        }
+
+        public String getCode() {
+            return code;
+        }
+
+        public void setCode(String code) {
+            this.code = code;
+        }
+
+        public String getCodeToView() {
+            return codeToView;
+        }
+
+        public void setCodeToView(String codeToView) {
+            this.codeToView = codeToView;
+        }
+
+        public int getMarkerLine() {
+            return markerLine;
+        }
+
+        public void setMarkerLine(int markerLine) {
+            this.markerLine = markerLine;
         }
     }
 

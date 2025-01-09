@@ -9,14 +9,15 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.slf4j.Logger;
 
-import lombok.extern.slf4j.Slf4j;
 import microbat.incontextlearning.InContextLearning.InContextLearningType;
 import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
 import tregression.incontextlearning.InContextLearningImpl;
 
-@Slf4j
 public class RunGPTInContextLearningHandler extends AbstractHandler {
+    private static final Logger log = org.slf4j.LoggerFactory.getLogger(RunGPTInContextLearningHandler.class);
+
     @Override
     public Object execute(ExecutionEvent event) throws ExecutionException {
         Job job = new Job("RunGPTInContextLearning") {
