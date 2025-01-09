@@ -60,6 +60,7 @@ public class InContextLearningImpl implements InContextLearning {
 
         InContextLearningCode generatedCode = processCodeGeneratedByLLM(response);
         log.info("Generated code: {}", generatedCode.getCode());
+        log.info("Marker line: {}", generatedCode.getMarkerLine());
         InContextExecutor executor = new InContextExecutor(generatedCode);
 
         Trace trace = null;
@@ -70,6 +71,9 @@ public class InContextLearningImpl implements InContextLearning {
             return "";
         }
 
+        // FIXME: debug only show trace
+        executor.visualizeTrace(trace);
+
         InContextLearningVariables variables = postProcessTrace(trace, type, generatedCode);
         log.info("Variables: {}", variables);
         String explanation = variablesToExplainString(variables);
@@ -78,7 +82,7 @@ public class InContextLearningImpl implements InContextLearning {
         return explanation;
     }
 
-    public static final String TARGET_METHOD_SIGN = "SampleTest#test()";
+    public static final String TARGET_METHOD_SIGN = "SampleTest#test()V";
 
     private static class TraceRange {
         int start;
@@ -124,8 +128,9 @@ public class InContextLearningImpl implements InContextLearning {
 
         List<Integer> targetLineTraces = new ArrayList<>();
 
-        for (int i = 0; i < trace.size(); i++) {
+        for (int i = 1; i <= trace.size(); i++) {
             TraceNode node = trace.getTraceNode(i);
+            log.info("Trace method: {}, line: {}", node.getMethodSign(), node.getLineNumber());
             if (node.getMethodSign().equals(TARGET_METHOD_SIGN)) {
                 firstLoc = Math.min(firstLoc, i);
                 lastLoc = Math.max(lastLoc, i);
@@ -267,6 +272,7 @@ public class InContextLearningImpl implements InContextLearning {
             } else {
                 sb.append(lines[i]);
             }
+            sb.append("\n");
         }
 
         return sb.toString();
@@ -295,17 +301,20 @@ public class InContextLearningImpl implements InContextLearning {
         }
     }
 
+    public static final String BEGIN_MARK = "```java";
+    public static final String END_MARK = "```";
+
     public InContextLearningCode processCodeGeneratedByLLM(String response) {
-        int beginMark = response.indexOf("```java");
+        int beginMark = response.indexOf(BEGIN_MARK);
         if (beginMark == -1) {
             throw new IllegalArgumentException("No code block \"```java\" found in the response");
         }
-        int endMark = response.indexOf("```", beginMark + 1);
+        int endMark = response.indexOf(END_MARK, beginMark + BEGIN_MARK.length());
         if (endMark == -1) {
             throw new IllegalArgumentException("No end mark \"```\" found in the response");
         }
 
-        String code = response.substring(beginMark, endMark);
+        String code = response.substring(beginMark + BEGIN_MARK.length(), endMark);
         int lastBracket = code.lastIndexOf("}");
         if (lastBracket == -1) {
             throw new IllegalArgumentException("No closing bracket found in the code block");

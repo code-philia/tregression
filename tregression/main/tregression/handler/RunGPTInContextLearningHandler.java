@@ -29,8 +29,8 @@ public class RunGPTInContextLearningHandler extends AbstractHandler {
                 // i.visualizeTrace(trace);
                 // }
                 try {
-                    String sampleCode = readResourceString("/run_sample/sample_code.txt");
-                    String sampleImport = readResourceString("/run_sample/sample_import.txt");
+                    String sampleCode = readResourceString("/run_sample/sample_code.java");
+                    String sampleImport = readResourceString("/run_sample/sample_import.java");
                     int sampleLineIdx = Integer.parseInt(readResourceString("/run_sample/sample_idx.txt").trim());
                     InContextLearningImpl learning = new InContextLearningImpl();
                     learning.setExecutionSimulator(ExecutionSimulatorFactory.getExecutionSimulator());
