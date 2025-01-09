@@ -5,11 +5,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.CharBuffer;
-import java.nio.charset.Charset;
-import java.nio.charset.CharsetDecoder;
-import java.nio.charset.CodingErrorAction;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -30,6 +25,7 @@ import microbat.compatibilitylayer.CompatibilityLayer;
 import microbat.instrumentation.CommonParams;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
+import microbat.util.StringFormatUtils;
 import sav.strategies.dto.AppJavaClassPath;
 import tregression.empiricalstudy.TestCase;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
@@ -220,14 +216,24 @@ public class GPTInContextLearning {
     public void runCommand(List<String> cmdline) {
         ProcessBuilder pb = new ProcessBuilder(cmdline);
         ExecutorService executor = Executors.newFixedThreadPool(2);
+        int exitCode = -1;
         try {
+            ReadFromStream readStdout = null, readStderr = null;
             Process p = pb.start();
+            try {
+                readStdout = new ReadFromStream(p.getInputStream());
+                readStderr = new ReadFromStream(p.getErrorStream());
+                executor.submit(readStdout);
+                executor.submit(readStderr);
+                boolean ret = p.waitFor(10, TimeUnit.SECONDS);
+                if (!ret) {
+                    throw new RuntimeException("Timeout while waiting for process to finish");
+                }
+                exitCode = p.exitValue();
+            } finally {
+                p.destroyForcibly();
+            }
 
-            ReadFromStream readStdout = new ReadFromStream(p.getInputStream());
-            ReadFromStream readStderr = new ReadFromStream(p.getErrorStream());
-            executor.submit(readStdout);
-            executor.submit(readStderr);
-            int exitCode = p.waitFor();
             executor.shutdown();
             if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
                 throw new RuntimeException("Timeout while waiting for process to finish");
@@ -273,11 +279,8 @@ public class GPTInContextLearning {
             byte[] buffer = new byte[1024];
             int bytesRead;
 
-            try {
-                while ((bytesRead = inputStream.read(buffer)) != -1) {
-                    byteArrayOutputStream.write(buffer, 0, bytesRead);
-                }
-            } catch (IOException e) {
+            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, bytesRead);
             }
 
             return null;
@@ -285,28 +288,7 @@ public class GPTInContextLearning {
 
         public String getOutput() {
             byte[] bytes = byteArrayOutputStream.toByteArray();
-            return decodeWithIgnore(bytes);
-        }
-
-        public static String decodeWithIgnore(byte[] bytes) {
-            CharsetDecoder decoder = Charset.forName("UTF-8").newDecoder();
-
-            decoder.onMalformedInput(CodingErrorAction.REPLACE);
-            decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
-
-            StringBuilder sb = new StringBuilder();
-            ByteBuffer byteBuffer = ByteBuffer.wrap(bytes);
-            CharBuffer charBuffer = CharBuffer.allocate(bytes.length);
-
-            decoder.decode(byteBuffer, charBuffer, true);
-            charBuffer.flip();
-            sb.append(charBuffer);
-
-            decoder.flush(charBuffer);
-            charBuffer.flip();
-            sb.append(charBuffer);
-
-            return sb.toString();
+            return StringFormatUtils.decodeWithIgnore(bytes);
         }
     }
 }
