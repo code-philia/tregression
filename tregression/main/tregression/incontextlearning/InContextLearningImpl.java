@@ -24,6 +24,15 @@ public class InContextLearningImpl implements InContextLearning {
     private static final Logger log = LoggerFactory.getLogger(InContextLearningImpl.class);
 
     private ExecutionSimulator executionSimulator;
+    private boolean visualizeTrace = false;
+
+    public boolean isVisualizeTrace() {
+        return visualizeTrace;
+    }
+
+    public void setVisualizeTrace(boolean visualizeTrace) {
+        this.visualizeTrace = visualizeTrace;
+    }
 
     public ExecutionSimulator getExecutionSimulator() {
         return executionSimulator;
@@ -33,12 +42,21 @@ public class InContextLearningImpl implements InContextLearning {
         this.executionSimulator = executionSimulator;
     }
 
+    public InContextLearningImpl(boolean visualizeTrace) {
+        this.visualizeTrace = visualizeTrace;
+    }
+
+    public InContextLearningImpl() {
+        this(false);
+    }
+
     @Override
     public String executeInContextLearning(
             String imports,
             String targetMethod,
             int targetLineNumber,
-            InContextLearningType type) {
+            InContextLearningType type,
+            ContextVariablesToString contextToString) {
         if (executionSimulator == null) {
             throw new IllegalStateException("Execution simulator is not set");
         }
@@ -75,12 +93,13 @@ public class InContextLearningImpl implements InContextLearning {
             return "";
         }
 
-        // FIXME: debug only show trace
-        executor.visualizeTrace(trace);
+        if (visualizeTrace) {
+            executor.visualizeTrace(trace);
+        }
 
         InContextLearningVariables variables = postProcessTrace(trace, type, generatedCode);
         log.info("Variables: {}", variables);
-        String explanation = variablesToExplainString(variables);
+        String explanation = contextToString.contextToString(variables, type);
         log.info("Explanation: {}", explanation);
 
         return explanation;
@@ -105,7 +124,7 @@ public class InContextLearningImpl implements InContextLearning {
         }
     }
 
-    public static class InContextLearningVariables {
+    public static class InContextLearningVariables implements ContextVariables {
         private List<VarValue> allWrittenVariables;
         private List<VarValue> allReadVariables;
         private List<VarValue> outerWrittenVariables;
@@ -160,12 +179,22 @@ public class InContextLearningImpl implements InContextLearning {
             this.outerReadVariables = outerReadVariables;
         }
 
-        public InContextLearningCode getCode() {
-            return code;
+        public String getCode() {
+            return code.getCode();
         }
 
         public void setCode(InContextLearningCode code) {
             this.code = code;
+        }
+
+        @Override
+        public String getCodeToView() {
+            return code.getCodeToView();
+        }
+
+        @Override
+        public int getMarkerLine() {
+            return code.getMarkerLine();
         }
     }
 
@@ -271,13 +300,13 @@ public class InContextLearningImpl implements InContextLearning {
         return variables;
     }
 
-    public String formatVarValue(VarValue var) {
+    public static String formatVarValue(VarValue var) {
         Map<String, String> vars = Map.of("var_name", var.getVarName(), "var_value", var.getStringValue());
         final String format = "Variable: ${var_name} with value: ${var_value}";
         return StringFormatUtils.formatString(format, vars);
     }
 
-    public String formatVarValueList(List<VarValue> vars) {
+    public static String formatVarValueList(List<VarValue> vars) {
         StringBuilder sb = new StringBuilder();
         for (VarValue var : vars) {
             sb.append("  ");
@@ -288,14 +317,18 @@ public class InContextLearningImpl implements InContextLearning {
         return sb.toString();
     }
 
-    public String variablesToExplainString(InContextLearningVariables variables) {
+    public static String variablesToExplainString(ContextVariables variables) {
         Map<String, String> varMap = new HashMap<>();
-        varMap.put("code", variables.getCode().getCodeToView());
+        varMap.put("code", variables.getCodeToView());
         varMap.put("variables_read", formatVarValueList(variables.getAllReadVariables()));
         varMap.put("variables_written", formatVarValueList(variables.getAllWrittenVariables()));
         varMap.put("variables_read_outer", formatVarValueList(variables.getOuterReadVariables()));
         varMap.put("variables_written_outer", formatVarValueList(variables.getOuterWrittenVariables()));
         return StringFormatUtils.formatString(StringFormatUtils.getPromptInContextLearningExplain(), varMap);
+    }
+
+    public static ContextVariablesToString defaultToString() {
+        return (context, type) -> variablesToExplainString(context);
     }
 
     public String insertLineMarker(String line) {
