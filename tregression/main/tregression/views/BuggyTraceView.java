@@ -100,6 +100,9 @@ public class BuggyTraceView extends TregressionTraceView {
 		
 		String fixPath = "null";
 		String buggyPath = breakPoint.getFullJavaFilePath();
+		if (buggyPath == null) {
+			return null;
+		}
 		
 		FilePairWithDiff fileDiff = diffMatcher.findDiffBySourceFile(breakPoint);
 		if (getDiffMatcher() == null || fileDiff == null) {
@@ -122,6 +125,9 @@ public class BuggyTraceView extends TregressionTraceView {
 		BreakPoint breakPoint = node.getBreakPoint();
 		
 		CompareFileName cfn = generateCompareFile(breakPoint, diffMatcher);
+		if (cfn == null) {
+			return;
+		}
 
 		CompareTextEditorInput input = new CompareTextEditorInput(node, this.pairList, 
 				cfn.buggyFileName, cfn.fixFileName, diffMatcher);
