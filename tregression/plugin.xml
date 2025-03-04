@@ -143,6 +143,11 @@
              id="tregression.exampleSearchingExperiment"
              name="Example Searching Experiment">
        </command>
+       <command
+             defaultHandler="tregression.handler.RunGPTInContextLearningHandler"
+             id="tregression.incontextLearning"
+             name="In Context Learning Example">
+       </command>
  </extension>	
  <extension
          point="org.eclipse.ui.views">
@@ -290,6 +295,11 @@
             <command
                   commandId="tregression.exampleSearchingExperiment"
                   icon="icons/engineering.png"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.incontextLearning"
+                  icon="icons/recover.png"
                   style="push">
             </command>
          </toolbar>

@@ -10,11 +10,11 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import microbat.incontextlearning.InContextLearning;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.model.value.VirtualValue;
+import microbat.tracerecov.autoprompt.incontextlearning.InContextLearning;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.executionsimulator.LLMResponseType;
 import microbat.util.StringFormatUtils;
