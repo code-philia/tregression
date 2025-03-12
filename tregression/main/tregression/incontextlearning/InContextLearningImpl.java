@@ -56,8 +56,8 @@ public class InContextLearningImpl implements InContextLearning {
             String targetMethod,
             int targetLineNumber,
             String targetVariable,
-            InContextLearningType type,
-            ContextVariablesToString contextToString) {
+            String targetValue,
+            InContextLearningType type, ContextVariablesToString contextToString) {
         if (executionSimulator == null) {
             throw new IllegalStateException("Execution simulator is not set");
         }
@@ -67,7 +67,7 @@ public class InContextLearningImpl implements InContextLearning {
         String input = processInputString(imports, targetMethod, targetLineNumber);
         log.info("Input code: {}", input);
         String gptSystem = getBackgroundContent();
-        String gptUser = getQuestionContent(input, targetVariable);
+        String gptUser = getQuestionContent(input, targetVariable, targetValue);
         log.info("GPT system: {}", gptSystem);
         log.info("GPT user: {}", gptUser);
 
@@ -366,11 +366,12 @@ public class InContextLearningImpl implements InContextLearning {
         return StringFormatUtils.getPromptInContextLearningSystem();
     }
 
-    public String getQuestionContent(String code, String varName) {
+    public String getQuestionContent(String code, String varName, String varValue) {
         String format = StringFormatUtils.getPromptInContextLearningUser();
         HashMap<String, String> map = new HashMap<>();
         map.put("original_code", code);
         map.put("target_var", varName);
+        map.put("target_val", varValue);
         return StringFormatUtils.formatString(format, map);
     }
 
