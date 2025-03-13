@@ -93,6 +93,9 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 		this.defaultResultPath = Activator.getDefault().getPreferenceStore().getString(RESULT_PATH_KEY);
 
 		String timeLimitStr = Activator.getDefault().getPreferenceStore().getString(TIME_LIMIT_KEY);
+		if (timeLimitStr.contains(".")) {
+			timeLimitStr = timeLimitStr.split("\\.")[0];
+		}
 		this.defaultTimeLimit = timeLimitStr == null || timeLimitStr.isEmpty() ? 60 : Integer.valueOf(timeLimitStr);
 	}
 
