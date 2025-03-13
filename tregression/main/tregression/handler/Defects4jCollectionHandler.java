@@ -1,7 +1,5 @@
 package tregression.handler;
 
-import java.nio.file.Paths;
-
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -10,9 +8,11 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
+import microbat.Activator;
 import microbat.util.JavaUtil;
 import tregression.auto.Defects4jRunner;
 import tregression.auto.ProjectsRunner;
+import tregression.preference.TregressionPreference;
 
 public class Defects4jCollectionHandler extends AbstractHandler {
 
@@ -33,8 +33,8 @@ public class Defects4jCollectionHandler extends AbstractHandler {
 	}
 	
 	private void execute() {
-		final String basePath = "D:\\MutationProjects_new";
-		final String resultPath = Paths.get("C:\\Users\\Kwy\\Desktop\\result\\mutation_new_baselinetxt").toString();
+		final String basePath = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.REPO_PATH);
+		final String resultPath = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.RESULT_PATH_KEY);
 		final ProjectsRunner runner = new Defects4jRunner(basePath, resultPath);
 		runner.run();
 	}
