@@ -90,7 +90,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								compileFile(file, binDirName);
 
 								System.out.println("trace collection");
-								String className = "_" + file.getName().substring(0, file.getName().lastIndexOf('.'));
+								String className = file.getName().substring(0, file.getName().lastIndexOf('.'));
 								initializeAppClassPath(className, METHOD_NAME);
 								Trace trace = runTarget();
 								visualizeTrace(trace);
