@@ -15,7 +15,7 @@ import microbat.model.value.VirtualValue;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
-import microbat.preference.TraceRecovPreference;
+import microbat.preference.RecovSlicingPreference;
 import microbat.tracerecov.TraceRecovUtils;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
@@ -73,7 +73,7 @@ public class StepChangeTypeChecker {
 			List<Pair<VarValue, VarValue>> wrongVariableList = 
 					checkWrongVariable(isOnBeforeTrace, step, matchedStep, pairList, matcher);
 			
-			if(Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.ENABLE_LLM) == "true") {
+			if(Activator.getDefault().getPreferenceStore().getString(RecovSlicingPreference.ENABLE_LLM) == "true") {
 				List<Pair<VarValue, VarValue>> expandedWrongVariableList = 
 						checkExpansion(wrongVariableList, buggyTrace, correctTrace, isOnBeforeTrace, matchedStep, step, pairList, matcher);
 				
