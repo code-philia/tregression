@@ -1,0 +1,247 @@
+package tregression.handler;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import org.eclipse.core.commands.AbstractHandler;
+import org.eclipse.core.commands.ExecutionEvent;
+import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.swt.widgets.Display;
+
+import microbat.Activator;
+import microbat.codeanalysis.runtime.InstrumentationExecutor;
+import microbat.codeanalysis.runtime.StepLimitException;
+import microbat.instrumentation.output.RunningInfo;
+import microbat.model.trace.Trace;
+import microbat.preference.MicrobatPreference;
+import microbat.preference.RecovSlicingPreference;
+import microbat.tracerecov.autoprompt.incontextlearning.CompilationFailureException;
+import microbat.tracerecov.autoprompt.incontextlearning.InContextExecutor.ReadFromStream;
+import microbat.util.MicroBatUtil;
+import sav.strategies.dto.AppJavaClassPath;
+import tregression.empiricalstudy.TestCase;
+import tregression.empiricalstudy.config.Defects4jProjectConfig;
+import tregression.empiricalstudy.config.ProjectConfig;
+import tregression.model.PairList;
+import tregression.preference.TregressionPreference;
+import tregression.separatesnapshots.AppClassPathInitializer;
+import tregression.separatesnapshots.DiffMatcher;
+import tregression.views.BuggyTraceView;
+import tregression.views.TregressionViews;
+import microbat.util.JavaUtil;
+
+/**
+ * This handler is responsible for running recov slicing on the given dataset.
+ * 
+ * @author HongshuW
+ */
+public class RecovSlicingEvalHandler extends AbstractHandler {
+
+	public static final String SRC_FOLDER = "src";
+	public static final String BIN_FOLDER = "bin";
+	public static final String TRACE_FOLDER = "trace";
+	public static final String TRACE_FILE_NAME = "trace";
+	public static final String METHOD_NAME = "testMainLogic";
+
+	private String srcDirName;
+	private String binDirName;
+	private String traceDirName;
+	private TestCase testCase;
+	private ProjectConfig d4jConfig;
+	private AppJavaClassPath appClassPath;
+
+	@Override
+	public Object execute(ExecutionEvent event) throws ExecutionException {
+
+		JavaUtil.sourceFile2CUMap.clear();
+
+		Job job = new Job("slicing evaluation") {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				// load dataset
+				String sliceDatasetPath = Activator.getDefault().getPreferenceStore()
+						.getString(RecovSlicingPreference.SLICE_DATASET_PATH);
+				srcDirName = sliceDatasetPath + File.separator + SRC_FOLDER;
+				binDirName = sliceDatasetPath + File.separator + BIN_FOLDER;
+				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
+				Set<String> filesToSkip = getProblematicFiles(sliceDatasetPath);
+
+				File folder = new File(srcDirName);
+				if (folder.exists() && folder.isDirectory()) {
+					File[] files = folder.listFiles();
+					if (files != null) {
+						for (File file : files) {
+							if (filesToSkip.contains(file.getName())) {
+								continue;
+							}
+							try {
+								System.out.println("compiling " + file.getName());
+								compileFile(file, binDirName);
+
+								System.out.println("trace collection");
+								String className = "_" + file.getName().substring(0, file.getName().lastIndexOf('.'));
+								initializeAppClassPath(className, METHOD_NAME);
+								Trace trace = runTarget();
+								visualizeTrace(trace);
+
+								// TODO: dynamic slicing
+								// TODO: write results
+							} catch (CompilationFailureException e) {
+								System.out.println(e);
+							}
+						}
+					}
+				} else {
+					System.out.println("Dataset is not found at: " + sliceDatasetPath);
+				}
+
+				return null;
+			}
+		};
+
+		job.schedule();
+
+		return null;
+	}
+
+	private Set<String> getProblematicFiles(String basePath) {
+		Set<String> output = new HashSet<>();
+		String metaFileName = "tc_with_compilation_error.txt";
+		output.add(metaFileName);
+		output.add("bin");
+
+		String filePath = basePath + File.separator + metaFileName;
+		File problematicClasses = new File(filePath);
+
+		try {
+			String content = new String(Files.readAllBytes(problematicClasses.toPath()), StandardCharsets.UTF_8);
+			String[] files = content.split("\r\n");
+			for (String f : files) {
+				output.add(f);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return output;
+	}
+
+	private void compileFile(File file, String buildPath) throws CompilationFailureException {
+		String javaHome = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH);
+		String javac = javaHome + File.separator + "bin" + File.separator + "javac";
+
+		ArrayList<String> command = new ArrayList<>();
+		command.add(javac);
+
+		List<String> jars = MicroBatUtil.getJunitJars();
+		String classpaths = String.join(File.pathSeparator, jars);
+		if (!classpaths.isEmpty()) {
+			command.add("-cp");
+			command.add(classpaths);
+		}
+
+		command.add("-d");
+		command.add(buildPath);
+		command.add(file.getPath());
+		runCommand(command);
+	}
+
+	private void runCommand(List<String> cmdline) throws CompilationFailureException {
+		ProcessBuilder pb = new ProcessBuilder(cmdline);
+		ExecutorService executor = Executors.newFixedThreadPool(2);
+		int exitCode = -1;
+		try {
+			ReadFromStream readStdout = null, readStderr = null;
+			Process p = pb.start();
+			try {
+				readStdout = new ReadFromStream(p.getInputStream());
+				readStderr = new ReadFromStream(p.getErrorStream());
+				executor.submit(readStdout);
+				executor.submit(readStderr);
+				boolean ret = p.waitFor(10, TimeUnit.SECONDS);
+				if (!ret) {
+					throw new RuntimeException("Timeout while waiting for process to finish");
+				}
+				exitCode = p.exitValue();
+			} finally {
+				p.destroyForcibly();
+			}
+
+			executor.shutdown();
+			if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+				throw new RuntimeException("Timeout while waiting for process to finish");
+			}
+
+			if (exitCode != 0) {
+				System.out.println(readStderr.getOutput());
+				throw new CompilationFailureException("Command line failed: " + cmdline);
+			}
+		} catch (IOException | InterruptedException e) {
+			String msg = "Failed to compile source file: " + cmdline.get(cmdline.size() - 1);
+			throw new RuntimeException(msg, e);
+		} finally {
+			executor.shutdown();
+		}
+	}
+
+	public void initializeAppClassPath(String className, String methodName) {
+		testCase = new TestCase(className, methodName);
+		String projectName = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.PROJECT_NAME);
+		String bugID = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.BUG_ID);
+		d4jConfig = Defects4jProjectConfig.getConfig(projectName, bugID);
+
+		appClassPath = AppClassPathInitializer.initialize(binDirName, testCase, d4jConfig);
+
+		appClassPath.setWorkingDirectory(binDirName);
+
+		List<String> classPaths = MicroBatUtil.getJunitJars();
+		classPaths.add(binDirName);
+		appClassPath.setClasspaths(classPaths);
+
+		appClassPath.setSourceCodePath(srcDirName);
+		appClassPath.setTestCodePath(binDirName);
+	}
+
+	private Trace runTarget() {
+		List<String> includeLibs = new ArrayList<>();
+		List<String> excludeLibs = new ArrayList<>();
+		includeLibs.add("*");
+
+		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath, traceDirName, TRACE_FILE_NAME,
+				includeLibs, excludeLibs);
+		RunningInfo results = null;
+		try {
+			results = executor.run();
+		} catch (StepLimitException e) {
+			throw new RuntimeException("Step limit exceeded", e);
+		}
+
+		return results.getMainTrace();
+	}
+
+	private void visualizeTrace(Trace trace) {
+		Display.getDefault().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				BuggyTraceView buggyTraceView = TregressionViews.getBuggyTraceView();
+				buggyTraceView.setMainTrace(trace);
+				buggyTraceView.updateData();
+				buggyTraceView.setPairList(new PairList(new ArrayList<>()));
+				DiffMatcher diffMatcher = new DiffMatcher(srcDirName, srcDirName, srcDirName, srcDirName);
+				diffMatcher.matchCode();
+				buggyTraceView.setDiffMatcher(diffMatcher);
+			}
+		});
+	}
+}

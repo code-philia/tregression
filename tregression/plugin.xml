@@ -148,6 +148,11 @@
              id="tregression.incontextLearning"
              name="In Context Learning Example">
        </command>
+       <command
+             defaultHandler="tregression.handler.RecovSlicingEvalHandler"
+             id="tregression.RecovSlicingEval"
+             name="Recov Slicing Evaluation">
+       </command>
  </extension>	
  <extension
          point="org.eclipse.ui.views">
@@ -300,6 +305,11 @@
             <command
                   commandId="tregression.incontextLearning"
                   icon="icons/recover.png"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.RecovSlicingEval"
+                  icon="icons/slice.png"
                   style="push">
             </command>
          </toolbar>
