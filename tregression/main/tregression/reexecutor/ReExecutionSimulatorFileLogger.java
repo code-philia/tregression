@@ -28,7 +28,7 @@ public class ReExecutionSimulatorFileLogger {
 	
 	public ReExecutionSimulatorFileLogger() {
         String aliasFileName = "aliases.txt";
-        this.aliasFilePath = Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.VAR_EXPAND_FILE_PATH)
+        this.aliasFilePath = Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.INCONTEXT_FILE_PATH)
                 + File.separator + aliasFileName;
 	}
 	

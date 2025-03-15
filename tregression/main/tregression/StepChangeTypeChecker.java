@@ -148,14 +148,7 @@ public class StepChangeTypeChecker {
 				}
 
 				if (deadEndOnBothTraces || shouldExpandBasedOnChangeTypes || expandedEarier) {
-					ExecutionSimulator simulator;
-					boolean isCollectingPrompt = Activator.getDefault().getPreferenceStore()
-							.getString(TraceRecovPreference.COLLECT_PROMPT).equals("true");
-					if (isCollectingPrompt) {
-						simulator = new ExecutionSimulatorForPromptCollection();
-					} else {
-						simulator = ExecutionSimulatorFactory.getExecutionSimulator();
-					}
+					ExecutionSimulator simulator = ExecutionSimulatorFactory.getExecutionSimulator();
 
 					try {
 						String responseOnBuggy = simulator.expandVariable(readVar1, currentStep, null);
