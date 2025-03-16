@@ -73,7 +73,7 @@ public class StepChangeTypeChecker {
 			List<Pair<VarValue, VarValue>> wrongVariableList = 
 					checkWrongVariable(isOnBeforeTrace, step, matchedStep, pairList, matcher);
 			
-			if(Activator.getDefault().getPreferenceStore().getString(RecovSlicingPreference.ENABLE_LLM) == "true") {
+			if(Activator.getDefault().getPreferenceStore().getString(RecovSlicingPreference.ENABLE_LLM).equals("true")) {
 				List<Pair<VarValue, VarValue>> expandedWrongVariableList = 
 						checkExpansion(wrongVariableList, buggyTrace, correctTrace, isOnBeforeTrace, matchedStep, step, pairList, matcher);
 				
