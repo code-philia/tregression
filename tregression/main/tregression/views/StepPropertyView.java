@@ -14,7 +14,7 @@ import org.eclipse.ui.part.ViewPart;
 import microbat.Activator;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
-import microbat.preference.TraceRecovPreference;
+import microbat.preference.RecovSlicingPreference;
 import microbat.views.TraceView;
 import tregression.StepChangeType;
 import tregression.StepChangeTypeChecker;
@@ -81,7 +81,7 @@ public class StepPropertyView extends ViewPart {
 		layout.numColumns = 1;
 		panel.setLayout(layout);
 		
-		boolean isEnableTraceRecov = Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.ENABLE_TRACERECOV).equals("true");
+		boolean isEnableTraceRecov = Activator.getDefault().getPreferenceStore().getString(RecovSlicingPreference.ENABLE_TRACERECOV).equals("true");
 		
 		if(view instanceof BuggyTraceView){
 			// Modified by David

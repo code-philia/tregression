@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.StepLimitException;
 import microbat.compatibilitylayer.CompatibilityLayer;
+import microbat.instrumentation.AgentParams;
 import microbat.instrumentation.CommonParams;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
@@ -201,6 +202,8 @@ public class InContextExecutor {
                 excludeLibs);
         executor.getAgentRunner().addAgentParam(CommonParams.OPT_FORCE_EXIT_WITHOUT_WAIT_OTHER_THREADS, "true");
         executor.getAgentRunner().addAgentParam(CommonParams.OPT_MANUALLY_TEST_RUNNING_CLASS, "SampleTest");
+        executor.getAgentRunner().addAgentParam(AgentParams.OPT_VARIABLE_LAYER, Integer.toString(5 /* any layers you want */));
+        executor.getAgentRunner().addAgentParam(AgentParams.OPT_TRACKING_ALL_FIELDS, "true");
         RunningInfo results = null;
         try {
             results = executor.run();

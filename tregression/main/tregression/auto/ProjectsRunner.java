@@ -16,11 +16,13 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+import microbat.Activator;
 import tregression.auto.result.ResultWriter;
 import tregression.auto.result.RunResult;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.TrialGenerator0;
 import tregression.empiricalstudy.config.ProjectConfig;
+import tregression.preference.TregressionPreference;
 
 public abstract class ProjectsRunner {
     protected final String basePath;
@@ -121,7 +123,9 @@ public abstract class ProjectsRunner {
             return generator0.generateTrials(bugFolder, fixFolder, false, false, false, 3, true, true, config, "");
         });
         try {
-            return future.get(10, TimeUnit.MINUTES);
+			return future.get(Integer.valueOf(
+					Activator.getDefault().getPreferenceStore().getString(TregressionPreference.TIME_LIMIT_KEY)),
+					TimeUnit.MINUTES);
         } catch (TimeoutException e) {
             throw e;
         } catch (InterruptedException e) {

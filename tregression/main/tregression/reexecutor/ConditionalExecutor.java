@@ -7,7 +7,7 @@ import microbat.codeanalysis.runtime.Condition;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.preference.TraceRecovPreference;
+import microbat.preference.RecovSlicingPreference;
 import microbat.tracerecov.executionsimulator.ExecutionSimulationFileLogger;
 import tregression.empiricalstudy.EmpiricalTrial;
 import tregression.empiricalstudy.TraceGenerator;
@@ -46,7 +46,7 @@ public class ConditionalExecutor {
 		System.out.println("Re-excution on the " + id + "th bug of " + projectName + " project.");
 
 		String isMutatedBugString = Activator.getDefault().getPreferenceStore()
-				.getString(TraceRecovPreference.USE_MUTATION_CONFIG);
+				.getString(RecovSlicingPreference.USE_MUTATION_CONFIG);
 		boolean isMutatedBug = isMutatedBugString != null && isMutatedBugString.equals("true");
 		ProjectConfig config = ConfigFactory.createConfig(projectName, id, buggyPath, fixPath, isMutatedBug);
 
@@ -81,7 +81,7 @@ public class ConditionalExecutor {
 		System.out.println("Re-execution on buggy trace? "+isOnBuggy);
 
 		String isMutatedBugString = Activator.getDefault().getPreferenceStore()
-				.getString(TraceRecovPreference.USE_MUTATION_CONFIG);
+				.getString(RecovSlicingPreference.USE_MUTATION_CONFIG);
 		boolean isMutatedBug = isMutatedBugString != null && isMutatedBugString.equals("true");
 		ProjectConfig config = ConfigFactory.createConfig(projectName, id, buggyPath, fixPath, isMutatedBug);
 		config.condition = condition;

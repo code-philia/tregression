@@ -27,14 +27,17 @@ public class RunGPTInContextLearningHandler extends AbstractHandler {
                     String sampleCode = readResourceString("../../resources/run_sample/sample_code.java");
                     String sampleImport = readResourceString("../../resources/run_sample/sample_import.java");
                     int sampleLineIdx = Integer.parseInt(readResourceString("../../resources/run_sample/sample_idx.txt").trim());
+                    String sampleTargetVar = readResourceString("../../resources/run_sample/sample_target_var.txt");
+                    String sampleTargetValue = readResourceString("../../resources/run_sample/sample_target_value.txt");
                     InContextLearningImpl learning = new InContextLearningImpl(true);
                     learning.setExecutionSimulator(ExecutionSimulatorFactory.getExecutionSimulator());
                     learning.executeInContextLearning(
                             sampleImport,
                             sampleCode,
                             sampleLineIdx,
-                            InContextLearningType.ALIAS_INFERENCE,
-                            InContextLearningImpl.defaultToString());
+                            sampleTargetVar,
+                            sampleTargetValue,
+                            InContextLearningType.ALIAS_INFERENCE, InContextLearningImpl.defaultToString());
                 } catch (Exception e) {
                     log.error("Failed to run GPT in context learning", e);
                     return Status.CANCEL_STATUS;

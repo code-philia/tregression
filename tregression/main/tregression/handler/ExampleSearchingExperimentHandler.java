@@ -9,7 +9,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 
 import microbat.Activator;
-import microbat.preference.TraceRecovPreference;
+import microbat.preference.RecovSlicingPreference;
 import microbat.tracerecov.autoprompt.AliasInferenceExampleSearcher;
 import microbat.tracerecov.autoprompt.DefinitionInferenceExampleSearcher;
 import microbat.tracerecov.autoprompt.ExampleSearcher;
@@ -23,7 +23,7 @@ public class ExampleSearchingExperimentHandler extends AbstractHandler {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				PromptType promptType = PromptType.valueOf(
-						Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.PROMPT_TYPE));
+						Activator.getDefault().getPreferenceStore().getString(RecovSlicingPreference.PROMPT_TYPE));
 				ExampleSearcher exampleSearcher = null;
 
 				switch (promptType) {
