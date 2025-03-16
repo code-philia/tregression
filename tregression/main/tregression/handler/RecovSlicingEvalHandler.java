@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -30,6 +31,7 @@ import microbat.preference.MicrobatPreference;
 import microbat.preference.RecovSlicingPreference;
 import microbat.tracerecov.autoprompt.incontextlearning.CompilationFailureException;
 import microbat.tracerecov.autoprompt.incontextlearning.InContextExecutor.ReadFromStream;
+import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import sav.strategies.dto.AppJavaClassPath;
 import tregression.empiricalstudy.TestCase;
@@ -41,7 +43,6 @@ import tregression.separatesnapshots.AppClassPathInitializer;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.views.BuggyTraceView;
 import tregression.views.TregressionViews;
-import microbat.util.JavaUtil;
 
 /**
  * This handler is responsible for running recov slicing on the given dataset.
@@ -158,6 +159,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 		ArrayList<String> command = new ArrayList<>();
 		command.add(javac);
+		command.add("-g");
 
 		List<String> jars = MicroBatUtil.getJunitJars();
 		String classpaths = String.join(File.pathSeparator, jars);
