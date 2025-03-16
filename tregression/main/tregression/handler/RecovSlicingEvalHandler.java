@@ -24,6 +24,8 @@ import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.StepLimitException;
 import microbat.instrumentation.output.RunningInfo;
 import microbat.model.trace.Trace;
+import microbat.model.trace.TraceNode;
+import microbat.model.value.VarValue;
 import microbat.preference.MicrobatPreference;
 import microbat.preference.RecovSlicingPreference;
 import microbat.tracerecov.autoprompt.incontextlearning.CompilationFailureException;
@@ -85,17 +87,30 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 							if (filesToSkip.contains(file.getName())) {
 								continue;
 							}
+							int criterionCounter = 1;
 							try {
 								System.out.println("compiling " + file.getName());
 								compileFile(file, binDirName);
 
-								System.out.println("trace collection");
+								System.out.println("collecting trace");
 								String className = file.getName().substring(0, file.getName().lastIndexOf('.'));
 								initializeAppClassPath(className, METHOD_NAME);
 								Trace trace = runTarget();
 								visualizeTrace(trace);
 
-								// TODO: dynamic slicing
+								System.out.println("dynamic slicing");
+								List<TraceNode> steps = trace.getExecutionList();
+
+								while (criterionCounter < steps.size()) {
+									TraceNode slicingCriterion = steps.get(criterionCounter);
+									List<VarValue> readVars = slicingCriterion.getReadVariables();
+									for (VarValue v : readVars) {
+										// TODO: dynamic slicing
+										System.out.println(v.getVarName());
+									}
+									criterionCounter++;
+								}
+
 								// TODO: write results
 							} catch (CompilationFailureException e) {
 								System.out.println(e);
@@ -210,7 +225,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		appClassPath.setClasspaths(classPaths);
 
 		appClassPath.setSourceCodePath(srcDirName);
-		appClassPath.setTestCodePath(binDirName);
+		appClassPath.setTestCodePath(srcDirName);
 	}
 
 	private Trace runTarget() {
