@@ -207,6 +207,8 @@ public class InContextLearningImpl implements InContextLearning {
 
         List<Integer> targetLineTraces = new ArrayList<>();
 
+        log.info("Trace size: {}", trace.size());
+
         for (int i = 1; i <= trace.size(); i++) {
             TraceNode node = trace.getTraceNode(i);
             log.info("Trace method: {}, line: {}", node.getMethodSign(), node.getLineNumber());
