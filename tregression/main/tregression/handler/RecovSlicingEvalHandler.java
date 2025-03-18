@@ -20,6 +20,8 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import microbat.Activator;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
@@ -84,7 +86,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				srcDirName = sliceDatasetPath + File.separator + SRC_FOLDER;
 				binDirName = sliceDatasetPath + File.separator + BIN_FOLDER;
 				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
-				Set<String> filesToSkip = getProblematicFiles(sliceDatasetPath);
+				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
+				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
 
 				// set up trace recoverer
 				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
@@ -95,7 +98,23 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 					File[] files = folder.listFiles();
 					if (files != null) {
 						for (File file : files) {
-							if (filesToSkip.contains(file.getName())) {
+							String className = file.getName().substring(0, file.getName().lastIndexOf('.'));
+
+							String id = "";
+							boolean idStarted = false;
+							for (int i = 0; i < className.length(); i++) {
+								char c = className.charAt(i);
+								if (c == '0' && !idStarted) {
+									continue;
+								} else if (c != '0') {
+									idStarted = true;
+									id += c;
+								} else if (c == 'T') {
+									break;
+								}
+							}
+
+							if (idsToSkip.contains(id) || processedFiles.contains(className)) {
 								continue;
 							}
 
@@ -104,7 +123,6 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								compileFile(file, binDirName);
 
 								System.out.println("collecting trace...");
-								String className = file.getName().substring(0, file.getName().lastIndexOf('.'));
 								initializeAppClassPath(className, METHOD_NAME);
 								Trace trace = runTarget();
 								visualizeTrace(trace);
@@ -223,6 +241,40 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			e.printStackTrace();
 		}
 
+		return output;
+	}
+
+	private Set<String> getMismatchFiles(String basePath) {
+		Set<String> output = new HashSet<>();
+		String fileName = "mismatched_ids.json";
+
+		String filePath = basePath + File.separator + fileName;
+		File mismatchFiles = new File(filePath);
+
+		try {
+			String content = new String(Files.readAllBytes(mismatchFiles.toPath()), StandardCharsets.UTF_8);
+
+			JSONArray jsonArray = new JSONArray(content);
+			for (Object object : jsonArray.toList()) {
+				String id = String.valueOf((Integer) object);
+				output.add(id);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return output;
+	}
+
+	private Set<String> getProcessedFiles(String basePath) {
+		Set<String> output = new HashSet<>();
+		String resultsPath = basePath + File.separator + "slicing_results";
+		File processedClasses = new File(resultsPath);
+
+		File[] files = processedClasses.listFiles();
+		for (File f : files) {
+			output.add(f.getName().substring(0, f.getName().lastIndexOf('.')));
+		}
 		return output;
 	}
 
