@@ -1,6 +1,7 @@
 package tregression.handler;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -29,8 +30,11 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
 import microbat.preference.MicrobatPreference;
 import microbat.preference.RecovSlicingPreference;
+import microbat.tracerecov.TraceRecoverer;
 import microbat.tracerecov.autoprompt.incontextlearning.CompilationFailureException;
 import microbat.tracerecov.autoprompt.incontextlearning.InContextExecutor.ReadFromStream;
+import microbat.tracerecov.executionsimulator.ExecutionSimulator;
+import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import sav.strategies.dto.AppJavaClassPath;
@@ -63,6 +67,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	private TestCase testCase;
 	private ProjectConfig d4jConfig;
 	private AppJavaClassPath appClassPath;
+	private ExecutionSimulator executionSimulator;
+	private TraceRecoverer traceRecoverer;
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -80,6 +86,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
 				Set<String> filesToSkip = getProblematicFiles(sliceDatasetPath);
 
+				// set up trace recoverer
+				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
+				traceRecoverer = new TraceRecoverer();
+
 				File folder = new File(srcDirName);
 				if (folder.exists() && folder.isDirectory()) {
 					File[] files = folder.listFiles();
@@ -88,31 +98,94 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 							if (filesToSkip.contains(file.getName())) {
 								continue;
 							}
-							int criterionCounter = 1;
+
 							try {
-								System.out.println("compiling " + file.getName());
+								System.out.println("compiling " + file.getName() + " ...");
 								compileFile(file, binDirName);
 
-								System.out.println("collecting trace");
+								System.out.println("collecting trace...");
 								String className = file.getName().substring(0, file.getName().lastIndexOf('.'));
 								initializeAppClassPath(className, METHOD_NAME);
 								Trace trace = runTarget();
 								visualizeTrace(trace);
 
-								System.out.println("dynamic slicing");
+								System.out.println("dynamic slicing...");
 								List<TraceNode> steps = trace.getExecutionList();
+
+								int criterionCounter = 1;
 
 								while (criterionCounter < steps.size()) {
 									TraceNode slicingCriterion = steps.get(criterionCounter);
 									List<VarValue> readVars = slicingCriterion.getReadVariables();
 									for (VarValue v : readVars) {
-										// TODO: dynamic slicing
+										System.out.println("slicing criterion:");
+										System.out.println(slicingCriterion.getOrder());
 										System.out.println(v.getVarName());
+
+										// original data dominator
+										TraceNode dataDom = trace.findDataDependency(slicingCriterion, v);
+										System.out.println("slicing destination without recovery:");
+										if (dataDom == null) {
+											System.out.println("none");
+										} else {
+											System.out.println(dataDom.getOrder());
+										}
+
+										/*
+										 * 1. Variable Expansion
+										 */
+										try {
+											executionSimulator.expandVariable(v, slicingCriterion, null);
+										} catch (IOException e) {
+											e.printStackTrace();
+										}
+
+										/*
+										 * 2. Recover Dependency
+										 */
+										System.out.println("slicing destination after recovery:");
+										Set<Integer> dataDominatorsAfterRecovery = new HashSet<>();
+										for (VarValue targetVar : v.getAllDescedentChildren()) {
+											traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v);
+											TraceNode dataDominator = trace.findProducer(targetVar, slicingCriterion);
+											if (dataDominator != null) {
+												dataDominatorsAfterRecovery.add(dataDominator.getLineNumber());
+												System.out.println(dataDominator.getOrder());
+											}
+										}
+										if (dataDom != null) {
+											dataDominatorsAfterRecovery.add(dataDom.getLineNumber());
+										}
+
+										// write result
+										if (!dataDominatorsAfterRecovery.isEmpty()) {
+											System.out.println("writing results...");
+											StringBuilder result = new StringBuilder();
+											result.append(slicingCriterion.getLineNumber() + ",");
+											result.append(v.getVarName() + ",");
+											StringBuilder slicingDestinations = new StringBuilder("[");
+											for (Integer i : dataDominatorsAfterRecovery) {
+												slicingDestinations.append(i);
+												slicingDestinations.append(";");
+											}
+											slicingDestinations.append("]");
+											result.append(slicingDestinations);
+											result.append(System.lineSeparator());
+
+											try {
+												File resultFile = new File(sliceDatasetPath + File.separator
+														+ "slicing_results" + File.separator + className + ".txt");
+												FileWriter resultWriter = new FileWriter(resultFile, true);
+												resultWriter.append(result.toString());
+												resultWriter.close();
+											} catch (IOException e) {
+												e.printStackTrace();
+												return null;
+											}
+										}
 									}
 									criterionCounter++;
 								}
-
-								// TODO: write results
 							} catch (CompilationFailureException e) {
 								System.out.println(e);
 							}
