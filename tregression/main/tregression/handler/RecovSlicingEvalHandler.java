@@ -21,8 +21,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 import org.json.JSONArray;
-import org.json.JSONObject;
-
 import microbat.Activator;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.StepLimitException;
@@ -87,6 +85,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				binDirName = sliceDatasetPath + File.separator + BIN_FOLDER;
 				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
 				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
+				Set<String> compilationErrors = getProblematicFiles(sliceDatasetPath);
 				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
 
 				// set up trace recoverer
@@ -114,7 +113,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								}
 							}
 
-							if (idsToSkip.contains(id) || processedFiles.contains(className)) {
+							if (idsToSkip.contains(id) || processedFiles.contains(className)
+									|| compilationErrors.contains(file.getName())) {
 								continue;
 							}
 
