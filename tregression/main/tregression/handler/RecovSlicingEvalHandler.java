@@ -114,9 +114,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								}
 							}
 
-							if (idsToSkip.contains(id) || processedFiles.contains(file.getName())
-									|| compilationErrors.contains(file.getName())
-									|| !classesToRun.contains(file.getName())) {
+							if (idsToSkip.contains(id) || processedFiles.contains(className)
+									|| compilationErrors.contains(className) || !classesToRun.contains(className)) {
 								continue;
 							}
 
@@ -236,7 +235,12 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			String content = new String(Files.readAllBytes(problematicClasses.toPath()), StandardCharsets.UTF_8);
 			String[] files = content.split("\r\n");
 			for (String f : files) {
-				output.add(f);
+				int index = f.lastIndexOf('.');
+				if (index >= 0) {
+					output.add(f.substring(0, f.lastIndexOf('.')));
+				} else {
+					output.add(f);
+				}
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
@@ -274,7 +278,12 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 		File[] files = processedClasses.listFiles();
 		for (File f : files) {
-			output.add(f.getName());
+			int index = f.getName().lastIndexOf('.');
+			if (index >= 0) {
+				output.add(f.getName().substring(0, f.getName().lastIndexOf('.')));
+			} else {
+				output.add(f.getName());
+			}
 		}
 		return output;
 	}
