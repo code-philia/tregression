@@ -60,6 +60,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String TRACE_FOLDER = "trace";
 	public static final String TRACE_FILE_NAME = "trace";
 	public static final String METHOD_NAME = "testMainLogic";
+	public static final String CLASSES_TO_RUN = "bugs.txt";
+	public static final String COMPILE_ERRORS = "tc_with_compilation_error.txt";
+	public static final String MISMATCHES = "mismatched_ids.json";
+	public static final String RESULTS_FOLDER = "slicing_results";
 
 	private String srcDirName;
 	private String binDirName;
@@ -84,9 +88,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				srcDirName = sliceDatasetPath + File.separator + SRC_FOLDER;
 				binDirName = sliceDatasetPath + File.separator + BIN_FOLDER;
 				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
-				Set<String> classesToRun = readContent(sliceDatasetPath, "bugs.txt");
+				Set<String> classesToRun = readContent(sliceDatasetPath, CLASSES_TO_RUN);
 				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
-				Set<String> compilationErrors = readContent(sliceDatasetPath, "tc_with_compilation_error.txt");
+				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
 				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
 
 				// set up trace recoverer
@@ -193,7 +197,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 											try {
 												File resultFile = new File(sliceDatasetPath + File.separator
-														+ "slicing_results" + File.separator + className + ".txt");
+														+ RESULTS_FOLDER + File.separator + className + ".txt");
 												FileWriter resultWriter = new FileWriter(resultFile, true);
 												resultWriter.append(result.toString());
 												resultWriter.close();
@@ -226,7 +230,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	private Set<String> readContent(String basePath, String fileName) {
 		Set<String> output = new HashSet<>();
 		output.add(fileName);
-		output.add("bin");
+		output.add(BIN_FOLDER);
 
 		String filePath = basePath + File.separator + fileName;
 		File problematicClasses = new File(filePath);
@@ -251,7 +255,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 	private Set<String> getMismatchFiles(String basePath) {
 		Set<String> output = new HashSet<>();
-		String fileName = "mismatched_ids.json";
+		String fileName = MISMATCHES;
 
 		String filePath = basePath + File.separator + fileName;
 		File mismatchFiles = new File(filePath);
@@ -273,7 +277,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 	private Set<String> getProcessedFiles(String basePath) {
 		Set<String> output = new HashSet<>();
-		String resultsPath = basePath + File.separator + "slicing_results";
+		String resultsPath = basePath + File.separator + RESULTS_FOLDER;
 		File processedClasses = new File(resultsPath);
 
 		File[] files = processedClasses.listFiles();
@@ -290,7 +294,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 	private void compileFile(File file, String buildPath) throws CompilationFailureException {
 		String javaHome = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH);
-		String javac = javaHome + File.separator + "bin" + File.separator + "javac";
+		String javac = javaHome + File.separator + BIN_FOLDER + File.separator + "javac";
 
 		ArrayList<String> command = new ArrayList<>();
 		command.add(javac);
