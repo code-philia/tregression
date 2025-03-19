@@ -84,8 +84,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				srcDirName = sliceDatasetPath + File.separator + SRC_FOLDER;
 				binDirName = sliceDatasetPath + File.separator + BIN_FOLDER;
 				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
+				Set<String> classesToRun = readContent(sliceDatasetPath, "bugs.txt");
 				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
-				Set<String> compilationErrors = getProblematicFiles(sliceDatasetPath);
+				Set<String> compilationErrors = readContent(sliceDatasetPath, "tc_with_compilation_error.txt");
 				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
 
 				// set up trace recoverer
@@ -113,8 +114,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								}
 							}
 
-							if (idsToSkip.contains(id) || processedFiles.contains(className)
-									|| compilationErrors.contains(file.getName())) {
+							if (idsToSkip.contains(id) || processedFiles.contains(file.getName())
+									|| compilationErrors.contains(file.getName())
+									|| !classesToRun.contains(file.getName())) {
 								continue;
 							}
 
@@ -222,13 +224,12 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		return null;
 	}
 
-	private Set<String> getProblematicFiles(String basePath) {
+	private Set<String> readContent(String basePath, String fileName) {
 		Set<String> output = new HashSet<>();
-		String metaFileName = "tc_with_compilation_error.txt";
-		output.add(metaFileName);
+		output.add(fileName);
 		output.add("bin");
 
-		String filePath = basePath + File.separator + metaFileName;
+		String filePath = basePath + File.separator + fileName;
 		File problematicClasses = new File(filePath);
 
 		try {
@@ -273,7 +274,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 		File[] files = processedClasses.listFiles();
 		for (File f : files) {
-			output.add(f.getName().substring(0, f.getName().lastIndexOf('.')));
+			output.add(f.getName());
 		}
 		return output;
 	}
