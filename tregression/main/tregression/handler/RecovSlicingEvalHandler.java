@@ -243,15 +243,16 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 	private Set<String> readContent(String basePath, String fileName) {
 		Set<String> output = new HashSet<>();
-		output.add(fileName);
-		output.add(BIN_FOLDER);
+		/* nd-dataset settings */
+//		output.add(fileName);
+//		output.add(BIN_FOLDER);
 
 		String filePath = basePath + File.separator + fileName;
 		File problematicClasses = new File(filePath);
 
 		try {
 			String content = new String(Files.readAllBytes(problematicClasses.toPath()), StandardCharsets.UTF_8);
-			String[] files = content.split("\r\n");
+			String[] files = content.split(System.lineSeparator());
 			for (String f : files) {
 				int index = f.lastIndexOf('.');
 				if (index >= 0) {
