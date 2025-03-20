@@ -61,19 +61,26 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String TRACE_FOLDER = "trace";
 	public static final String TRACE_FILE_NAME = "trace";
 	public static final String METHOD_NAME = "testMainLogic";
-	public static final String CLASSES_TO_RUN = Activator.getDefault().getPreferenceStore()
-			.getString(RecovSlicingPreference.SLICE_BUGS_TO_RUN);
 	public static final String COMPILE_ERRORS = "tc_with_compilation_error.txt";
 	public static final String MISMATCHES = "mismatched_ids.json";
 	public static final String RESULTS_FOLDER = "slicing_results";
+	public static final String B1_FOLDER = "RQ3_baseline1";
+	public static final String B2_FOLDER = "RQ3_baseline2";
+	public static final String B3_FOLDER = "RQ3_baseline3";
 	public static final String JAVA_HOME = Activator.getDefault().getPreferenceStore()
 			.getString(MicrobatPreference.JAVA7HOME_PATH);
 	public static final String INSTRUMENTATION_JAR_PATH = IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID,
 			"lib") + File.separator + "instrumentator.jar";
-	public static final String SLICE_DATASET_PATH = Activator.getDefault().getPreferenceStore()
+
+	public String sliceDatasetPath = Activator.getDefault().getPreferenceStore()
 			.getString(RecovSlicingPreference.SLICE_DATASET_PATH);
-	public static final String IS_JUNIT_STR = Activator.getDefault().getPreferenceStore()
-			.getString(RecovSlicingPreference.IS_JUNIT);
+	public String bugsToRun = Activator.getDefault().getPreferenceStore()
+			.getString(RecovSlicingPreference.SLICE_BUGS_TO_RUN);
+	public String isJunitStr = Activator.getDefault().getPreferenceStore().getString(RecovSlicingPreference.IS_JUNIT);
+	public String enableIncontextLearningStr = Activator.getDefault().getPreferenceStore()
+			.getString(RecovSlicingPreference.ENABLE_IN_CONTEXT_LEARNING);
+	public String enableAliasInferStr = Activator.getDefault().getPreferenceStore()
+			.getString(RecovSlicingPreference.ENABLE_ALIAS_INFERENCE);
 
 	private String srcDirName;
 	private String binDirName;
@@ -93,14 +100,14 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				// load dataset
-				srcDirName = SLICE_DATASET_PATH + File.separator + SRC_FOLDER;
-				binDirName = SLICE_DATASET_PATH + File.separator + BIN_FOLDER;
-				traceDirName = SLICE_DATASET_PATH + File.separator + TRACE_FOLDER;
+				srcDirName = sliceDatasetPath + File.separator + SRC_FOLDER;
+				binDirName = sliceDatasetPath + File.separator + BIN_FOLDER;
+				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
 
-				Set<String> classesToRun = readContent(SLICE_DATASET_PATH, CLASSES_TO_RUN);
-				Set<String> idsToSkip = getMismatchFiles(SLICE_DATASET_PATH);
-				Set<String> compilationErrors = readContent(SLICE_DATASET_PATH, COMPILE_ERRORS);
-				Set<String> processedFiles = getProcessedFiles(SLICE_DATASET_PATH);
+				Set<String> classesToRun = readContent(sliceDatasetPath, bugsToRun);
+				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
+				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
+				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
 
 				// set up trace recoverer
 				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
@@ -138,7 +145,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								compileFile(file, binDirName);
 
 								System.out.println("collecting trace...");
-								if (IS_JUNIT_STR != null && IS_JUNIT_STR.equals("true")) {
+								if (isJunitStr != null && isJunitStr.equals("true")) {
 									initializeAppClassPathJunitTest(className, METHOD_NAME);
 								} else {
 									initializeAppClassPath(className);
@@ -210,8 +217,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 											result.append(System.lineSeparator());
 
 											try {
-												File resultFile = new File(SLICE_DATASET_PATH + File.separator
-														+ RESULTS_FOLDER + File.separator + className + ".txt");
+												File resultFile = new File(sliceDatasetPath + File.separator
+														+ getResultFolderName() + File.separator + className + ".txt");
 												FileWriter resultWriter = new FileWriter(resultFile, true);
 												resultWriter.append(result.toString());
 												resultWriter.close();
@@ -229,7 +236,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 						}
 					}
 				} else {
-					System.out.println("Dataset is not found at: " + SLICE_DATASET_PATH);
+					System.out.println("Dataset is not found at: " + sliceDatasetPath);
 				}
 
 				return null;
@@ -243,7 +250,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 	private Set<String> readContent(String basePath, String fileName) {
 		Set<String> output = new HashSet<>();
-		if (IS_JUNIT_STR != null && IS_JUNIT_STR.equals("true")) {
+		if (isJunitStr != null && isJunitStr.equals("true")) {
 			output.add(fileName);
 			output.add(BIN_FOLDER);
 		}
@@ -295,7 +302,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 	private Set<String> getProcessedFiles(String basePath) {
 		Set<String> output = new HashSet<>();
-		String resultsPath = basePath + File.separator + RESULTS_FOLDER;
+		String resultsPath = basePath + File.separator + getResultFolderName();
 		File processedClasses = new File(resultsPath);
 
 		File[] files = processedClasses.listFiles();
@@ -432,5 +439,24 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				buggyTraceView.setDiffMatcher(diffMatcher);
 			}
 		});
+	}
+
+	private String getResultFolderName() {
+		boolean enableIncontextLearning = enableIncontextLearningStr != null
+				&& enableIncontextLearningStr.equals("true");
+		boolean enableAliasInfer = enableAliasInferStr != null && enableAliasInferStr.equals("true");
+		if (enableIncontextLearning) {
+			if (enableAliasInfer) {
+				return RESULTS_FOLDER; // all features enabled, use default result folder "slicing_results"
+			} else {
+				return B2_FOLDER; // Baseline 2: enable in-context learning only
+			}
+		} else {
+			if (enableAliasInfer) {
+				return B3_FOLDER; // Baseline 3: enable alias inference only
+			} else {
+				return B1_FOLDER; // Baseline 1: disable in-context learning and alias inference
+			}
+		}
 	}
 }
