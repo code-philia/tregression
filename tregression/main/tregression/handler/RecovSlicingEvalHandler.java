@@ -61,7 +61,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String TRACE_FOLDER = "trace";
 	public static final String TRACE_FILE_NAME = "trace";
 	public static final String METHOD_NAME = "testMainLogic";
-	public static final String CLASSES_TO_RUN = Activator.getDefault().getPreferenceStore().getString(RecovSlicingPreference.SLICE_BUGS_TO_RUN);
+	public static final String CLASSES_TO_RUN = Activator.getDefault().getPreferenceStore()
+			.getString(RecovSlicingPreference.SLICE_BUGS_TO_RUN);
 	public static final String COMPILE_ERRORS = "tc_with_compilation_error.txt";
 	public static final String MISMATCHES = "mismatched_ids.json";
 	public static final String RESULTS_FOLDER = "slicing_results";
@@ -96,8 +97,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 				/* nd-dataset settings */
 				Set<String> classesToRun = readContent(SLICE_DATASET_PATH, CLASSES_TO_RUN);
-//				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
-//				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
+//				Set<String> idsToSkip = getMismatchFiles(SLICE_DATASET_PATH);
+				Set<String> compilationErrors = readContent(SLICE_DATASET_PATH, COMPILE_ERRORS);
 				Set<String> processedFiles = getProcessedFiles(SLICE_DATASET_PATH);
 
 				// set up trace recoverer
@@ -131,7 +132,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 //								continue;
 //							}
 
-							if (processedFiles.contains(className) || !classesToRun.contains(className)) {
+							if (processedFiles.contains(className) || compilationErrors.contains(className)
+									|| !classesToRun.contains(className)) {
 								continue;
 							}
 
