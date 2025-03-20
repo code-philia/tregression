@@ -72,6 +72,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			"lib") + File.separator + "instrumentator.jar";
 	public static final String SLICE_DATASET_PATH = Activator.getDefault().getPreferenceStore()
 			.getString(RecovSlicingPreference.SLICE_DATASET_PATH);
+	public static final String IS_JUNIT_STR = Activator.getDefault().getPreferenceStore()
+			.getString(RecovSlicingPreference.IS_JUNIT);
 
 	private String srcDirName;
 	private String binDirName;
@@ -95,9 +97,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				binDirName = SLICE_DATASET_PATH + File.separator + BIN_FOLDER;
 				traceDirName = SLICE_DATASET_PATH + File.separator + TRACE_FOLDER;
 
-				/* nd-dataset settings */
 				Set<String> classesToRun = readContent(SLICE_DATASET_PATH, CLASSES_TO_RUN);
-//				Set<String> idsToSkip = getMismatchFiles(SLICE_DATASET_PATH);
+				Set<String> idsToSkip = getMismatchFiles(SLICE_DATASET_PATH);
 				Set<String> compilationErrors = readContent(SLICE_DATASET_PATH, COMPILE_ERRORS);
 				Set<String> processedFiles = getProcessedFiles(SLICE_DATASET_PATH);
 
@@ -113,27 +114,22 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 							String className = file.getName().substring(0, file.getName().lastIndexOf('.'));
 
 							/* nd-dataset settings */
-//							String id = "";
-//							boolean idStarted = false;
-//							for (int i = 0; i < className.length(); i++) {
-//								char c = className.charAt(i);
-//								if (c == '0' && !idStarted) {
-//									continue;
-//								} else if (c != '0') {
-//									idStarted = true;
-//									id += c;
-//								} else if (c == 'T') {
-//									break;
-//								}
-//							}
-//
-//							if (idsToSkip.contains(id) || processedFiles.contains(className)
-//									|| compilationErrors.contains(className) || !classesToRun.contains(className)) {
-//								continue;
-//							}
+							String id = "";
+							boolean idStarted = false;
+							for (int i = 0; i < className.length(); i++) {
+								char c = className.charAt(i);
+								if (c == '0' && !idStarted) {
+									continue;
+								} else if (c != '0') {
+									idStarted = true;
+									id += c;
+								} else if (c == 'T') {
+									break;
+								}
+							}
 
-							if (processedFiles.contains(className) || compilationErrors.contains(className)
-									|| !classesToRun.contains(className)) {
+							if (idsToSkip.contains(id) || processedFiles.contains(className)
+									|| compilationErrors.contains(className) || !classesToRun.contains(className)) {
 								continue;
 							}
 
@@ -142,9 +138,11 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								compileFile(file, binDirName);
 
 								System.out.println("collecting trace...");
-								/* nd-dataset settings */
-//								initializeAppClassPathJunitTest(className, METHOD_NAME);
-								initializeAppClassPath(className);
+								if (IS_JUNIT_STR != null && IS_JUNIT_STR.equals("true")) {
+									initializeAppClassPathJunitTest(className, METHOD_NAME);
+								} else {
+									initializeAppClassPath(className);
+								}
 								Trace trace = runTarget();
 								visualizeTrace(trace);
 
@@ -245,9 +243,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 	private Set<String> readContent(String basePath, String fileName) {
 		Set<String> output = new HashSet<>();
-		/* nd-dataset settings */
-//		output.add(fileName);
-//		output.add(BIN_FOLDER);
+		if (IS_JUNIT_STR != null && IS_JUNIT_STR.equals("true")) {
+			output.add(fileName);
+			output.add(BIN_FOLDER);
+		}
 
 		String filePath = basePath + File.separator + fileName;
 		File problematicClasses = new File(filePath);
@@ -265,6 +264,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+			return new HashSet<>();
 		}
 
 		return output;
@@ -287,6 +287,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
+			return new HashSet<>();
 		}
 
 		return output;
