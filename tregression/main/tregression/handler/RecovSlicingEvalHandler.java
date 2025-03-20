@@ -95,10 +95,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
 
 				/* nd-dataset settings */
-//				Set<String> classesToRun = readContent(sliceDatasetPath, CLASSES_TO_RUN);
+				Set<String> classesToRun = readContent(sliceDatasetPath, CLASSES_TO_RUN);
 //				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
 //				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
-//				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
+				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
 
 				// set up trace recoverer
 				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
@@ -130,6 +130,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 //									|| compilationErrors.contains(className) || !classesToRun.contains(className)) {
 //								continue;
 //							}
+
+							if (processedFiles.contains(className) || !classesToRun.contains(className)) {
+								continue;
+							}
 
 							try {
 								System.out.println("compiling " + file.getName() + " ...");
