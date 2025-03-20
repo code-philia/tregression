@@ -382,6 +382,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 		appClassPath.setJavaHome(JAVA_HOME);
 		appClassPath.setAgentLib(INSTRUMENTATION_JAR_PATH);
+		MicroBatUtil.setSystemJars(appClassPath);
 		appClassPath.setLaunchClass(className);
 
 		List<String> classPaths = MicroBatUtil.getJunitJars();
