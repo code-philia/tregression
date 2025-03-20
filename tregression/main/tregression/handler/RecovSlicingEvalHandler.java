@@ -35,6 +35,7 @@ import microbat.tracerecov.autoprompt.incontextlearning.CompilationFailureExcept
 import microbat.tracerecov.autoprompt.incontextlearning.InContextExecutor.ReadFromStream;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
+import microbat.util.IResourceUtils;
 import microbat.util.JavaUtil;
 import microbat.util.MicroBatUtil;
 import sav.strategies.dto.AppJavaClassPath;
@@ -64,6 +65,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String COMPILE_ERRORS = "tc_with_compilation_error.txt";
 	public static final String MISMATCHES = "mismatched_ids.json";
 	public static final String RESULTS_FOLDER = "slicing_results";
+	public static final String JAVA_HOME = Activator.getDefault().getPreferenceStore()
+			.getString(MicrobatPreference.JAVA7HOME_PATH);
+	public static final String INSTRUMENTATION_JAR_PATH = IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID,
+			"lib") + File.separator + "instrumentator.jar";
 
 	private String srcDirName;
 	private String binDirName;
@@ -88,10 +93,12 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				srcDirName = sliceDatasetPath + File.separator + SRC_FOLDER;
 				binDirName = sliceDatasetPath + File.separator + BIN_FOLDER;
 				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
-				Set<String> classesToRun = readContent(sliceDatasetPath, CLASSES_TO_RUN);
-				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
-				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
-				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
+
+				/* nd-dataset settings */
+//				Set<String> classesToRun = readContent(sliceDatasetPath, CLASSES_TO_RUN);
+//				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
+//				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
+//				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
 
 				// set up trace recoverer
 				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
@@ -104,31 +111,34 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 						for (File file : files) {
 							String className = file.getName().substring(0, file.getName().lastIndexOf('.'));
 
-							String id = "";
-							boolean idStarted = false;
-							for (int i = 0; i < className.length(); i++) {
-								char c = className.charAt(i);
-								if (c == '0' && !idStarted) {
-									continue;
-								} else if (c != '0') {
-									idStarted = true;
-									id += c;
-								} else if (c == 'T') {
-									break;
-								}
-							}
-
-							if (idsToSkip.contains(id) || processedFiles.contains(className)
-									|| compilationErrors.contains(className) || !classesToRun.contains(className)) {
-								continue;
-							}
+							/* nd-dataset settings */
+//							String id = "";
+//							boolean idStarted = false;
+//							for (int i = 0; i < className.length(); i++) {
+//								char c = className.charAt(i);
+//								if (c == '0' && !idStarted) {
+//									continue;
+//								} else if (c != '0') {
+//									idStarted = true;
+//									id += c;
+//								} else if (c == 'T') {
+//									break;
+//								}
+//							}
+//
+//							if (idsToSkip.contains(id) || processedFiles.contains(className)
+//									|| compilationErrors.contains(className) || !classesToRun.contains(className)) {
+//								continue;
+//							}
 
 							try {
 								System.out.println("compiling " + file.getName() + " ...");
 								compileFile(file, binDirName);
 
 								System.out.println("collecting trace...");
-								initializeAppClassPath(className, METHOD_NAME);
+								/* nd-dataset settings */
+//								initializeAppClassPathJunitTest(className, METHOD_NAME);
+								initializeAppClassPath(className);
 								Trace trace = runTarget();
 								visualizeTrace(trace);
 
@@ -293,8 +303,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	}
 
 	private void compileFile(File file, String buildPath) throws CompilationFailureException {
-		String javaHome = Activator.getDefault().getPreferenceStore().getString(MicrobatPreference.JAVA7HOME_PATH);
-		String javac = javaHome + File.separator + BIN_FOLDER + File.separator + "javac";
+		String javac = JAVA_HOME + File.separator + BIN_FOLDER + File.separator + "javac";
 
 		ArrayList<String> command = new ArrayList<>();
 		command.add(javac);
@@ -351,7 +360,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		}
 	}
 
-	public void initializeAppClassPath(String className, String methodName) {
+	public void initializeAppClassPathJunitTest(String className, String methodName) {
 		testCase = new TestCase(className, methodName);
 		String projectName = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.PROJECT_NAME);
 		String bugID = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.BUG_ID);
@@ -359,12 +368,27 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 		appClassPath = AppClassPathInitializer.initialize(binDirName, testCase, d4jConfig);
 
+		List<String> classPaths = MicroBatUtil.getJunitJars();
+		classPaths.add(binDirName);
+		appClassPath.setClasspaths(classPaths);
+
 		appClassPath.setWorkingDirectory(binDirName);
+		appClassPath.setSourceCodePath(srcDirName);
+		appClassPath.setTestCodePath(srcDirName);
+	}
+
+	public void initializeAppClassPath(String className) {
+		appClassPath = new AppJavaClassPath();
+
+		appClassPath.setJavaHome(JAVA_HOME);
+		appClassPath.setAgentLib(INSTRUMENTATION_JAR_PATH);
+		appClassPath.setLaunchClass(className);
 
 		List<String> classPaths = MicroBatUtil.getJunitJars();
 		classPaths.add(binDirName);
 		appClassPath.setClasspaths(classPaths);
 
+		appClassPath.setWorkingDirectory(binDirName);
 		appClassPath.setSourceCodePath(srcDirName);
 		appClassPath.setTestCodePath(srcDirName);
 	}
