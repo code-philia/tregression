@@ -61,7 +61,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String TRACE_FOLDER = "trace";
 	public static final String TRACE_FILE_NAME = "trace";
 	public static final String METHOD_NAME = "testMainLogic";
-	public static final String CLASSES_TO_RUN = "bugs.txt";
+	public static final String CLASSES_TO_RUN = Activator.getDefault().getPreferenceStore().getString(RecovSlicingPreference.SLICE_BUGS_TO_RUN);
 	public static final String COMPILE_ERRORS = "tc_with_compilation_error.txt";
 	public static final String MISMATCHES = "mismatched_ids.json";
 	public static final String RESULTS_FOLDER = "slicing_results";
@@ -69,6 +69,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			.getString(MicrobatPreference.JAVA7HOME_PATH);
 	public static final String INSTRUMENTATION_JAR_PATH = IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID,
 			"lib") + File.separator + "instrumentator.jar";
+	public static final String SLICE_DATASET_PATH = Activator.getDefault().getPreferenceStore()
+			.getString(RecovSlicingPreference.SLICE_DATASET_PATH);
 
 	private String srcDirName;
 	private String binDirName;
@@ -88,17 +90,15 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				// load dataset
-				String sliceDatasetPath = Activator.getDefault().getPreferenceStore()
-						.getString(RecovSlicingPreference.SLICE_DATASET_PATH);
-				srcDirName = sliceDatasetPath + File.separator + SRC_FOLDER;
-				binDirName = sliceDatasetPath + File.separator + BIN_FOLDER;
-				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
+				srcDirName = SLICE_DATASET_PATH + File.separator + SRC_FOLDER;
+				binDirName = SLICE_DATASET_PATH + File.separator + BIN_FOLDER;
+				traceDirName = SLICE_DATASET_PATH + File.separator + TRACE_FOLDER;
 
 				/* nd-dataset settings */
-				Set<String> classesToRun = readContent(sliceDatasetPath, CLASSES_TO_RUN);
+				Set<String> classesToRun = readContent(SLICE_DATASET_PATH, CLASSES_TO_RUN);
 //				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
 //				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
-				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
+				Set<String> processedFiles = getProcessedFiles(SLICE_DATASET_PATH);
 
 				// set up trace recoverer
 				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
@@ -210,7 +210,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 											result.append(System.lineSeparator());
 
 											try {
-												File resultFile = new File(sliceDatasetPath + File.separator
+												File resultFile = new File(SLICE_DATASET_PATH + File.separator
 														+ RESULTS_FOLDER + File.separator + className + ".txt");
 												FileWriter resultWriter = new FileWriter(resultFile, true);
 												resultWriter.append(result.toString());
@@ -229,7 +229,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 						}
 					}
 				} else {
-					System.out.println("Dataset is not found at: " + sliceDatasetPath);
+					System.out.println("Dataset is not found at: " + SLICE_DATASET_PATH);
 				}
 
 				return null;
