@@ -7,6 +7,7 @@ import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -36,6 +37,10 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 	protected Text baseFolderText;
 	protected Text resultText;
 	protected Text timeLimitText;
+	protected Button isFilterByProjectButton;
+	protected Button isFilterByBugsFileButton;
+	protected Text rq4ProjectText;
+	protected Text rq4BugsFileText;
 
 	private String defaultProjectPath;
 	private String defaultProjectName;
@@ -50,6 +55,10 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 
 	protected String defaultBaseFolderPath;
 	protected String defaultResultPath;
+	protected boolean isFilterByProject;
+	protected boolean isFilterByBugsFile;
+	protected String defaultRQ4ProjectName;
+	protected String defaultRQ4BugsFileName;
 
 	public static final String REPO_PATH = "project_path";
 	public static final String PROJECT_NAME = "project_name";
@@ -66,6 +75,10 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 
 	public static final String BASE_FOLDER_KEY = "base_folder_key";
 	public static final String RESULT_PATH_KEY = "result_path_key";
+	public static final String PROJECT_NAME_FILTER_KEY = "project_name_filter";
+	public static final String BUGS_FILE_FILTER_KEY = "bugs_file_filter";
+	public static final String RQ4_PROJECT_KEY = "rq4_project";
+	public static final String RQ4_BUGS_FILE_KEY = "rq4_bugs_file";
 
 	public TregressionPreference() {
 	}
@@ -91,6 +104,20 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 
 		this.defaultBaseFolderPath = Activator.getDefault().getPreferenceStore().getString(BASE_FOLDER_KEY);
 		this.defaultResultPath = Activator.getDefault().getPreferenceStore().getString(RESULT_PATH_KEY);
+		String isFilterByProjectStr = Activator.getDefault().getPreferenceStore().getString(PROJECT_NAME_FILTER_KEY);
+		if (isFilterByProjectStr != null && isFilterByProjectStr.equals("true")) {
+			this.isFilterByProject = true;
+		} else {
+			this.isFilterByProject = false;
+		}
+		String isFilterByBugsFileStr = Activator.getDefault().getPreferenceStore().getString(BUGS_FILE_FILTER_KEY);
+		if (isFilterByBugsFileStr != null && isFilterByBugsFileStr.equals("true")) {
+			this.isFilterByBugsFile = true;
+		} else {
+			this.isFilterByBugsFile = false;
+		}
+		this.defaultRQ4ProjectName = Activator.getDefault().getPreferenceStore().getString(RQ4_PROJECT_KEY);
+		this.defaultRQ4BugsFileName = Activator.getDefault().getPreferenceStore().getString(RQ4_BUGS_FILE_KEY);
 
 		String timeLimitStr = Activator.getDefault().getPreferenceStore().getString(TIME_LIMIT_KEY);
 		if (timeLimitStr.contains(".")) {
@@ -150,6 +177,10 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 		preferences.put(TIME_LIMIT_KEY, this.timeLimitText.getText());
 		preferences.put(BASE_FOLDER_KEY, this.baseFolderText.getText());
 		preferences.put(RESULT_PATH_KEY, this.resultText.getText());
+		preferences.put(PROJECT_NAME_FILTER_KEY, String.valueOf(this.isFilterByProjectButton.getSelection()));
+		preferences.put(BUGS_FILE_FILTER_KEY, String.valueOf(this.isFilterByBugsFileButton.getSelection()));
+		preferences.put(RQ4_PROJECT_KEY, this.rq4ProjectText.getText());
+		preferences.put(RQ4_BUGS_FILE_KEY, this.rq4BugsFileText.getText());
 
 		Activator.getDefault().getPreferenceStore().putValue(REPO_PATH, this.projectPathText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(PROJECT_NAME, this.projectNameText.getText());
@@ -159,6 +190,12 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 		Activator.getDefault().getPreferenceStore().putValue(TIME_LIMIT_KEY, this.timeLimitText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(BASE_FOLDER_KEY, this.baseFolderText.getText());
 		Activator.getDefault().getPreferenceStore().putValue(RESULT_PATH_KEY, this.resultText.getText());
+		Activator.getDefault().getPreferenceStore().putValue(PROJECT_NAME_FILTER_KEY,
+				String.valueOf(this.isFilterByProjectButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(BUGS_FILE_FILTER_KEY,
+				String.valueOf(this.isFilterByBugsFileButton.getSelection()));
+		Activator.getDefault().getPreferenceStore().putValue(RQ4_PROJECT_KEY, this.rq4ProjectText.getText());
+		Activator.getDefault().getPreferenceStore().putValue(RQ4_BUGS_FILE_KEY, this.rq4BugsFileText.getText());
 
 		return true;
 	}
@@ -192,6 +229,38 @@ public class TregressionPreference extends PreferencePage implements IWorkbenchP
 		this.timeLimitText = new Text(rq4Group, SWT.NONE);
 		this.timeLimitText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
 		this.timeLimitText.setText(String.valueOf(this.defaultTimeLimit));
+
+		String filterByProjectNameLabel = "enable filter by project name";
+		this.isFilterByProjectButton = createCheckButton(rq4Group, filterByProjectNameLabel, this.isFilterByProject);
+
+		String filterByBugsFileLabel = "enable filter by bugs.txt file";
+		this.isFilterByBugsFileButton = createCheckButton(rq4Group, filterByBugsFileLabel, this.isFilterByBugsFile);
+
+		Label rq4ProjectName = new Label(rq4Group, SWT.NONE);
+		rq4ProjectName.setText("RQ4 Project Name: ");
+		this.rq4ProjectText = new Text(rq4Group, SWT.NONE);
+		this.rq4ProjectText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+		this.rq4ProjectText.setText(this.defaultRQ4ProjectName);
+
+		Label rq4BugsFileName = new Label(rq4Group, SWT.NONE);
+		rq4BugsFileName.setText("RQ4 bugs.txt file name: ");
+		this.rq4BugsFileText = new Text(rq4Group, SWT.NONE);
+		this.rq4BugsFileText.setLayoutData(new GridData(SWT.FILL, SWT.LEFT, true, false));
+		this.rq4BugsFileText.setText(this.defaultRQ4BugsFileName);
+
+	}
+
+	private Button createCheckButton(Group settingGroup, String textLabel, boolean defaultValue) {
+		Button button = new Button(settingGroup, SWT.CHECK);
+		button.setText(textLabel);
+
+		GridData buttonData = new GridData(SWT.FILL, SWT.FILL, true, false);
+		buttonData.horizontalSpan = 2;
+		button.setLayoutData(buttonData);
+
+		button.setSelection(defaultValue);
+
+		return button;
 	}
 
 }

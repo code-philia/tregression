@@ -43,8 +43,9 @@ public abstract class ProjectsRunner {
         this.basePath = basePath;
         this.resultPath = resultPath;
         this.maxThreadsCount = 5;
-        
-        final String targetBugPath = Paths.get(basePath, "bugs.txt").toString();
+
+        String fileName = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.RQ4_BUGS_FILE_KEY);
+        final String targetBugPath = Paths.get(basePath, fileName).toString();
         File targetBugFile = new File(targetBugPath);
         if(targetBugFile.exists()) {
             try (BufferedReader reader = new BufferedReader(new FileReader(targetBugPath))) {
@@ -97,11 +98,19 @@ public abstract class ProjectsRunner {
                     continue;
                 }
                 
-                
-                if (!this.targetBugs.isEmpty() && !this.targetBugs.contains(id)) {
+                String isFilterByBugsFileStr = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.BUGS_FILE_FILTER_KEY);
+                boolean isFilterByBugsFile = isFilterByBugsFileStr != null && isFilterByBugsFileStr.equals("true");
+                if (isFilterByBugsFile && !this.targetBugs.isEmpty() && !this.targetBugs.contains(id)) {
                 	continue;
                 }
 
+                String isFilterByProjectNameStr = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.PROJECT_NAME_FILTER_KEY);
+                boolean isFilterByProjectName = isFilterByProjectNameStr != null && isFilterByProjectNameStr.equals("true");
+                String targetProject = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.RQ4_PROJECT_KEY);
+                if (isFilterByProjectName && !projectName.equals(targetProject)) {
+                	continue;
+                }
+                
                 RunResult result = this.runProject(projectName, bugID_str);
                 if (result != null) {
                     writer.writeResult(result);
