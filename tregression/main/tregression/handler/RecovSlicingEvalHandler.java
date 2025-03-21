@@ -155,12 +155,18 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 								System.out.println("dynamic slicing...");
 								List<TraceNode> steps = trace.getExecutionList();
+								Set<Integer> visitedLines = new HashSet<>();
 
 								int criterionCounter = 1;
 
 								while (criterionCounter < steps.size()) {
 									TraceNode slicingCriterion = steps.get(criterionCounter);
 									List<VarValue> readVars = slicingCriterion.getReadVariables();
+									if (visitedLines.contains(slicingCriterion.getLineNumber())) {
+										criterionCounter++;
+										continue;
+									}
+									visitedLines.add(slicingCriterion.getLineNumber());
 									for (VarValue v : readVars) {
 										System.out.println("slicing criterion:");
 										System.out.println(slicingCriterion.getOrder());
