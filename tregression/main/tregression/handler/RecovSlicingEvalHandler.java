@@ -21,6 +21,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.swt.widgets.Display;
 import org.json.JSONArray;
+
 import microbat.Activator;
 import microbat.codeanalysis.runtime.InstrumentationExecutor;
 import microbat.codeanalysis.runtime.StepLimitException;
@@ -135,8 +136,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								}
 							}
 
-							if (idsToSkip.contains(id) || processedFiles.contains(className)
-									|| compilationErrors.contains(className) || !classesToRun.contains(className)) {
+							if (idsToSkip.contains(id) || compilationErrors.contains(className)
+									|| !classesToRun.contains(className)) {
 								continue;
 							}
 
@@ -156,6 +157,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								System.out.println("dynamic slicing...");
 								List<TraceNode> steps = trace.getExecutionList();
 								Set<Integer> visitedLines = new HashSet<>();
+
+								if (processedFiles.contains(className)) {
+									visitedLines = readVisitedLines(sliceDatasetPath, className);
+								}
 
 								int criterionCounter = 1;
 
@@ -464,5 +469,28 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				return B1_FOLDER; // Baseline 1: disable in-context learning and alias inference
 			}
 		}
+	}
+
+	private Set<Integer> readVisitedLines(String basePath, String className) {
+		String filePath = basePath + File.separator + getResultFolderName() + File.separator + className + ".txt";
+		Set<Integer> visitedLines = new HashSet<>();
+
+		try {
+			File targetResultFile = new File(filePath);
+			String content = new String(Files.readAllBytes(targetResultFile.toPath()), StandardCharsets.UTF_8);
+			String[] lines = content.split(System.lineSeparator());
+			for (String line : lines) {
+				if (line == null || line.equals("")) {
+					break;
+				}
+				String lineNo = line.split(",")[0];
+				Integer lineNumber = Integer.valueOf(lineNo);
+				visitedLines.add(lineNumber);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return visitedLines;
 	}
 }
