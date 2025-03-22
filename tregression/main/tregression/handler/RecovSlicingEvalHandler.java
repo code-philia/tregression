@@ -123,15 +123,15 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 							/* nd-dataset settings */
 							String id = "";
 							boolean idStarted = false;
-							for (int i = 0; i < className.length(); i++) {
+							for (int i = 1; i < className.length(); i++) {
 								char c = className.charAt(i);
 								if (c == '0' && !idStarted) {
 									continue;
+								} else if (c == 'T') {
+									break;
 								} else if (c != '0') {
 									idStarted = true;
 									id += c;
-								} else if (c == 'T') {
-									break;
 								}
 							}
 
