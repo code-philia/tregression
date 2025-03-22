@@ -150,7 +150,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 							}
 
 							if (idsToSkip.contains(id) || compilationErrors.contains(className)
-									|| runtimeErrors.contains(className)
+									|| runtimeErrors.contains(className) || processedFiles.contains(className)
 									|| (!classesToRun.isEmpty() && !classesToRun.contains(className))) {
 								continue;
 							}
@@ -178,9 +178,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								List<TraceNode> steps = trace.getExecutionList();
 								Set<Integer> visitedLines = new HashSet<>();
 
-								if (processedFiles.contains(className)) {
-									visitedLines = readVisitedLines(sliceDatasetPath, className);
-								}
+//								if (processedFiles.contains(className)) {
+//									visitedLines = readVisitedLines(sliceDatasetPath, className);
+//								}
 
 								int criterionCounter = 1;
 
