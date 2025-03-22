@@ -63,6 +63,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String TRACE_FILE_NAME = "trace";
 	public static final String METHOD_NAME = "testMainLogic";
 	public static final String COMPILE_ERRORS = "tc_with_compilation_error.txt";
+	public static final String RUNTIME_ERRORS = "tc_with_runtime_error.txt";
 	public static final String MISMATCHES = "mismatched_ids.json";
 	public static final String RESULTS_FOLDER = "slicing_results";
 	public static final String B1_FOLDER = "RQ3_baseline1";
@@ -108,6 +109,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				Set<String> classesToRun = readContent(sliceDatasetPath, bugsToRun);
 				Set<String> idsToSkip = getMismatchFiles(sliceDatasetPath);
 				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
+				Set<String> runtimeErrors = readContent(sliceDatasetPath, RUNTIME_ERRORS);
 				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
 
 				// set up trace recoverer
@@ -137,7 +139,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 							}
 
 							if (idsToSkip.contains(id) || compilationErrors.contains(className)
-									|| !classesToRun.contains(className)) {
+									|| runtimeErrors.contains(className) || !classesToRun.contains(className)) {
 								continue;
 							}
 
