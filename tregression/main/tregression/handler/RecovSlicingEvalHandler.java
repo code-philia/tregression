@@ -6,8 +6,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -65,6 +67,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String COMPILE_ERRORS = "tc_with_compilation_error.txt";
 	public static final String RUNTIME_ERRORS = "tc_with_runtime_error.txt";
 	public static final String MISMATCHES = "mismatched_ids.json";
+	public static final String SLICING_CRITERIA_INFO = "info.txt";
 	public static final String RESULTS_FOLDER = "slicing_results";
 	public static final String B1_FOLDER = "RQ3_baseline1";
 	public static final String B2_FOLDER = "RQ3_baseline2";
@@ -83,6 +86,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			.getString(RecovSlicingPreference.ENABLE_IN_CONTEXT_LEARNING);
 	public String enableAliasInferStr = Activator.getDefault().getPreferenceStore()
 			.getString(RecovSlicingPreference.ENABLE_ALIAS_INFERENCE);
+	public String javac = JAVA_HOME + File.separator + BIN_FOLDER + File.separator + "javac";
 
 	private String srcDirName;
 	private String binDirName;
@@ -111,17 +115,24 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
 				Set<String> runtimeErrors = readContent(sliceDatasetPath, RUNTIME_ERRORS);
 				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
+				Map<String, Integer> singleFileCriteria = readSingleFileSlicingCriteria(sliceDatasetPath,
+						SLICING_CRITERIA_INFO);
 
 				// set up trace recoverer
 				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
 				traceRecoverer = new TraceRecoverer();
+
+				boolean isGeneratedDataset = sliceDatasetPath.contains("generated");
 
 				File folder = new File(srcDirName);
 				if (folder.exists() && folder.isDirectory()) {
 					File[] files = folder.listFiles();
 					if (files != null) {
 						for (File file : files) {
-							String className = file.getName().substring(0, file.getName().lastIndexOf('.'));
+							String className = isGeneratedDataset ? file.getName()
+									: file.getName().substring(0, file.getName().lastIndexOf('.'));
+
+							int criteria = isGeneratedDataset ? singleFileCriteria.get(className) : -1;
 
 							/* nd-dataset settings */
 							String id = "";
@@ -139,17 +150,24 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 							}
 
 							if (idsToSkip.contains(id) || compilationErrors.contains(className)
-									|| runtimeErrors.contains(className) || !classesToRun.contains(className)) {
+									|| runtimeErrors.contains(className)
+									|| (!classesToRun.isEmpty() && !classesToRun.contains(className))) {
 								continue;
 							}
 
 							try {
 								System.out.println("compiling " + file.getName() + " ...");
-								compileFile(file, binDirName);
+								if (isGeneratedDataset) {
+									compileFolder(file, binDirName, file.getName());
+								} else {
+									compileFile(file, binDirName);
+								}
 
 								System.out.println("collecting trace...");
 								if (isJunitStr != null && isJunitStr.equals("true")) {
 									initializeAppClassPathJunitTest(className, METHOD_NAME);
+								} else if (isGeneratedDataset) {
+									initializeAppClassPathGeneratedDataset(className);
 								} else {
 									initializeAppClassPath(className);
 								}
@@ -168,8 +186,13 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 								while (criterionCounter < steps.size()) {
 									TraceNode slicingCriterion = steps.get(criterionCounter);
+									int lineNo = slicingCriterion.getLineNumber();
+									if (criteria != -1 && criteria != lineNo) {
+										criterionCounter++;
+										continue;
+									}
 									List<VarValue> readVars = slicingCriterion.getReadVariables();
-									if (visitedLines.contains(slicingCriterion.getLineNumber())) {
+									if (visitedLines.contains(lineNo)) {
 										criterionCounter++;
 										continue;
 									}
@@ -178,15 +201,6 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										System.out.println("slicing criterion:");
 										System.out.println(slicingCriterion.getOrder());
 										System.out.println(v.getVarName());
-
-										// original data dominator
-										TraceNode dataDom = trace.findDataDependency(slicingCriterion, v);
-										System.out.println("slicing destination without recovery:");
-										if (dataDom == null) {
-											System.out.println("none");
-										} else {
-											System.out.println(dataDom.getOrder());
-										}
 
 										/*
 										 * 1. Variable Expansion
@@ -210,7 +224,16 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 												System.out.println(dataDominator.getOrder());
 											}
 										}
-										if (dataDom != null) {
+
+										// original data dominator
+										TraceNode dataDom = trace.findDataDependency(slicingCriterion, v);
+										System.out.println("slicing destination without recovery:");
+										if (dataDom == null) {
+											System.out.println("none");
+										} else {
+											System.out.println(dataDom.getOrder());
+										}
+										if (dataDominatorsAfterRecovery.isEmpty() && dataDom != null) {
 											dataDominatorsAfterRecovery.add(dataDom.getLineNumber());
 										}
 
@@ -218,7 +241,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										if (!dataDominatorsAfterRecovery.isEmpty()) {
 											System.out.println("writing results...");
 											StringBuilder result = new StringBuilder();
-											result.append(slicingCriterion.getLineNumber() + ",");
+											result.append(lineNo + ",");
 											result.append(v.getVarName() + ",");
 											StringBuilder slicingDestinations = new StringBuilder("[");
 											for (Integer i : dataDominatorsAfterRecovery) {
@@ -319,6 +342,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		File processedClasses = new File(resultsPath);
 
 		File[] files = processedClasses.listFiles();
+		if (files == null || files.length == 0) {
+			return output;
+		}
 		for (File f : files) {
 			int index = f.getName().lastIndexOf('.');
 			if (index >= 0) {
@@ -331,8 +357,6 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	}
 
 	private void compileFile(File file, String buildPath) throws CompilationFailureException {
-		String javac = JAVA_HOME + File.separator + BIN_FOLDER + File.separator + "javac";
-
 		ArrayList<String> command = new ArrayList<>();
 		command.add(javac);
 		command.add("-g");
@@ -347,6 +371,29 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		command.add("-d");
 		command.add(buildPath);
 		command.add(file.getPath());
+		runCommand(command);
+	}
+
+	private void compileFolder(File folder, String buildPath, String projectName) throws CompilationFailureException {
+		ArrayList<String> command = new ArrayList<>();
+		command.add(javac);
+		command.add("-g");
+
+		List<String> jars = MicroBatUtil.getJunitJars();
+		String classpaths = String.join(File.pathSeparator, jars);
+		if (!classpaths.isEmpty()) {
+			command.add("-cp");
+			command.add(classpaths);
+		}
+
+		command.add("-d");
+		String binPath = buildPath + File.separator + projectName;
+		File buildFolder = new File(binPath);
+		if (!buildFolder.exists()) {
+			buildFolder.mkdir();
+		}
+		command.add(binPath);
+		command.add(folder.getPath() + File.separator + "*.java");
 		runCommand(command);
 	}
 
@@ -422,6 +469,25 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		appClassPath.setTestCodePath(srcDirName);
 	}
 
+	public void initializeAppClassPathGeneratedDataset(String projectName) {
+		appClassPath = new AppJavaClassPath();
+
+		appClassPath.setJavaHome(JAVA_HOME);
+		appClassPath.setAgentLib(INSTRUMENTATION_JAR_PATH);
+		MicroBatUtil.setSystemJars(appClassPath);
+		appClassPath.setLaunchClass("Main");
+
+		List<String> classPaths = MicroBatUtil.getJunitJars();
+		String binPath = binDirName + File.separator + projectName;
+		String srcPath = srcDirName + File.separator + projectName;
+		classPaths.add(binPath);
+		appClassPath.setClasspaths(classPaths);
+
+		appClassPath.setWorkingDirectory(binPath);
+		appClassPath.setSourceCodePath(srcPath);
+		appClassPath.setTestCodePath(srcPath);
+	}
+
 	private Trace runTarget() {
 		List<String> includeLibs = new ArrayList<>();
 		List<String> excludeLibs = new ArrayList<>();
@@ -494,5 +560,33 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		}
 
 		return visitedLines;
+	}
+
+	private Map<String, Integer> readSingleFileSlicingCriteria(String basePath, String fileName) {
+		String filePath = basePath + File.separator + fileName;
+		Map<String, Integer> criteria = new HashMap<>();
+
+		try {
+			File targetResultFile = new File(filePath);
+			String content = new String(Files.readAllBytes(targetResultFile.toPath()), StandardCharsets.UTF_8);
+			String[] lines = content.split(System.lineSeparator());
+			boolean isHeader = true;
+			for (String line : lines) {
+				if (isHeader) {
+					isHeader = false;
+					continue;
+				}
+				if (line == null || line.equals("")) {
+					break;
+				}
+				String projectName = line.split(",")[0];
+				Integer lineNumber = Integer.valueOf(line.split(",")[1]);
+				criteria.put(projectName, lineNumber);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return criteria;
 	}
 }
