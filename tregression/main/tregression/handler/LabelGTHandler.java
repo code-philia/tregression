@@ -12,8 +12,10 @@ import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
@@ -61,14 +63,15 @@ public class LabelGTHandler extends AbstractHandler {
 	public static final String COMPILE_ERRORS = "tc_with_compilation_error.txt";
 	public static final String RUNTIME_ERRORS = "tc_with_runtime_error.txt";
 	public static final String MISMATCHES = "mismatched_ids.json";
+	public static final String SLICING_CRITERIA = "slicing_criteria.txt";
 	public static final String RESULTS_FOLDER = "ground_truth";
 	public static final String JAVA_HOME = Activator.getDefault().getPreferenceStore()
 			.getString(MicrobatPreference.JAVA7HOME_PATH);
 	public static final String INSTRUMENTATION_JAR_PATH = IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID,
 			"lib") + File.separator + "instrumentator.jar";
 
-	public String sliceDatasetPath = "D:\\recov-slicing-benchmark\\dataset-for-recov\\nd-dataset";
-	public String isJunitStr = "true";
+	public String sliceDatasetPath = "D:\\recov-slicing-benchmark\\dataset-for-recov\\llm-slicer";
+	public String isJunitStr = "false";
 
 	private String srcDirName;
 	private String binDirName;
@@ -76,6 +79,9 @@ public class LabelGTHandler extends AbstractHandler {
 	private TestCase testCase;
 	private ProjectConfig d4jConfig;
 	private AppJavaClassPath appClassPath;
+
+	String[] dataStructures = new String[] { "List", "Map", "Set", "StringBuffer", "StringWriter", "PrintWriter",
+			"StringBuilder", "Iterator", "Queue", "Stack" };
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -94,6 +100,7 @@ public class LabelGTHandler extends AbstractHandler {
 				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
 				Set<String> runtimeErrors = readContent(sliceDatasetPath, RUNTIME_ERRORS);
 				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
+				Map<String, Integer> slicingCriteria = getSlicingCriteria(sliceDatasetPath, SLICING_CRITERIA);
 
 				File folder = new File(srcDirName);
 				if (folder.exists() && folder.isDirectory()) {
@@ -101,6 +108,28 @@ public class LabelGTHandler extends AbstractHandler {
 					if (files != null) {
 						for (File file : files) {
 							String className = file.getName().substring(0, file.getName().lastIndexOf('.'));
+
+							File doubleCheckFile = new File(sliceDatasetPath + File.separator + "double_check_gt.txt");
+
+							// files to double check
+							try {
+								String content = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+								for (String dataStructure : dataStructures) {
+									if (content.contains(dataStructure)) {
+										FileWriter resultWriter;
+										try {
+											resultWriter = new FileWriter(doubleCheckFile, true);
+											resultWriter.append(file.getName() + System.lineSeparator());
+											resultWriter.close();
+										} catch (IOException e) {
+											e.printStackTrace();
+										}
+										break;
+									}
+								}
+							} catch (IOException e) {
+								e.printStackTrace();
+							}
 
 							/* nd-dataset settings */
 							String id = "";
@@ -119,10 +148,6 @@ public class LabelGTHandler extends AbstractHandler {
 
 							if (idsToSkip.contains(id) || compilationErrors.contains(className)
 									|| runtimeErrors.contains(className)) {
-								continue;
-							}
-
-							if (!className.contains("11610")) {
 								continue;
 							}
 
@@ -152,7 +177,9 @@ public class LabelGTHandler extends AbstractHandler {
 								while (criterionCounter < steps.size()) {
 									TraceNode slicingCriterion = steps.get(criterionCounter);
 									List<VarValue> readVars = slicingCriterion.getReadVariables();
-									if (visitedLines.contains(slicingCriterion.getLineNumber())) {
+									int lineNo = slicingCriterion.getLineNumber();
+									if (visitedLines.contains(lineNo)
+											|| !slicingCriteria.get(className).equals(lineNo)) {
 										criterionCounter++;
 										continue;
 									}
@@ -171,9 +198,6 @@ public class LabelGTHandler extends AbstractHandler {
 											System.out.println(dataDom.getOrder());
 										}
 
-										/*
-										 * 2. Recover Dependency
-										 */
 										System.out.println("slicing destination:");
 										Set<Integer> dataDominatorsAfterRecovery = new HashSet<>();
 										for (VarValue targetVar : v.getAllDescedentChildren()) {
@@ -224,6 +248,7 @@ public class LabelGTHandler extends AbstractHandler {
 				} else {
 					System.out.println("Dataset is not found at: " + sliceDatasetPath);
 				}
+
 
 				return null;
 			}
@@ -526,5 +551,28 @@ public class LabelGTHandler extends AbstractHandler {
 
 			return sb.toString();
 		}
+	}
+
+	public Map<String, Integer> getSlicingCriteria(String basePath, String fileName) {
+		String filePath = basePath + File.separator + fileName;
+		Map<String, Integer> criteria = new HashMap<>();
+
+		try {
+			File contentFile = new File(filePath);
+			String content = new String(Files.readAllBytes(contentFile.toPath()), StandardCharsets.UTF_8);
+			String[] lines = content.split("\n");
+			for (String line : lines) {
+				if (line == null || line.equals("")) {
+					break;
+				}
+				String bugName = line.split(":")[0];
+				Integer lineNumber = Integer.valueOf(line.split(":")[1].trim());
+				criteria.put(bugName, lineNumber);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return criteria;
 	}
 }
