@@ -137,7 +137,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 									: file.getName().substring(0, file.getName().lastIndexOf('.'));
 
 							int singleCriteria = (isGeneratedDataset && !isMultiFile)
-									? singleFileCriteria.get(className)
+									? (singleFileCriteria.containsKey(className) ? singleFileCriteria.get(className)
+											: -1)
 									: -1;
 							Map<String, Integer> MultiCriteria = (isGeneratedDataset && isMultiFile)
 									? multiFileCriteria.get(className)
