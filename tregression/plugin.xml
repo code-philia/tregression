@@ -153,6 +153,11 @@
              id="tregression.RecovSlicingEval"
              name="Recov Slicing Evaluation">
        </command>
+       <command
+             defaultHandler="tregression.handler.LabelGTHandler"
+             id="tregression.LabelGT"
+             name="Label GT">
+       </command>
  </extension>	
  <extension
          point="org.eclipse.ui.views">
@@ -310,6 +315,11 @@
             <command
                   commandId="tregression.RecovSlicingEval"
                   icon="icons/slice.png"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.LabelGT"
+                  icon="icons/after.ico"
                   style="push">
             </command>
          </toolbar>
