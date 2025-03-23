@@ -124,7 +124,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
 				traceRecoverer = new TraceRecoverer();
 
-				boolean isGeneratedDataset = sliceDatasetPath.contains("generated");
+				boolean isGeneratedDataset = sliceDatasetPath.contains("generated")
+						|| sliceDatasetPath.contains("guava");
 				boolean isMultiFile = sliceDatasetPath.contains("multi_files");
 
 				File folder = new File(srcDirName);
