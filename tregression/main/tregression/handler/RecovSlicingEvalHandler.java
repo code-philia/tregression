@@ -61,6 +61,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 	public static final String SRC_FOLDER = "src";
 	public static final String BIN_FOLDER = "bin";
+	public static final String LIB_FOLDER = "lib";
 	public static final String TRACE_FOLDER = "trace";
 	public static final String TRACE_FILE_NAME = "trace";
 	public static final String METHOD_NAME = "testMainLogic";
@@ -87,6 +88,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public String enableAliasInferStr = Activator.getDefault().getPreferenceStore()
 			.getString(RecovSlicingPreference.ENABLE_ALIAS_INFERENCE);
 	public String javac = JAVA_HOME + File.separator + BIN_FOLDER + File.separator + "javac";
+	public boolean isGuava = sliceDatasetPath.contains("guava");
+	public boolean isGeneratedDataset = sliceDatasetPath.contains("generated") || isGuava;
+	public boolean isMultiFile = sliceDatasetPath.contains("multi_files");
 
 	private String srcDirName;
 	private String binDirName;
@@ -123,10 +127,6 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				// set up trace recoverer
 				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
 				traceRecoverer = new TraceRecoverer();
-
-				boolean isGeneratedDataset = sliceDatasetPath.contains("generated")
-						|| sliceDatasetPath.contains("guava");
-				boolean isMultiFile = sliceDatasetPath.contains("multi_files");
 
 				File folder = new File(srcDirName);
 				if (folder.exists() && folder.isDirectory()) {
@@ -390,6 +390,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		command.add("-g");
 
 		List<String> jars = MicroBatUtil.getJunitJars();
+		if (isGuava) {
+			jars.add(
+					sliceDatasetPath + File.pathSeparator + LIB_FOLDER + File.separator + "guava-libs-package-all.jar");
+		}
 		String classpaths = String.join(File.pathSeparator, jars);
 		if (!classpaths.isEmpty()) {
 			command.add("-cp");
@@ -408,6 +412,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		command.add("-g");
 
 		List<String> jars = MicroBatUtil.getJunitJars();
+		if (isGuava) {
+			jars.add(sliceDatasetPath + File.separator + LIB_FOLDER + File.separator + "guava-libs-package-all.jar");
+		}
 		String classpaths = String.join(File.pathSeparator, jars);
 		if (!classpaths.isEmpty()) {
 			command.add("-cp");
@@ -506,6 +513,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		appClassPath.setLaunchClass("Main");
 
 		List<String> classPaths = MicroBatUtil.getJunitJars();
+		if (isGuava) {
+			classPaths.add(
+					sliceDatasetPath + File.separator + LIB_FOLDER + File.separator + "guava-libs-package-all.jar");
+		}
 		String binPath = binDirName + File.separator + projectName;
 		String srcPath = srcDirName + File.separator + projectName;
 		classPaths.add(binPath);
