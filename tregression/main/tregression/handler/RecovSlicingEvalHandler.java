@@ -192,20 +192,24 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 //								}
 
 								int criterionCounter = 1;
-								int criteria = isMultiFile ? -1 : singleCriteria;
 
 								while (criterionCounter < steps.size()) {
 									TraceNode slicingCriterion = steps.get(criterionCounter);
 									int lineNo = slicingCriterion.getLineNumber();
 									String fileContainingCriterion = slicingCriterion.getClassCanonicalName();
-									if (isMultiFile && MultiCriteria.containsKey(fileContainingCriterion)) {
-										criteria = MultiCriteria.get(fileContainingCriterion);
+									if (isMultiFile) {
+										if (!(MultiCriteria.containsKey(fileContainingCriterion)
+												&& MultiCriteria.get(fileContainingCriterion) == lineNo)) {
+											criterionCounter++;
+											continue;
+										}
+									} else {
+										if (singleCriteria != -1 && singleCriteria != lineNo) {
+											criterionCounter++;
+											continue;
+										}
 									}
 
-									if (criteria != -1 && criteria != lineNo) {
-										criterionCounter++;
-										continue;
-									}
 									List<VarValue> readVars = slicingCriterion.getReadVariables();
 									if (visitedLines.contains(lineNo)) {
 										criterionCounter++;
