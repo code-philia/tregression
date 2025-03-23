@@ -117,12 +117,15 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
 				Map<String, Integer> singleFileCriteria = readSingleFileSlicingCriteria(sliceDatasetPath,
 						SLICING_CRITERIA_INFO);
+				Map<String, Map<String, Integer>> multiFileCriteria = readMultiFileSlicingCriteria(sliceDatasetPath,
+						SLICING_CRITERIA_INFO);
 
 				// set up trace recoverer
 				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
 				traceRecoverer = new TraceRecoverer();
 
 				boolean isGeneratedDataset = sliceDatasetPath.contains("generated");
+				boolean isMultiFile = sliceDatasetPath.contains("multi_files");
 
 				File folder = new File(srcDirName);
 				if (folder.exists() && folder.isDirectory()) {
@@ -132,7 +135,12 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 							String className = isGeneratedDataset ? file.getName()
 									: file.getName().substring(0, file.getName().lastIndexOf('.'));
 
-							int criteria = isGeneratedDataset ? singleFileCriteria.get(className) : -1;
+							int singleCriteria = (isGeneratedDataset && !isMultiFile)
+									? singleFileCriteria.get(className)
+									: -1;
+							Map<String, Integer> MultiCriteria = (isGeneratedDataset && isMultiFile)
+									? multiFileCriteria.get(className)
+									: null;
 
 							/* nd-dataset settings */
 							String id = "";
@@ -183,10 +191,16 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 //								}
 
 								int criterionCounter = 1;
+								int criteria = isMultiFile ? -1 : singleCriteria;
 
 								while (criterionCounter < steps.size()) {
 									TraceNode slicingCriterion = steps.get(criterionCounter);
 									int lineNo = slicingCriterion.getLineNumber();
+									String fileContainingCriterion = slicingCriterion.getClassCanonicalName();
+									if (isMultiFile && MultiCriteria.containsKey(fileContainingCriterion)) {
+										criteria = MultiCriteria.get(fileContainingCriterion);
+									}
+
 									if (criteria != -1 && criteria != lineNo) {
 										criterionCounter++;
 										continue;
@@ -566,6 +580,11 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		String filePath = basePath + File.separator + fileName;
 		Map<String, Integer> criteria = new HashMap<>();
 
+		boolean isMultiFile = sliceDatasetPath.contains("multi_files");
+		if (isMultiFile) {
+			return criteria;
+		}
+
 		try {
 			File targetResultFile = new File(filePath);
 			String content = new String(Files.readAllBytes(targetResultFile.toPath()), StandardCharsets.UTF_8);
@@ -582,6 +601,43 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				String projectName = line.split(",")[0];
 				Integer lineNumber = Integer.valueOf(line.split(",")[1]);
 				criteria.put(projectName, lineNumber);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return criteria;
+	}
+
+	private Map<String, Map<String, Integer>> readMultiFileSlicingCriteria(String basePath, String fileName) {
+		String filePath = basePath + File.separator + fileName;
+		Map<String, Map<String, Integer>> criteria = new HashMap<>();
+
+		boolean isMultiFile = sliceDatasetPath.contains("multi_files");
+		if (!isMultiFile) {
+			return criteria;
+		}
+
+		try {
+			File targetResultFile = new File(filePath);
+			String content = new String(Files.readAllBytes(targetResultFile.toPath()), StandardCharsets.UTF_8);
+			String[] lines = content.split(System.lineSeparator());
+			boolean isHeader = true;
+			for (String line : lines) {
+				if (isHeader) {
+					isHeader = false;
+					continue;
+				}
+				if (line == null || line.equals("")) {
+					break;
+				}
+				String projectName = line.split(",")[0];
+				String fName = line.split(",")[1];
+				fName = fName.substring(0, fName.lastIndexOf("."));
+				Integer lineNumber = Integer.valueOf(line.split(",")[2]);
+				Map<String, Integer> pair = new HashMap<>();
+				pair.put(fName, lineNumber);
+				criteria.put(projectName, pair);
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
