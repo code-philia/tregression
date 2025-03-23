@@ -117,6 +117,8 @@ public class LabelGTHandler extends AbstractHandler {
 
 							int sc = 0;
 							int gt = 0;
+							String scFile = "";
+							String gtFile = "";
 
 							for (File f : file.listFiles()) {
 								if (f.getName().endsWith(".java")) {
@@ -127,8 +129,10 @@ public class LabelGTHandler extends AbstractHandler {
 											line++;
 											if (l.contains("/* read */")) {
 												sc = line;
+												scFile = f.getName();
 											} else if (l.contains("/* write */")) {
 												gt = line;
+												gtFile = f.getName();
 											}
 										}
 									} catch (IOException e) {
@@ -140,7 +144,13 @@ public class LabelGTHandler extends AbstractHandler {
 							if (sc != 0 && gt != 0) {
 								StringBuilder result = new StringBuilder();
 								result.append(className + ",");
+								if (isMultiFile) {
+									result.append(scFile + ",");
+								}
 								result.append(sc + ",");
+								if (isMultiFile) {
+									result.append(gtFile + ",");
+								}
 								result.append(gt + ",");
 								result.append(System.lineSeparator());
 								try {
