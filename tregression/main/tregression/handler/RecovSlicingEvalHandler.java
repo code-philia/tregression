@@ -229,12 +229,12 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										 * 2. Recover Dependency
 										 */
 										System.out.println("slicing destination after recovery:");
-										Set<Integer> dataDominatorsAfterRecovery = new HashSet<>();
+										Set<TraceNode> dataDominatorsAfterRecovery = new HashSet<>();
 										for (VarValue targetVar : v.getAllDescedentChildren()) {
 											traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v);
 											TraceNode dataDominator = trace.findProducer(targetVar, slicingCriterion);
 											if (dataDominator != null) {
-												dataDominatorsAfterRecovery.add(dataDominator.getLineNumber());
+												dataDominatorsAfterRecovery.add(dataDominator);
 												System.out.println(dataDominator.getOrder());
 											}
 										}
@@ -248,18 +248,27 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 											System.out.println(dataDom.getOrder());
 										}
 										if (dataDominatorsAfterRecovery.isEmpty() && dataDom != null) {
-											dataDominatorsAfterRecovery.add(dataDom.getLineNumber());
+											dataDominatorsAfterRecovery.add(dataDom);
 										}
 
 										// write result
 										if (!dataDominatorsAfterRecovery.isEmpty()) {
 											System.out.println("writing results...");
 											StringBuilder result = new StringBuilder();
+											if (isMultiFile) {
+												result.append(fileContainingCriterion + ",");
+											}
 											result.append(lineNo + ",");
 											result.append(v.getVarName() + ",");
 											StringBuilder slicingDestinations = new StringBuilder("[");
-											for (Integer i : dataDominatorsAfterRecovery) {
-												slicingDestinations.append(i);
+											for (TraceNode i : dataDominatorsAfterRecovery) {
+												if (isMultiFile) {
+													slicingDestinations.append(i.getClassCanonicalName());
+													slicingDestinations.append(" ");
+													slicingDestinations.append(i.getLineNumber());
+												} else {
+													slicingDestinations.append(i.getLineNumber());
+												}
 												slicingDestinations.append(";");
 											}
 											slicingDestinations.append("]");
