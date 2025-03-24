@@ -72,6 +72,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String RUNTIME_ERRORS = "tc_with_runtime_error.txt";
 	public static final String MISMATCHES = "mismatched_ids.json";
 	public static final String SLICING_CRITERIA_INFO = "info.txt";
+	public static final String CRITICAL_VAR = "real-var.txt";
 	public static final String RESULTS_FOLDER = "slicing_results";
 	public static final String B1_FOLDER = "RQ3_baseline1";
 	public static final String B2_FOLDER = "RQ3_baseline2";
@@ -133,7 +134,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 						SLICING_CRITERIA_INFO);
 
 				// set up trace recoverer
-				if(!isReexecution) {
+				if (!isReexecution) {
 					executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
 					traceRecoverer = new TraceRecoverer();
 				}
@@ -145,6 +146,26 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 						for (File file : files) {
 							String className = isGeneratedDataset ? file.getName()
 									: file.getName().substring(0, file.getName().lastIndexOf('.'));
+
+							// read critical variable
+							String criticalVar = "";
+							if (isGeneratedDataset) {
+								try {
+									criticalVar = getCriticalVar(srcDirName + File.separator + className, CRITICAL_VAR);
+								} catch (IOException e) {
+									// skip file for now
+									try {
+										File resultFile = new File(
+												sliceDatasetPath + File.separator + "without_critical_var.txt");
+										FileWriter resultWriter = new FileWriter(resultFile, true);
+										resultWriter.append(className);
+										resultWriter.close();
+									} catch (IOException e1) {
+										e1.printStackTrace();
+										continue;
+									}
+								}
+							}
 
 							int singleCriteria = (isGeneratedDataset && !isMultiFile)
 									? (singleFileCriteria.containsKey(className) ? singleFileCriteria.get(className)
@@ -184,7 +205,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								}
 
 								List<String> dependencies = null;
-								if(isReexecution) {
+								if (isReexecution) {
 									dependencies = readDependencies(file.getPath());
 								}
 
@@ -241,20 +262,29 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										 * 1. Variable Expansion
 										 */
 										try {
-											if(!isReexecution) {
-												executionSimulator.expandVariable(v, slicingCriterion, null);
+											if (!isReexecution) {
+												executionSimulator.expandVariable(v, slicingCriterion, null, null);
 											}
 										} catch (IOException e) {
 											e.printStackTrace();
 										}
 
 										/*
-										 * 2. Recover Dependency
+										 * 2. Identify Critical Variable
+										 */
+										String criticalFieldName = executionSimulator.getCriticalVariable(v,
+												slicingCriterion, criticalVar);
+
+										/*
+										 * 3. Recover Dependency
 										 */
 										System.out.println("slicing destination after recovery:");
 										Set<TraceNode> dataDominatorsAfterRecovery = new HashSet<>();
 										for (VarValue targetVar : v.getAllDescedentChildren()) {
-											if(!isReexecution) {
+											if (!targetVar.getVarName().equals(criticalFieldName)) {
+												continue;
+											}
+											if (!isReexecution) {
 												traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v);
 											}
 											TraceNode dataDominator = trace.findProducer(targetVar, slicingCriterion);
@@ -277,40 +307,38 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										}
 
 										// write result
-										// if (!dataDominatorsAfterRecovery.isEmpty()) {
-											System.out.println("writing results...");
-											StringBuilder result = new StringBuilder();
+										System.out.println("writing results...");
+										StringBuilder result = new StringBuilder();
+										if (isMultiFile) {
+											result.append(fileContainingCriterion + ",");
+										}
+										result.append(lineNo + ",");
+										result.append(v.getVarName() + ",");
+										StringBuilder slicingDestinations = new StringBuilder("[");
+										for (TraceNode i : dataDominatorsAfterRecovery) {
 											if (isMultiFile) {
-												result.append(fileContainingCriterion + ",");
+												slicingDestinations.append(i.getClassCanonicalName());
+												slicingDestinations.append(" ");
+												slicingDestinations.append(i.getLineNumber());
+											} else {
+												slicingDestinations.append(i.getLineNumber());
 											}
-											result.append(lineNo + ",");
-											result.append(v.getVarName() + ",");
-											StringBuilder slicingDestinations = new StringBuilder("[");
-											for (TraceNode i : dataDominatorsAfterRecovery) {
-												if (isMultiFile) {
-													slicingDestinations.append(i.getClassCanonicalName());
-													slicingDestinations.append(" ");
-													slicingDestinations.append(i.getLineNumber());
-												} else {
-													slicingDestinations.append(i.getLineNumber());
-												}
-												slicingDestinations.append(";");
-											}
-											slicingDestinations.append("]");
-											result.append(slicingDestinations);
-											result.append(System.lineSeparator());
+											slicingDestinations.append(";");
+										}
+										slicingDestinations.append("]");
+										result.append(slicingDestinations);
+										result.append(System.lineSeparator());
 
-											try {
-												File resultFile = new File(sliceDatasetPath + File.separator
-														+ getResultFolderName() + File.separator + className + ".txt");
-												FileWriter resultWriter = new FileWriter(resultFile, true);
-												resultWriter.append(result.toString());
-												resultWriter.close();
-											} catch (IOException e) {
-												e.printStackTrace();
-												return null;
-											}
-										// }
+										try {
+											File resultFile = new File(sliceDatasetPath + File.separator
+													+ getResultFolderName() + File.separator + className + ".txt");
+											FileWriter resultWriter = new FileWriter(resultFile, true);
+											resultWriter.append(result.toString());
+											resultWriter.close();
+										} catch (IOException e) {
+											e.printStackTrace();
+											return null;
+										}
 									}
 									criterionCounter++;
 								}
@@ -339,7 +367,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			System.err.println("Dependency file not found: " + filePath);
 			return dependencies;
 		}
-		try(BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+		try (BufferedReader br = new BufferedReader(new FileReader(filePath))) {
 			String line = br.readLine();
 			while (line != null) {
 				String linestrip = line.strip();
@@ -572,22 +600,22 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	private Trace runTarget(List<String> dependencies) {
 		List<String> includeLibs = new ArrayList<>();
 		List<String> excludeLibs = new ArrayList<>();
-		if(isReexecution) {
+		if (isReexecution) {
 			includeLibs.add("^^^");
 			includeLibs.add("Main*");
 		} else {
 			includeLibs.add("*");
 		}
-		if(dependencies != null) {
+		if (dependencies != null) {
 			includeLibs.addAll(dependencies);
 		}
-		for(String lib: includeLibs) {
+		for (String lib : includeLibs) {
 			System.out.println("include: " + lib);
 		}
 
 		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath, traceDirName, TRACE_FILE_NAME,
 				includeLibs, excludeLibs);
-		if(isReexecution) {
+		if (isReexecution) {
 			executor.getAgentRunner().setToTenSecondsTimeout = true;
 			executor.getAgentRunner().addAgentParam("no_exclude_all_java", "true");
 		}
@@ -621,21 +649,23 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		boolean enableIncontextLearning = enableIncontextLearningStr != null
 				&& enableIncontextLearningStr.equals("true");
 		boolean enableAliasInfer = enableAliasInferStr != null && enableAliasInferStr.equals("true");
-		if(isReexecution) {
+		if (isReexecution) {
 			return RE_EXECUTION_FOLDER;
 		}
 		if (enableIncontextLearning) {
-			if (enableAliasInfer) {
-				return RESULTS_FOLDER; // all features enabled, use default result folder "slicing_results"
-			} else {
-				return B2_FOLDER; // Baseline 2: enable in-context learning only
-			}
+//			if (enableAliasInfer) {
+//				return RESULTS_FOLDER; // all features enabled, use default result folder "slicing_results"
+//			} else {
+//				return B2_FOLDER; // Baseline 2: enable in-context learning only
+//			}
+			return RESULTS_FOLDER;
 		} else {
-			if (enableAliasInfer) {
-				return B3_FOLDER; // Baseline 3: enable alias inference only
-			} else {
-				return B1_FOLDER; // Baseline 1: disable in-context learning and alias inference
-			}
+//			if (enableAliasInfer) {
+//				return B3_FOLDER; // Baseline 3: enable alias inference only
+//			} else {
+//				return B1_FOLDER; // Baseline 1: disable in-context learning and alias inference
+//			}
+			return B1_FOLDER;
 		}
 	}
 
@@ -730,5 +760,26 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		}
 
 		return criteria;
+	}
+
+	private String getCriticalVar(String basePath, String fileName) throws IOException {
+		String filePath = basePath + File.separator + fileName;
+		String criticalVar = "";
+
+		try {
+			File criticalVarFile = new File(filePath);
+			String content = new String(Files.readAllBytes(criticalVarFile.toPath()), StandardCharsets.UTF_8);
+			String[] lines = content.split(System.lineSeparator());
+			for (String line : lines) {
+				if (line == null || line.equals("")) {
+					break;
+				}
+				criticalVar = line.strip();
+			}
+		} catch (IOException e) {
+			throw e;
+		}
+
+		return criticalVar;
 	}
 }
