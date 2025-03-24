@@ -104,7 +104,8 @@ public class LabelGTHandler extends AbstractHandler {
 				traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
 
 				boolean isGeneratedDataset = sliceDatasetPath.contains("generated")
-						|| sliceDatasetPath.contains("guava") || sliceDatasetPath.contains("benchmark-300");
+						|| sliceDatasetPath.contains("guava") || sliceDatasetPath.contains("benchmark-300")
+						|| sliceDatasetPath.contains("benchmark-compute-200");
 				boolean isMultiFile = sliceDatasetPath.contains("multi_files");
 
 				File folder = new File(srcDirName);
