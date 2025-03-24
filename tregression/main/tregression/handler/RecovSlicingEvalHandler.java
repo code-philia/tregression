@@ -90,7 +90,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public String javac = JAVA_HOME + File.separator + BIN_FOLDER + File.separator + "javac";
 	public boolean isGuava = sliceDatasetPath.contains("guava");
 	public boolean isGeneratedDataset = sliceDatasetPath.contains("generated") || isGuava
-			|| sliceDatasetPath.contains("benchmark-300") || sliceDatasetPath.contains("benchmark-compute-200");
+			|| sliceDatasetPath.contains("benchmark-");
 	public boolean isMultiFile = sliceDatasetPath.contains("multi_files");
 
 	private String srcDirName;
@@ -136,10 +136,6 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 						for (File file : files) {
 							String className = isGeneratedDataset ? file.getName()
 									: file.getName().substring(0, file.getName().lastIndexOf('.'));
-
-//							if (!className.equals("prog_415ff038")) {
-//								continue;
-//							}
 
 							int singleCriteria = (isGeneratedDataset && !isMultiFile)
 									? (singleFileCriteria.containsKey(className) ? singleFileCriteria.get(className)
@@ -242,9 +238,6 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										System.out.println("slicing destination after recovery:");
 										Set<TraceNode> dataDominatorsAfterRecovery = new HashSet<>();
 										for (VarValue targetVar : v.getAllDescedentChildren()) {
-//											if (!targetVar.getVarName().equals("key")) {
-//												continue;
-//											}
 											traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v);
 											TraceNode dataDominator = trace.findProducer(targetVar, slicingCriterion);
 											if (dataDominator != null) {
