@@ -93,7 +93,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			.getString(RecovSlicingPreference.ENABLE_ALIAS_INFERENCE);
 	public String javac = JAVA_HOME + File.separator + BIN_FOLDER + File.separator + "javac";
 	public boolean isGuava = sliceDatasetPath.contains("guava");
-	public boolean isGeneratedDataset = sliceDatasetPath.contains("generated") || isGuava;
+	public boolean isGeneratedDataset = sliceDatasetPath.contains("generated") || isGuava
+			|| sliceDatasetPath.contains("benchmark-300") || sliceDatasetPath.contains("benchmark-compute-200");
 	public boolean isMultiFile = sliceDatasetPath.contains("multi_files");
 	public boolean isReexecution = Activator.getDefault().getPreferenceStore()
 			.getString(RecovSlicingPreference.ENABLE_RE_EXECUTION).equals("true");
