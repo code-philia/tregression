@@ -1,6 +1,8 @@
 package tregression.handler;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -73,10 +75,12 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String B1_FOLDER = "RQ3_baseline1";
 	public static final String B2_FOLDER = "RQ3_baseline2";
 	public static final String B3_FOLDER = "RQ3_baseline3";
+	public static final String RE_EXECUTION_FOLDER = "RQ1_re_execution";
 	public static final String JAVA_HOME = Activator.getDefault().getPreferenceStore()
 			.getString(MicrobatPreference.JAVA7HOME_PATH);
 	public static final String INSTRUMENTATION_JAR_PATH = IResourceUtils.getResourceAbsolutePath(Activator.PLUGIN_ID,
 			"lib") + File.separator + "instrumentator.jar";
+	public static final String DEPENDENCY_FILE = "dependencies.txt";
 
 	public String sliceDatasetPath = Activator.getDefault().getPreferenceStore()
 			.getString(RecovSlicingPreference.SLICE_DATASET_PATH);
@@ -91,6 +95,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public boolean isGuava = sliceDatasetPath.contains("guava");
 	public boolean isGeneratedDataset = sliceDatasetPath.contains("generated") || isGuava;
 	public boolean isMultiFile = sliceDatasetPath.contains("multi_files");
+	public boolean isReexecution = Activator.getDefault().getPreferenceStore()
+			.getString(RecovSlicingPreference.ENABLE_RE_EXECUTION).equals("true");
 
 	private String srcDirName;
 	private String binDirName;
@@ -125,8 +131,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 						SLICING_CRITERIA_INFO);
 
 				// set up trace recoverer
-				executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
-				traceRecoverer = new TraceRecoverer();
+				if(!isReexecution) {
+					executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
+					traceRecoverer = new TraceRecoverer();
+				}
 
 				File folder = new File(srcDirName);
 				if (folder.exists() && folder.isDirectory()) {
@@ -173,6 +181,11 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 									compileFile(file, binDirName);
 								}
 
+								List<String> dependencies = null;
+								if(isReexecution) {
+									dependencies = readDependencies(file.getPath());
+								}
+
 								System.out.println("collecting trace...");
 								if (isJunitStr != null && isJunitStr.equals("true")) {
 									initializeAppClassPathJunitTest(className, METHOD_NAME);
@@ -181,7 +194,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								} else {
 									initializeAppClassPath(className);
 								}
-								Trace trace = runTarget();
+								Trace trace = runTarget(dependencies);
 								visualizeTrace(trace);
 
 								System.out.println("dynamic slicing...");
@@ -226,7 +239,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										 * 1. Variable Expansion
 										 */
 										try {
-											executionSimulator.expandVariable(v, slicingCriterion, null);
+											if(!isReexecution) {
+												executionSimulator.expandVariable(v, slicingCriterion, null);
+											}
 										} catch (IOException e) {
 											e.printStackTrace();
 										}
@@ -237,7 +252,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										System.out.println("slicing destination after recovery:");
 										Set<TraceNode> dataDominatorsAfterRecovery = new HashSet<>();
 										for (VarValue targetVar : v.getAllDescedentChildren()) {
-											traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v);
+											if(!isReexecution) {
+												traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v);
+											}
 											TraceNode dataDominator = trace.findProducer(targetVar, slicingCriterion);
 											if (dataDominator != null) {
 												dataDominatorsAfterRecovery.add(dataDominator);
@@ -258,7 +275,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										}
 
 										// write result
-										if (!dataDominatorsAfterRecovery.isEmpty()) {
+										// if (!dataDominatorsAfterRecovery.isEmpty()) {
 											System.out.println("writing results...");
 											StringBuilder result = new StringBuilder();
 											if (isMultiFile) {
@@ -291,12 +308,12 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 												e.printStackTrace();
 												return null;
 											}
-										}
+										// }
 									}
 									criterionCounter++;
 								}
-							} catch (CompilationFailureException e) {
-								System.out.println(e);
+							} catch (Exception e) {
+								System.out.println("An error occurred: " + e.getMessage());
 							}
 						}
 					}
@@ -311,6 +328,28 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		job.schedule();
 
 		return null;
+	}
+
+	private List<String> readDependencies(String folder) {
+		List<String> dependencies = new ArrayList<>();
+		String filePath = folder + File.separator + DEPENDENCY_FILE;
+		if (!new File(filePath).exists()) {
+			System.err.println("Dependency file not found: " + filePath);
+			return dependencies;
+		}
+		try(BufferedReader br = new BufferedReader(new FileReader(filePath))) {
+			String line = br.readLine();
+			while (line != null) {
+				String linestrip = line.strip();
+				if (!linestrip.isEmpty()) {
+					dependencies.add(line);
+				}
+				line = br.readLine();
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return dependencies;
 	}
 
 	private Set<String> readContent(String basePath, String fileName) {
@@ -528,13 +567,28 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		appClassPath.setTestCodePath(srcPath);
 	}
 
-	private Trace runTarget() {
+	private Trace runTarget(List<String> dependencies) {
 		List<String> includeLibs = new ArrayList<>();
 		List<String> excludeLibs = new ArrayList<>();
-		includeLibs.add("*");
+		if(isReexecution) {
+			includeLibs.add("^^^");
+			includeLibs.add("Main*");
+		} else {
+			includeLibs.add("*");
+		}
+		if(dependencies != null) {
+			includeLibs.addAll(dependencies);
+		}
+		for(String lib: includeLibs) {
+			System.out.println("include: " + lib);
+		}
 
 		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath, traceDirName, TRACE_FILE_NAME,
 				includeLibs, excludeLibs);
+		if(isReexecution) {
+			executor.getAgentRunner().setToTenSecondsTimeout = true;
+			executor.getAgentRunner().addAgentParam("no_exclude_all_java", "true");
+		}
 		RunningInfo results = null;
 		try {
 			results = executor.run();
@@ -564,6 +618,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		boolean enableIncontextLearning = enableIncontextLearningStr != null
 				&& enableIncontextLearningStr.equals("true");
 		boolean enableAliasInfer = enableAliasInferStr != null && enableAliasInferStr.equals("true");
+		if(isReexecution) {
+			return RE_EXECUTION_FOLDER;
+		}
 		if (enableIncontextLearning) {
 			if (enableAliasInfer) {
 				return RESULTS_FOLDER; // all features enabled, use default result folder "slicing_results"
