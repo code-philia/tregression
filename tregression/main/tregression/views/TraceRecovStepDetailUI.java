@@ -121,7 +121,7 @@ public class TraceRecovStepDetailUI extends StepDetailUI {
 
 					try {
 						ExecutionSimulator executionSimulator = ExecutionSimulatorFactory.getExecutionSimulator();
-						executionSimulator.expandVariable((VarValue) obj, currentNode, null);
+						executionSimulator.expandVariable((VarValue) obj, currentNode, null, null);
 					} catch (IOException ioException) {
 						ioException.printStackTrace();
 					}

@@ -151,13 +151,13 @@ public class StepChangeTypeChecker {
 					ExecutionSimulator simulator = ExecutionSimulatorFactory.getExecutionSimulator();
 
 					try {
-						String responseOnBuggy = simulator.expandVariable(readVar1, currentStep, null);
+						String responseOnBuggy = simulator.expandVariable(readVar1, currentStep, null, null);
 						readVar1.setExpanded(true);
 
 						String preValue = TraceRecovUtils.processInputStringForLLM(readVar1.getStringValue());
 						Pair<String, String> valueResponse = Pair.of(preValue, responseOnBuggy);
 
-						simulator.expandVariable(readVar2, matchedStep, valueResponse);
+						simulator.expandVariable(readVar2, matchedStep, valueResponse, null);
 						readVar2.setExpanded(true);
 						
 						List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2, deadEndOnBothTraces);

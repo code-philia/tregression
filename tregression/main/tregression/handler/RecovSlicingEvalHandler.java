@@ -137,6 +137,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 							String className = isGeneratedDataset ? file.getName()
 									: file.getName().substring(0, file.getName().lastIndexOf('.'));
 
+//							if (!className.equals("prog_415ff038")) {
+//								continue;
+//							}
+
 							int singleCriteria = (isGeneratedDataset && !isMultiFile)
 									? (singleFileCriteria.containsKey(className) ? singleFileCriteria.get(className)
 											: -1)
@@ -227,7 +231,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										 * 1. Variable Expansion
 										 */
 										try {
-											executionSimulator.expandVariable(v, slicingCriterion, null);
+											executionSimulator.expandVariable(v, slicingCriterion, null, null);
 										} catch (IOException e) {
 											e.printStackTrace();
 										}
@@ -238,6 +242,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										System.out.println("slicing destination after recovery:");
 										Set<TraceNode> dataDominatorsAfterRecovery = new HashSet<>();
 										for (VarValue targetVar : v.getAllDescedentChildren()) {
+//											if (!targetVar.getVarName().equals("key")) {
+//												continue;
+//											}
 											traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v);
 											TraceNode dataDominator = trace.findProducer(targetVar, slicingCriterion);
 											if (dataDominator != null) {
