@@ -272,8 +272,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										/*
 										 * 2. Identify Critical Variable
 										 */
-										String criticalFieldName = executionSimulator.getCriticalVariable(v,
-												slicingCriterion, criticalVar);
+										String criticalFieldName = "";
+										if (!isReexecution) {
+											executionSimulator.getCriticalVariable(v, slicingCriterion, criticalVar);
+										}
 
 										/*
 										 * 3. Recover Dependency
@@ -281,10 +283,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										System.out.println("slicing destination after recovery:");
 										Set<TraceNode> dataDominatorsAfterRecovery = new HashSet<>();
 										for (VarValue targetVar : v.getAllDescedentChildren()) {
-											if (!targetVar.getVarName().equals(criticalFieldName)) {
-												continue;
-											}
 											if (!isReexecution) {
+												if (!targetVar.getVarName().equals(criticalFieldName)) {
+													continue;
+												}
 												traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v);
 											}
 											TraceNode dataDominator = trace.findProducer(targetVar, slicingCriterion);
