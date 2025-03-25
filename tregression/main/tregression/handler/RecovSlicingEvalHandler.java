@@ -70,6 +70,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String METHOD_NAME = "testMainLogic";
 	public static final String COMPILE_ERRORS = "tc_with_compilation_error.txt";
 	public static final String RUNTIME_ERRORS = "tc_with_runtime_error.txt";
+	public static final String SKIP = "skip.txt";
 	public static final String MISMATCHES = "mismatched_ids.json";
 	public static final String SLICING_CRITERIA_INFO = "info.txt";
 	public static final String CRITICAL_VAR = "real-var.txt";
@@ -128,6 +129,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 				Set<String> compilationErrors = readContent(sliceDatasetPath, COMPILE_ERRORS);
 				Set<String> runtimeErrors = readContent(sliceDatasetPath, RUNTIME_ERRORS);
 				Set<String> processedFiles = getProcessedFiles(sliceDatasetPath);
+				Set<String> classesToSkip = readContent(sliceDatasetPath, SKIP);
 				Map<String, Integer> singleFileCriteria = readSingleFileSlicingCriteria(sliceDatasetPath,
 						SLICING_CRITERIA_INFO);
 				Map<String, Map<String, Integer>> multiFileCriteria = readMultiFileSlicingCriteria(sliceDatasetPath,
@@ -192,7 +194,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 							if (idsToSkip.contains(id) || compilationErrors.contains(className)
 									|| runtimeErrors.contains(className) || processedFiles.contains(className)
-									|| (!classesToRun.isEmpty() && !classesToRun.contains(className))) {
+									|| (!classesToRun.isEmpty() && !classesToRun.contains(className))
+									|| classesToSkip.contains(className)) {
 								continue;
 							}
 
