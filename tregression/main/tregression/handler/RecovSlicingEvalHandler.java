@@ -656,8 +656,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath, traceDirName, TRACE_FILE_NAME,
 				includeLibs, excludeLibs);
+		executor.getAgentRunner().setToTenSecondsTimeout = true;
 		if (isReexecution) {
-			executor.getAgentRunner().setToTenSecondsTimeout = true;
 			executor.getAgentRunner().addAgentParam("no_exclude_all_java", "true");
 		}
 		executor.getAgentRunner().addAgentParam(CommonParams.OPT_FORCE_EXIT_WITHOUT_WAIT_OTHER_THREADS, "true");
