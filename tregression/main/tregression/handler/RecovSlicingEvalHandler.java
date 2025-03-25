@@ -352,7 +352,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										}
 										slicingDestinations.append("]");
 										result.append(slicingDestinations);
-										result.append(System.lineSeparator());
+										result.append("\n");
 
 										try {
 											File resultFile = new File(sliceDatasetPath + File.separator
@@ -432,7 +432,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 		try {
 			String content = new String(Files.readAllBytes(problematicClasses.toPath()), StandardCharsets.UTF_8);
-			String[] files = content.split(System.lineSeparator());
+			String[] files = content.split("\n");
 			for (String f : files) {
 				int index = f.lastIndexOf('.');
 				if (index >= 0) {
@@ -714,7 +714,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		try {
 			File targetResultFile = new File(filePath);
 			String content = new String(Files.readAllBytes(targetResultFile.toPath()), StandardCharsets.UTF_8);
-			String[] lines = content.split(System.lineSeparator());
+			String[] lines = content.split("\n");
 			for (String line : lines) {
 				if (line == null || line.equals("")) {
 					break;
@@ -742,7 +742,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		try {
 			File targetResultFile = new File(filePath);
 			String content = new String(Files.readAllBytes(targetResultFile.toPath()), StandardCharsets.UTF_8);
-			String[] lines = content.split(System.lineSeparator());
+			String[] lines = content.split("\n");
 			boolean isHeader = true;
 			for (String line : lines) {
 				if (isHeader) {
@@ -775,7 +775,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		try {
 			File targetResultFile = new File(filePath);
 			String content = new String(Files.readAllBytes(targetResultFile.toPath()), StandardCharsets.UTF_8);
-			String[] lines = content.split(System.lineSeparator());
+			String[] lines = content.split("\n");
 			boolean isHeader = true;
 			for (String line : lines) {
 				if (isHeader) {
@@ -807,7 +807,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		try {
 			File criticalVarFile = new File(filePath);
 			String content = new String(Files.readAllBytes(criticalVarFile.toPath()), StandardCharsets.UTF_8);
-			String[] lines = content.split(System.lineSeparator());
+			String[] lines = content.split("\n");
 			for (String line : lines) {
 				if (line == null || line.equals("")) {
 					break;
