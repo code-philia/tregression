@@ -143,6 +143,11 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 					File[] files = folder.listFiles();
 					if (files != null) {
 						for (File file : files) {
+							if(!file.getName().equals("prog_0e214e5f")) {
+								// System.err.println("skip " + file.getName());
+								continue;
+							}
+							System.err.println("process " + file.getName());
 							String className = isGeneratedDataset ? file.getName()
 									: file.getName().substring(0, file.getName().lastIndexOf('.'));
 
@@ -168,12 +173,21 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 									id += c;
 								}
 							}
+							System.err.println("process2 " + file.getName());
+							System.err.println("idsToSkip: " + idsToSkip);
+							System.err.println("compilationErrors: " + compilationErrors);
+							System.err.println("runtimeErrors: " + runtimeErrors);
+							System.err.println("processedFiles: " + processedFiles);
+							System.err.println("classesToRun: " + classesToRun);
+							System.err.println("singleCriteria: " + singleCriteria);
+
 
 							if (idsToSkip.contains(id) || compilationErrors.contains(className)
 									|| runtimeErrors.contains(className) || processedFiles.contains(className)
 									|| (!classesToRun.isEmpty() && !classesToRun.contains(className))) {
 								continue;
 							}
+							System.err.println("process3 " + file.getName());
 
 							try {
 								System.out.println("compiling " + file.getName() + " ...");
@@ -416,12 +430,12 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			return output;
 		}
 		for (File f : files) {
-			int index = f.getName().lastIndexOf('.');
-			if (index >= 0) {
-				output.add(f.getName().substring(0, f.getName().lastIndexOf('.')));
-			} else {
-				output.add(f.getName());
-			}
+			// int index = f.getName().lastIndexOf('.');
+			// if (index >= 0) {
+			// 	output.add(f.getName().substring(0, f.getName().lastIndexOf('.')));
+			// } else {
+			// 	output.add(f.getName());
+			// }
 		}
 		return output;
 	}
@@ -588,9 +602,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		InstrumentationExecutor executor = new InstrumentationExecutor(appClassPath, traceDirName, TRACE_FILE_NAME,
 				includeLibs, excludeLibs);
 		if(isReexecution) {
-			executor.getAgentRunner().setToTenSecondsTimeout = true;
 			executor.getAgentRunner().addAgentParam("no_exclude_all_java", "true");
 		}
+		executor.getAgentRunner().setToTenSecondsTimeout = true;
 		executor.getAgentRunner().addAgentParam(CommonParams.OPT_FORCE_EXIT_WITHOUT_WAIT_OTHER_THREADS, "true");
 		RunningInfo results = null;
 		try {
