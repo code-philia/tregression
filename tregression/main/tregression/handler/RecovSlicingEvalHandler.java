@@ -274,7 +274,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										 */
 										String criticalFieldName = "";
 										if (!isReexecution) {
-											executionSimulator.getCriticalVariable(v, slicingCriterion, criticalVar);
+											criticalFieldName = executionSimulator.getCriticalVariable(v, slicingCriterion, criticalVar);
 										}
 
 										/*
@@ -282,11 +282,13 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										 */
 										System.out.println("slicing destination after recovery:");
 										Set<TraceNode> dataDominatorsAfterRecovery = new HashSet<>();
+										VarValue criticalVarValue = null;
 										for (VarValue targetVar : v.getAllDescedentChildren()) {
 											if (!isReexecution) {
 												if (!targetVar.getVarName().equals(criticalFieldName)) {
 													continue;
 												}
+												criticalVarValue = targetVar;
 												traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v);
 											}
 											TraceNode dataDominator = trace.findProducer(targetVar, slicingCriterion);
@@ -315,7 +317,12 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 											result.append(fileContainingCriterion + ",");
 										}
 										result.append(lineNo + ",");
-										result.append(v.getVarName() + ",");
+										if (criticalVarValue == null) {
+											result.append(v.getVarName() + ",");
+										} else {
+											String name = getCascadingName(criticalVarValue, v);
+											result.append(name + ",");
+										}
 										StringBuilder slicingDestinations = new StringBuilder("[");
 										for (TraceNode i : dataDominatorsAfterRecovery) {
 											if (isMultiFile) {
@@ -360,6 +367,19 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		job.schedule();
 
 		return null;
+	}
+	
+	private String getCascadingName(VarValue targetVar, VarValue rootVar) {
+		String name = targetVar.getVarName();
+
+		VarValue temp = targetVar;
+
+		while (temp != rootVar) {
+			temp = temp.getParents().get(0);
+			name = temp.getVarName() + "." + name;
+		}
+
+		return name;
 	}
 
 	private List<String> readDependencies(String folder) {
