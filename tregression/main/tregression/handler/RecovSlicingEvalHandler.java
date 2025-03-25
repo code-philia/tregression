@@ -253,13 +253,28 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										continue;
 									}
 									visitedLines.add(slicingCriterion.getLineNumber());
+
+									/*
+									 * 1. Identify Critical Variable
+									 */
+									String criticalRootVarName = "";
+									if (!isReexecution) {
+										criticalRootVarName = executionSimulator.getCriticalVar(slicingCriterion,
+												criticalVar);
+									}
+
 									for (VarValue v : readVars) {
+										if (!isReexecution) {
+											if (!v.getVarName().equals(criticalRootVarName)) {
+												continue;
+											}
+										}
 										System.out.println("slicing criterion:");
 										System.out.println(slicingCriterion.getOrder());
 										System.out.println(v.getVarName());
 
 										/*
-										 * 1. Variable Expansion
+										 * 2. Variable Expansion
 										 */
 										try {
 											if (!isReexecution) {
@@ -270,15 +285,16 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 										}
 
 										/*
-										 * 2. Identify Critical Variable
+										 * 3. Identify Critical Field
 										 */
 										String criticalFieldName = "";
 										if (!isReexecution) {
-											criticalFieldName = executionSimulator.getCriticalVariable(v, slicingCriterion, criticalVar);
+											criticalFieldName = executionSimulator.getCriticalField(v, slicingCriterion,
+													criticalVar);
 										}
 
 										/*
-										 * 3. Recover Dependency
+										 * 4. Recover Dependency
 										 */
 										System.out.println("slicing destination after recovery:");
 										Set<TraceNode> dataDominatorsAfterRecovery = new HashSet<>();
@@ -368,7 +384,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 		return null;
 	}
-	
+
 	private String getCascadingName(VarValue targetVar, VarValue rootVar) {
 		String name = targetVar.getVarName();
 
