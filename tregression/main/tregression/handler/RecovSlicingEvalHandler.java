@@ -435,8 +435,9 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 		try {
 			String content = new String(Files.readAllBytes(problematicClasses.toPath()), StandardCharsets.UTF_8);
-			String[] files = content.split(System.lineSeparator());
+			String[] files = content.split("\n");
 			for (String f : files) {
+				f = f.strip();
 				int index = f.lastIndexOf('.');
 				if (index >= 0) {
 					output.add(f.substring(0, f.lastIndexOf('.')));
