@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-      <!-- Original -->
       <extension
             point="org.eclipse.ui.commands">
             <command
@@ -144,6 +143,21 @@
                   id="tregression.exampleSearchingExperiment"
                   name="Example Searching Experiment">
             </command>
+            <command
+                  defaultHandler="tregression.handler.RunGPTInContextLearningHandler"
+                  id="tregression.incontextLearning"
+                  name="In Context Learning Example">
+            </command>
+            <command
+                  defaultHandler="tregression.handler.RecovSlicingEvalHandler"
+                  id="tregression.RecovSlicingEval"
+                  name="Recov Slicing Evaluation">
+            </command>
+            <command
+                  defaultHandler="tregression.handler.LabelGTHandler"
+                  id="tregression.LabelGT"
+                  name="Label GT">
+            </command>
       </extension>
       <extension
             point="org.eclipse.ui.views">
@@ -235,12 +249,6 @@
                               label="Retrieve All Defect4j Regressions"
                               style="push">
                         </command>
-
-                        <command
-                              commandId="tregression.command.rungptincontextlearning"
-                              label="Run GPT In Context Learning"
-                              style="push">
-                        </command>
                   </menu>
                   <menu
                         label="Trace Agent">
@@ -299,6 +307,21 @@
                               icon="icons/engineering.png"
                               style="push">
                         </command>
+                        <command
+                              commandId="tregression.incontextLearning"
+                              icon="icons/recover.png"
+                              style="push">
+                        </command>
+                        <command
+                              commandId="tregression.RecovSlicingEval"
+                              icon="icons/slice.png"
+                              style="push">
+                        </command>
+                        <command
+                              commandId="tregression.LabelGT"
+                              icon="icons/after.ico"
+                              style="push">
+                        </command>
                   </toolbar>
             </menuContribution>
       </extension>
@@ -328,470 +351,6 @@
                   id="tregression.preference"
                   name="Tregression (Defects4j)">
             </page>
-      </extension>
-
-      <!-- microbat -->
-      <extension
-            point="org.eclipse.ui.views">
-            <category
-                  id="microbat.category"
-                  name="MicroBat">
-            </category>
-            <view
-                  category="microbat.category"
-                  class="microbat.views.DebugFeedbackView"
-                  icon="icons/feedback.png"
-                  id="microbat.view.debugFeedback"
-                  name="Debug Feedback"
-                  restorable="true">
-            </view>
-            <view
-                  category="microbat.category"
-                  class="microbat.views.TraceView"
-                  icon="icons/trace.png"
-                  id="microbat.view.trace"
-                  name="Trace"
-                  restorable="true">
-            </view>
-            <view
-                  category="microbat.category"
-                  class="microbat.views.ConcurrentTraceView"
-                  icon="icons/trace.png"
-                  id="microbat.view.concurrentTrace"
-                  name="Concurrent Trace"
-                  restorable="true">
-            </view>
-            <view
-                  category="microbat.category"
-                  class="microbat.views.ReasonView"
-                  icon="icons/navigation_history.png"
-                  id="microbat.view.reason"
-                  name="Recommending Reason"
-                  restorable="true">
-            </view>
-            <view
-                  category="microbat.category"
-                  class="microbat.views.PathView"
-                  icon="icons/path_mark.png"
-                  id="microbat.evalView.pathView"
-                  name="Debugging Plan"
-                  restorable="true">
-            </view>
-            <category
-                  id="microbat.evalCategory"
-                  name="Evaluation">
-            </category>
-            <view
-                  category="microbat.evalCategory"
-                  class="microbat.evaluation.views.BeforeTraceView"
-                  icon="icons/before.png"
-                  id="microbat.evalView.beforeTraceView"
-                  name="Before Trace"
-                  restorable="true">
-            </view>
-            <view
-                  category="microbat.evalCategory"
-                  class="microbat.evaluation.views.AfterTraceView"
-                  icon="icons/after.ico"
-                  id="microbat.evalView.afterTraceView"
-                  name="After Trace"
-                  restorable="true">
-            </view>
-            <view
-                  category="microbat.category"
-                  class="microbat.views.DebugPilotFeedbackView"
-                  icon="icons/feedback.png"
-                  id="microbat.view.debugPilotFeedback"
-                  name="DebugPilot Feedback"
-                  restorable="true">
-            </view>
-      </extension>
-      <extension
-            point="org.eclipse.ui.perspectives">
-            <perspective
-                  class="microbat.perspectives.MicroBatPerspective"
-                  icon="icons/microbat.png"
-                  id="microbat.perspectives.MicroBatPerspective"
-                  name="MicroBat">
-            </perspective>
-            <perspective
-                  class="microbat.perspectives.ConcurrentPerspective"
-                  icon="icons/concurrency.png"
-                  id="microbat.perspectives.ConcurrentPerspective"
-                  name="Concurrent">
-            </perspective>
-            <perspective
-                  class="microbat.perspectives.DebugPilotPerspective"
-                  icon="icons/play_debug_pilot.png"
-                  id="microbat.debugpilotperspective"
-                  name="DebugPilot">
-            </perspective>
-      </extension>
-      <extension
-            point="org.eclipse.ui.commands">
-            <command
-                  defaultHandler="microbat.handler.StartDebugHandler"
-                  id="microbat.command.startDebug"
-                  name="Start Debugging">
-            </command>
-            <command
-                  defaultHandler="microbat.evaluation.handler.EvaluationAllHandler"
-                  id="microbat.command.evaluateAll"
-                  name="Run Evaluation for All">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.UndoHandler"
-                  id="microbat.command.undo"
-                  name="Undo">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.SearchStepForwardHandler"
-                  id="microbat.command.searchStepForward"
-                  name="Search Step Forward">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.SearchStepBackwardHandler"
-                  id="microbat.command.searchStepBackward"
-                  name="Search Step Backward">
-            </command>
-            <command
-                  defaultHandler="microbat.evaluation.handler.EvaluationTestCaseHandler"
-                  id="microbat.command.evaluationTestCase"
-                  name="Run Evaluation for Test Case">
-            </command>
-            <command
-                  defaultHandler="microbat.evaluation.handler.EvaluationTrialHandler"
-                  id="microbat.command.evaluateTrial"
-                  name="Run Evaluation for Trial">
-            </command>
-            <command
-                  defaultHandler="microbat.test.handler.RunTestHandler"
-                  id="microbat.command.runTest"
-                  name="Run Test">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.TransformLibHandler"
-                  id="microbat.command.transformRTJar"
-                  name="Transform JDK Library">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.StoreTraceHandler"
-                  id="microbat.command.StoreTrace"
-                  name="Store Trace">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.TraceRestoreHandler"
-                  id="microbat.command.RestoreTrace"
-                  name="Restore Trace">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.TestHandler"
-                  id="microbat.testing"
-                  name="Testing Microbat">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.DebugPilotHandler"
-                  id="microbat.debugpilot"
-                  name="Debug Pilot">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.StopDebugPilotHandler"
-                  id="microbat.stopdebugpilot"
-                  name="Stop Debug Pilot">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.GenerateTraceHandler"
-                  id="microbat.generateTraceCommand"
-                  name="Debug As DebugPilot">
-            </command>
-            <command
-                  defaultHandler="microbat.handler.RecovAllDependencyHandler"
-                  id="microbat.allDependencyRecovery"
-                  name="Recover All Data Dependency">
-            </command>
-      </extension>
-      <extension
-            point="org.eclipse.ui.menus">
-            <menuContribution
-                  allPopups="false"
-                  locationURI="menu:org.eclipse.ui.main.menu">
-                  <menu
-                        label="MicroBat">
-                        <command
-                              commandId="microbat.command.startDebug"
-                              icon="icons/microbat.png"
-                              label="Start Debug"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="microbat.command.undo"
-                              icon="icons/undo.png"
-                              label="Undo Your Debug Operation"
-                              style="push">
-                        </command>
-                        <menu
-                              label="Run Evaluation">
-                              <command
-                                    commandId="microbat.command.evaluateAll"
-                                    icon="icons/evaluation.png"
-                                    label="All"
-                                    style="push">
-                              </command>
-                              <command
-                                    commandId="microbat.command.evaluationTestCase"
-                                    icon="icons/evaluation.png"
-                                    label="Test Case"
-                                    style="push">
-                              </command>
-                              <command
-                                    commandId="microbat.command.evaluateTrial"
-                                    icon="icons/evaluation.png"
-                                    label="Trial"
-                                    style="push">
-                              </command>
-                        </menu>
-                        <command
-                              commandId="microbat.command.runTest"
-                              icon="icons/evaluation.png"
-                              label="Run Test"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="microbat.command.transformRTJar"
-                              label="Transform JDK Library"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="microbat.command.StoreTrace"
-                              label="Store Trace"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="microbat.command.RestoreTrace"
-                              label="Restore Trace"
-                              style="push">
-                        </command>
-                  </menu>
-            </menuContribution>
-            <menuContribution
-                  allPopups="false"
-                  locationURI="toolbar:org.eclipse.ui.main.toolbar">
-                  <toolbar
-                        id="microbat.toolbar.startDebug">
-                        <command
-                              commandId="microbat.command.startDebug"
-                              icon="icons/microbat.png"
-                              label="Start Debug"
-                              style="push">
-                        </command>
-                  </toolbar>
-                  <toolbar
-                        id="microbat.toolbar.allDependencyRecovery">
-                        <command
-                              commandId="microbat.allDependencyRecovery"
-                              icon="icons/path_mark.png"
-                              label="Recover All Data Dependency"
-                              style="push">
-                        </command>
-                  </toolbar>
-            </menuContribution>
-            <menuContribution
-                  allPopups="false"
-                  locationURI="toolbar:org.eclipse.ui.main.toolbar">
-                  <toolbar
-                        id="microbat.toolbar.undo">
-                        <command
-                              commandId="microbat.command.undo"
-                              icon="icons/undo.png"
-                              label="Undo Your Debug Operation"
-                              style="push"
-                              tooltip="undo your previous debugging operation">
-                        </command>
-                  </toolbar>
-            </menuContribution>
-            <menuContribution
-                  allPopups="false"
-                  locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
-                  <command
-                        commandId="microbat.command.searchStepBackward"
-                        icon="icons/up.png"
-                        label="Search Step Backward"
-                        style="push"
-                        tooltip="search the nearest trace step with regard to current step">
-                  </command>
-            </menuContribution>
-            <menuContribution
-                  allPopups="false"
-                  locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
-                  <command
-                        commandId="microbat.command.searchStepForward"
-                        icon="icons/down.png"
-                        label="Search Step Forward"
-                        style="push"
-                        tooltip="search the nearest trace step with regard to current step">
-                  </command>
-            </menuContribution>
-            <menuContribution
-                  locationURI="menu:org.eclipse.ui.main.menu?after=additions">
-                  <menu
-                        id="microbat.menus.sampleMenu"
-                        label="Sample Menu"
-                        mnemonic="M">
-                        <command
-                              commandId="microbat.commands.sampleCommand"
-                              id="microbat.menus.sampleCommand"
-                              mnemonic="S">
-                        </command>
-                  </menu>
-            </menuContribution>
-            <menuContribution
-                  locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
-                  <toolbar
-                        id="microbat.toolbars.sampleToolbar">
-                        <command
-                              commandId="microbat.commands.sampleCommand"
-                              icon="icons/sample.png"
-                              id="microbat.toolbars.sampleCommand"
-                              tooltip="Say hello world">
-                        </command>
-                  </toolbar>
-            </menuContribution>
-            <menuContribution
-                  locationURI="menu:org.eclipse.ui.main.menu?after=additions">
-                  <menu
-                        id="microbat.menus.sampleMenu"
-                        label="Sample Menu"
-                        mnemonic="M">
-                        <command
-                              commandId="microbat.commands.sampleCommand"
-                              id="microbat.menus.sampleCommand"
-                              mnemonic="S">
-                        </command>
-                  </menu>
-            </menuContribution>
-            <menuContribution
-                  locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
-                  <toolbar
-                        id="microbat.toolbars.sampleToolbar">
-                        <command
-                              commandId="microbat.commands.sampleCommand"
-                              icon="icons/sample.png"
-                              id="microbat.toolbars.sampleCommand"
-                              tooltip="Say hello world">
-                        </command>
-                  </toolbar>
-            </menuContribution>
-            <menuContribution
-                  locationURI="menu:org.eclipse.ui.main.menu?after=additions">
-                  <menu
-                        id="microbat.menus.sampleMenu"
-                        label="Sample Menu"
-                        mnemonic="M">
-                        <command
-                              commandId="microbat.commands.sampleCommand"
-                              id="microbat.menus.sampleCommand"
-                              mnemonic="S">
-                        </command>
-                  </menu>
-            </menuContribution>
-            <menuContribution
-                  locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
-                  <toolbar
-                        id="microbat.toolbars.sampleToolbar">
-                        <command
-                              commandId="microbat.commands.sampleCommand"
-                              icon="icons/sample.png"
-                              id="microbat.toolbars.sampleCommand"
-                              tooltip="Say hello world">
-                        </command>
-                  </toolbar>
-            </menuContribution>
-            <menuContribution
-                  allPopups="false"
-                  locationURI="popup:org.eclipse.ui.popup.any">
-                  <command
-                        commandId="microbat.generateTraceCommand"
-                        icon="icons/microbat.png"
-                        style="push">
-                  </command>
-            </menuContribution>
-      </extension>
-      <extension
-            point="org.eclipse.ui.editors.markerAnnotationSpecification">
-            <specification
-                  annotationImageProvider="microbat.views.StepImageProvider"
-                  annotationType="microbat.specification.step"
-                  colorPreferenceKey="inspected_step_color"
-                  colorPreferenceValue="127,255,212"
-                  contributesToHeader="true"
-                  highlightPreferenceKey="inspected_step_highlight"
-                  highlightPreferenceValue="true"
-                  includeOnPreferencePage="true"
-                  label="StepAnnotation"
-                  overviewRulerPreferenceKey="inspected_step_overview"
-                  overviewRulerPreferenceValue="true"
-                  textPreferenceKey="inspected_step_text"
-                  textPreferenceValue="true"
-                  verticalRulerPreferenceKey="inspected_step_vertical"
-                  verticalRulerPreferenceValue="false">
-            </specification>
-      </extension>
-      <extension
-            point="org.eclipse.ui.preferencePages">
-            <page
-                  class="microbat.preference.MicrobatPreference"
-                  id="microbat.preference"
-                  name="Microbat Debugging">
-            </page>
-            <page
-                  category="microbat.preference"
-                  class="microbat.preference.DatabasePreference"
-                  id="microbat.preference.database"
-                  name="Database">
-            </page>
-            <page
-                  category="microbat.preference"
-                  class="microbat.preference.AnalysisScopePreference"
-                  id="microbat.preference.analysisScope"
-                  name="Analysis Scope">
-            </page>
-            <page
-                  category="microbat.preference"
-                  class="microbat.preference.ExecutionRangePreference"
-                  id="microbat.preference.executionRange"
-                  name="Execution Range">
-            </page>
-            <page
-                  category="microbat.preference"
-                  class="microbat.preference.DebugPilotPreference"
-                  id="microbat.preference.debugpilot"
-                  name="Debug Pilot Setting">
-            </page>
-            <page
-                  category="microbat.preference"
-                  class="microbat.preference.TraceRecovPreference"
-                  id="microbat.preference.tracerecov"
-                  name="Trace Recov Setting">
-            </page>
-      </extension>
-      <extension
-            point="org.eclipse.ui.editors.annotationTypes">
-            <type
-                  name="microbat.specification.step">
-            </type>
-      </extension>
-      <extension
-            point="org.eclipse.ui.preferencePages">
-      </extension>
-
-
-      <extension
-            point="org.eclipse.ui.commands">
-            <command
-                  defaultHandler="tregression.handler.RunGPTInContextLearningHandler"
-                  id="tregression.command.rungptincontextlearning"
-                  name="Run GPT In Context Learning">
-            </command>
       </extension>
 
 </plugin>
