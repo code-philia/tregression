@@ -155,6 +155,11 @@
       name="Recov Slicing Evaluation">
     </command>
     <command
+      defaultHandler="microbat.runconfigs.TestLoadConfig"
+      id="tregression.testrunconfig"
+      name="Test Run Configuration">
+    </command>
+    <command
       defaultHandler="tregression.handler.LabelGTHandler"
       id="tregression.LabelGT"
       name="Label GT">
@@ -321,6 +326,11 @@
         </command>
         <command
           commandId="tregression.RecovSlicingEval"
+          icon="icons/slice.png"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.testrunconfig"
           icon="icons/slice.png"
           style="push">
         </command>
