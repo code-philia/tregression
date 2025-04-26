@@ -160,6 +160,11 @@
       name="Test Run Configuration">
     </command>
     <command
+      defaultHandler="microbat.runconfigs.BaseFolderSetter"
+      id="tregression.setbaseloc"
+      name="Set Base Location">
+    </command>
+    <command
       defaultHandler="tregression.handler.LabelGTHandler"
       id="tregression.LabelGT"
       name="Label GT">
@@ -332,6 +337,11 @@
         <command
           commandId="tregression.testrunconfig"
           icon="icons/slice.png"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.setbaseloc"
+          icon="icons/collect.png"
           style="push">
         </command>
         <command
