@@ -1,356 +1,827 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?eclipse version="3.4"?>
 <plugin>
-      <extension
-            point="org.eclipse.ui.commands">
-            <command
-                  defaultHandler="tregression.handler.EvaluationTrialHandler"
-                  id="tregression.command.evaluateTrial"
-                  name="Run Regression for Trial">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.EvaluationTestCaseHandler"
-                  id="tregression.command.evaluateTestCase"
-                  name="Run Regression for Test Case">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.PlayRegressionLocalizationHandler"
-                  id="tregression.command.localizationPlayer"
-                  name="Play The Process of Regression Localization">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.EvaluationAllHandler"
-                  id="tregression.command.evaluateAll"
-                  name="Run Regression for All">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.SeparateVersionHandler"
-                  id="tregression.command.runSeparateVersions"
-                  name="Run for Separate Versions">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.AllDefects4jHandler"
-                  id="tregression.command.runAllDefects4jProjects"
-                  name="Run All Defects4j Projects">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.AllMutationHandler"
-                  id="tregression.command.runAllMutationProjects"
-                  name="Run All Mutation Projects">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.RegressionRetrieveHandler"
-                  id="tregression.command.retrieveRegression"
-                  name="Retrieve the Bug from exec file">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.RetrieveAllDefect4jRegressionsHandler"
-                  id="tregression.command.retrieveAllDefect4jRegression"
-                  name="Retrieve All Defect4j Regressions">
-            </command>
-            <command
-                  defaultHandler="traceagent.handler.RunAllDefects4jHandler"
-                  id="traceagent.command.runAllDefects4jBugs"
-                  name="Run All Defect4j Bugs">
-            </command>
-            <command
-                  defaultHandler="traceagent.handler.RunSingleTestcaseHandler"
-                  id="traceagent.command.runSingleDefects4jBugs"
-                  name="Run Single Defect4j Bug">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.DataCollectionHandler"
-                  id="tregression.collectdata"
-                  name="Collect Data">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.TestingHandler"
-                  id="tregression.testingTregression"
-                  name="Testing Tregression">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.DSDebuggingHandler"
-                  id="tregression.dynamicslicing"
-                  name="Run Dyanmic Slicing">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.MutationDatasetHandler"
-                  id="tregression.mutate"
-                  name="Mutate Target Project">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.DebugPilotTHandler"
-                  id="tregression.debugpilot"
-                  name="Debug Pilot">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.Defects4jCollectionHandler"
-                  id="tregression.collectDefects4jData"
-                  name="Collect Defects4j Data">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.MutationRunnerHandler"
-                  id="tregression.collectMutationDatasetData"
-                  name="Collect Mutation Dataset Data">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.Defects4jAutoDebugHandler"
-                  id="tregression.defects4jautodebug"
-                  name="Auto Debug Defects4j">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.IOSelectionHandler"
-                  id="tregression.selectIO"
-                  name="Select IO">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.TrainModelHandler"
-                  id="tregression.trainmodel"
-                  name="Train Model">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.StopDebugPilotTHandler"
-                  id="tregression.stopdebugpilot"
-                  name="Stop Debug Pilot">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.Defects4jAutoProfInferHandler"
-                  id="tregression.autoprobinfer"
-                  name="Run ProbInfer Debug">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.Defects4jAutoDebugMistakeHandler"
-                  id="tregression.defects4jautodebug_debugpilot_mistake"
-                  name="Defects4j Auto Debug Mistake">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.Defects4jAutoMicrobatHandler"
-                  id="tregression.defects4jautodebug_microbat"
-                  name="Auto Debug Microbat">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.SimulatorHandler"
-                  id="tregression.simulate"
-                  name="Simulate Experiment">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.AutoPromptEngineeringHandler"
-                  id="tregression.autoPromptEngineering"
-                  name="Auto Prompt Engineering">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.ExampleSearchingExperimentHandler"
-                  id="tregression.exampleSearchingExperiment"
-                  name="Example Searching Experiment">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.RunGPTInContextLearningHandler"
-                  id="tregression.incontextLearning"
-                  name="In Context Learning Example">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.RecovSlicingEvalHandler"
-                  id="tregression.RecovSlicingEval"
-                  name="Recov Slicing Evaluation">
-            </command>
-            <command
-                  defaultHandler="tregression.handler.LabelGTHandler"
-                  id="tregression.LabelGT"
-                  name="Label GT">
-            </command>
-      </extension>
-      <extension
-            point="org.eclipse.ui.views">
-            <category
-                  id="tregression.category"
-                  name="Tregression">
-            </category>
-            <view
-                  category="tregression.category"
-                  class="tregression.views.CorrectTraceView"
-                  icon="icons/check_mark.png"
-                  id="tregression.evalView.correctTraceView"
-                  name="Correct Trace"
-                  restorable="true">
-            </view>
-            <view
-                  category="tregression.category"
-                  class="tregression.views.BuggyTraceView"
-                  icon="icons/cross_mark.png"
-                  id="tregression.evalView.buggyTraceView"
-                  name="Buggy Trace"
-                  restorable="true">
-            </view>
-            <view
-                  category="tregression.category"
-                  class="tregression.views.StepPropertyView"
-                  icon="icons/property.png"
-                  id="tregression.view.stepProperty"
-                  name="Step Properties"
-                  restorable="true">
-            </view>
-      </extension>
-      <extension
-            point="org.eclipse.ui.perspectives">
-            <perspective
-                  class="tregression.perspectives.TraceComparisonPerspective"
-                  icon="icons/trace_comparison.png"
-                  id="tregression.perspective.traceChecking"
-                  name="Trace Comparison">
-            </perspective>
-      </extension>
-      <extension
-            point="org.eclipse.ui.menus">
-            <menuContribution
-                  allPopups="false"
-                  locationURI="menu:org.eclipse.ui.main.menu">
-                  <menu label="Tregression">
-                        <command
-                              commandId="tregression.command.evaluateTrial"
-                              icon="icons/evaluation.png"
-                              label="Trial"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.command.evaluateTestCase"
-                              icon="icons/evaluation.png"
-                              label="Test Case"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.command.evaluateAll"
-                              icon="icons/evaluation.png"
-                              label="Evaluate All"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.command.runSeparateVersions"
-                              icon="icons/trace_comparison.png"
-                              label="Run for Separate Versions"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.command.runAllDefects4jProjects"
-                              label="Run All Defects4j Projects"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.command.runAllMutationProjects"
-                              label="Run All Mutation Projects"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.command.retrieveRegression"
-                              label="Retrieve the Bug from DB"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.command.retrieveAllDefect4jRegression"
-                              label="Retrieve All Defect4j Regressions"
-                              style="push">
-                        </command>
-                  </menu>
-                  <menu
-                        label="Trace Agent">
-                        <command
-                              commandId="traceagent.command.runAllDefects4jBugs"
-                              label="Run All Defects4j"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="traceagent.command.runSingleDefects4jBugs"
-                              label="Run Single Testcase"
-                              style="push">
-                        </command>
-                  </menu>
-            </menuContribution>
-            <menuContribution
-                  allPopups="false"
-                  locationURI="toolbar:org.eclipse.ui.main.toolbar">
-                  <toolbar
-                        id="tregression.toolbar">
-                        <command
-                              commandId="tregression.command.runSeparateVersions"
-                              icon="icons/trace_comparison.png"
-                              label="Run for Separate Versions"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.command.retrieveRegression"
-                              icon="icons/recover.png"
-                              label="Recover Trace"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.command.localizationPlayer"
-                              icon="icons/play.png"
-                              label="Show Regression Localization"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.debugpilot"
-                              icon="icons/play_debug_pilot.png"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.stopdebugpilot"
-                              icon="icons/stop_debug_pilot_button.png"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.collectDefects4jData"
-                              icon="icons/evaluation.png"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.exampleSearchingExperiment"
-                              icon="icons/engineering.png"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.incontextLearning"
-                              icon="icons/recover.png"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.RecovSlicingEval"
-                              icon="icons/slice.png"
-                              style="push">
-                        </command>
-                        <command
-                              commandId="tregression.LabelGT"
-                              icon="icons/after.ico"
-                              style="push">
-                        </command>
-                  </toolbar>
-            </menuContribution>
-      </extension>
-      <extension
-            point="org.eclipse.ui.editors">
-            <editor
-                  class="tregression.editors.CompareEditor"
-                  default="false"
-                  extensions=".java"
-                  icon="icons/compare.png"
-                  id="tregression.editor.compare"
-                  name="Compare">
-            </editor>
-      </extension>
-      <extension
-            point="org.eclipse.ui.editors.documentProviders">
-            <provider
-                  class="org.eclipse.ui.editors.text.TextFileDocumentProvider"
-                  id="org.eclipse.ui.editors.text.StorageDocumentProvider"
-                  inputTypes="org.eclipse.ui.IStorageEditorInput">
-            </provider>
-      </extension>
-      <extension
-            point="org.eclipse.ui.preferencePages">
-            <page
-                  class="tregression.preference.TregressionPreference"
-                  id="tregression.preference"
-                  name="Tregression (Defects4j)">
-            </page>
-      </extension>
+  <!-- Original -->
+  <extension
+    point="org.eclipse.ui.commands">
+    <command
+      defaultHandler="tregression.handler.EvaluationTrialHandler"
+      id="tregression.command.evaluateTrial"
+      name="Run Regression for Trial">
+    </command>
+    <command
+      defaultHandler="tregression.handler.EvaluationTestCaseHandler"
+      id="tregression.command.evaluateTestCase"
+      name="Run Regression for Test Case">
+    </command>
+    <command
+      defaultHandler="tregression.handler.PlayRegressionLocalizationHandler"
+      id="tregression.command.localizationPlayer"
+      name="Play The Process of Regression Localization">
+    </command>
+    <command
+      defaultHandler="tregression.handler.EvaluationAllHandler"
+      id="tregression.command.evaluateAll"
+      name="Run Regression for All">
+    </command>
+    <command
+      defaultHandler="tregression.handler.SeparateVersionHandler"
+      id="tregression.command.runSeparateVersions"
+      name="Run for Separate Versions">
+    </command>
+    <command
+      defaultHandler="tregression.handler.AllDefects4jHandler"
+      id="tregression.command.runAllDefects4jProjects"
+      name="Run All Defects4j Projects">
+    </command>
+    <command
+      defaultHandler="tregression.handler.AllMutationHandler"
+      id="tregression.command.runAllMutationProjects"
+      name="Run All Mutation Projects">
+    </command>
+    <command
+      defaultHandler="tregression.handler.RegressionRetrieveHandler"
+      id="tregression.command.retrieveRegression"
+      name="Retrieve the Bug from exec file">
+    </command>
+    <command
+      defaultHandler="tregression.handler.RetrieveAllDefect4jRegressionsHandler"
+      id="tregression.command.retrieveAllDefect4jRegression"
+      name="Retrieve All Defect4j Regressions">
+    </command>
+    <command
+      defaultHandler="traceagent.handler.RunAllDefects4jHandler"
+      id="traceagent.command.runAllDefects4jBugs"
+      name="Run All Defect4j Bugs">
+    </command>
+    <command
+      defaultHandler="traceagent.handler.RunSingleTestcaseHandler"
+      id="traceagent.command.runSingleDefects4jBugs"
+      name="Run Single Defect4j Bug">
+    </command>
+    <command
+      defaultHandler="tregression.handler.DataCollectionHandler"
+      id="tregression.collectdata"
+      name="Collect Data">
+    </command>
+    <command
+      defaultHandler="tregression.handler.TestingHandler"
+      id="tregression.testingTregression"
+      name="Testing Tregression">
+    </command>
+    <command
+      defaultHandler="tregression.handler.DSDebuggingHandler"
+      id="tregression.dynamicslicing"
+      name="Run Dyanmic Slicing">
+    </command>
+    <command
+      defaultHandler="tregression.handler.MutationDatasetHandler"
+      id="tregression.mutate"
+      name="Mutate Target Project">
+    </command>
+    <command
+      defaultHandler="tregression.handler.DebugPilotTHandler"
+      id="tregression.debugpilot"
+      name="Debug Pilot">
+    </command>
+    <command
+      defaultHandler="tregression.handler.Defects4jCollectionHandler"
+      id="tregression.collectDefects4jData"
+      name="Collect Defects4j Data">
+    </command>
+    <command
+      defaultHandler="tregression.handler.MutationRunnerHandler"
+      id="tregression.collectMutationDatasetData"
+      name="Collect Mutation Dataset Data">
+    </command>
+    <command
+      defaultHandler="tregression.handler.Defects4jAutoDebugHandler"
+      id="tregression.defects4jautodebug"
+      name="Auto Debug Defects4j">
+    </command>
+    <command
+      defaultHandler="tregression.handler.IOSelectionHandler"
+      id="tregression.selectIO"
+      name="Select IO">
+    </command>
+    <command
+      defaultHandler="tregression.handler.TrainModelHandler"
+      id="tregression.trainmodel"
+      name="Train Model">
+    </command>
+    <command
+      defaultHandler="tregression.handler.StopDebugPilotTHandler"
+      id="tregression.stopdebugpilot"
+      name="Stop Debug Pilot">
+    </command>
+    <command
+      defaultHandler="tregression.handler.Defects4jAutoProfInferHandler"
+      id="tregression.autoprobinfer"
+      name="Run ProbInfer Debug">
+    </command>
+    <command
+      defaultHandler="tregression.handler.Defects4jAutoDebugMistakeHandler"
+      id="tregression.defects4jautodebug_debugpilot_mistake"
+      name="Defects4j Auto Debug Mistake">
+    </command>
+    <command
+      defaultHandler="tregression.handler.Defects4jAutoMicrobatHandler"
+      id="tregression.defects4jautodebug_microbat"
+      name="Auto Debug Microbat">
+    </command>
+    <command
+      defaultHandler="tregression.handler.SimulatorHandler"
+      id="tregression.simulate"
+      name="Simulate Experiment">
+    </command>
+    <command
+      defaultHandler="tregression.handler.AutoPromptEngineeringHandler"
+      id="tregression.autoPromptEngineering"
+      name="Auto Prompt Engineering">
+    </command>
+    <command
+      defaultHandler="tregression.handler.ExampleSearchingExperimentHandler"
+      id="tregression.exampleSearchingExperiment"
+      name="Example Searching Experiment">
+    </command>
+    <command
+      defaultHandler="tregression.handler.RunGPTInContextLearningHandler"
+      id="tregression.incontextLearning"
+      name="In Context Learning Example">
+    </command>
+    <command
+      defaultHandler="tregression.handler.RecovSlicingEvalHandler"
+      id="tregression.RecovSlicingEval"
+      name="Recov Slicing Evaluation">
+    </command>
+    <command
+      defaultHandler="tregression.handler.LabelGTHandler"
+      id="tregression.LabelGT"
+      name="Label GT">
+    </command>
+  </extension>
+  <extension
+    point="org.eclipse.ui.views">
+    <category
+      id="tregression.category"
+      name="Tregression">
+    </category>
+    <view
+      category="tregression.category"
+      class="tregression.views.CorrectTraceView"
+      icon="icons/check_mark.png"
+      id="tregression.evalView.correctTraceView"
+      name="Correct Trace"
+      restorable="true">
+    </view>
+    <view
+      category="tregression.category"
+      class="tregression.views.BuggyTraceView"
+      icon="icons/cross_mark.png"
+      id="tregression.evalView.buggyTraceView"
+      name="Buggy Trace"
+      restorable="true">
+    </view>
+    <view
+      category="tregression.category"
+      class="tregression.views.StepPropertyView"
+      icon="icons/property.png"
+      id="tregression.view.stepProperty"
+      name="Step Properties"
+      restorable="true">
+    </view>
+  </extension>
+  <extension
+    point="org.eclipse.ui.perspectives">
+    <perspective
+      class="tregression.perspectives.TraceComparisonPerspective"
+      icon="icons/trace_comparison.png"
+      id="tregression.perspective.traceChecking"
+      name="Trace Comparison">
+    </perspective>
+  </extension>
+  <extension
+    point="org.eclipse.ui.menus">
+    <menuContribution
+      allPopups="false"
+      locationURI="menu:org.eclipse.ui.main.menu">
+      <menu label="Tregression">
+        <command
+          commandId="tregression.command.evaluateTrial"
+          icon="icons/evaluation.png"
+          label="Trial"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.command.evaluateTestCase"
+          icon="icons/evaluation.png"
+          label="Test Case"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.command.evaluateAll"
+          icon="icons/evaluation.png"
+          label="Evaluate All"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.command.runSeparateVersions"
+          icon="icons/trace_comparison.png"
+          label="Run for Separate Versions"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.command.runAllDefects4jProjects"
+          label="Run All Defects4j Projects"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.command.runAllMutationProjects"
+          label="Run All Mutation Projects"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.command.retrieveRegression"
+          label="Retrieve the Bug from DB"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.command.retrieveAllDefect4jRegression"
+          label="Retrieve All Defect4j Regressions"
+          style="push">
+        </command>
+
+        <command
+          commandId="tregression.command.rungptincontextlearning"
+          label="Run GPT In Context Learning"
+          style="push">
+        </command>
+      </menu>
+      <menu
+        label="Trace Agent">
+        <command
+          commandId="traceagent.command.runAllDefects4jBugs"
+          label="Run All Defects4j"
+          style="push">
+        </command>
+        <command
+          commandId="traceagent.command.runSingleDefects4jBugs"
+          label="Run Single Testcase"
+          style="push">
+        </command>
+      </menu>
+    </menuContribution>
+    <menuContribution
+      allPopups="false"
+      locationURI="toolbar:org.eclipse.ui.main.toolbar">
+      <toolbar
+        id="tregression.toolbar">
+        <command
+          commandId="tregression.command.runSeparateVersions"
+          icon="icons/trace_comparison.png"
+          label="Run for Separate Versions"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.command.retrieveRegression"
+          icon="icons/recover.png"
+          label="Recover Trace"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.command.localizationPlayer"
+          icon="icons/play.png"
+          label="Show Regression Localization"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.debugpilot"
+          icon="icons/play_debug_pilot.png"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.stopdebugpilot"
+          icon="icons/stop_debug_pilot_button.png"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.collectDefects4jData"
+          icon="icons/evaluation.png"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.exampleSearchingExperiment"
+          icon="icons/engineering.png"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.incontextLearning"
+          icon="icons/recover.png"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.RecovSlicingEval"
+          icon="icons/slice.png"
+          style="push">
+        </command>
+        <command
+          commandId="tregression.LabelGT"
+          icon="icons/after.ico"
+          style="push">
+        </command>
+      </toolbar>
+    </menuContribution>
+  </extension>
+  <extension
+    point="org.eclipse.ui.editors">
+    <editor
+      class="tregression.editors.CompareEditor"
+      default="false"
+      extensions=".java"
+      icon="icons/compare.png"
+      id="tregression.editor.compare"
+      name="Compare">
+    </editor>
+  </extension>
+  <extension
+    point="org.eclipse.ui.editors.documentProviders">
+    <provider
+      class="org.eclipse.ui.editors.text.TextFileDocumentProvider"
+      id="org.eclipse.ui.editors.text.StorageDocumentProvider"
+      inputTypes="org.eclipse.ui.IStorageEditorInput">
+    </provider>
+  </extension>
+  <extension
+    point="org.eclipse.ui.preferencePages">
+    <page
+      class="tregression.preference.TregressionPreference"
+      id="tregression.preference"
+      name="Tregression (Defects4j)">
+    </page>
+  </extension>
+
+  <!-- microbat -->
+  <extension
+    point="org.eclipse.ui.views">
+    <category
+      id="microbat.category"
+      name="MicroBat">
+    </category>
+    <view
+      category="microbat.category"
+      class="microbat.views.DebugFeedbackView"
+      icon="icons/feedback.png"
+      id="microbat.view.debugFeedback"
+      name="Debug Feedback"
+      restorable="true">
+    </view>
+    <view
+      category="microbat.category"
+      class="microbat.views.TraceView"
+      icon="icons/trace.png"
+      id="microbat.view.trace"
+      name="Trace"
+      restorable="true">
+    </view>
+    <view
+      category="microbat.category"
+      class="microbat.views.ConcurrentTraceView"
+      icon="icons/trace.png"
+      id="microbat.view.concurrentTrace"
+      name="Concurrent Trace"
+      restorable="true">
+    </view>
+    <view
+      category="microbat.category"
+      class="microbat.views.ReasonView"
+      icon="icons/navigation_history.png"
+      id="microbat.view.reason"
+      name="Recommending Reason"
+      restorable="true">
+    </view>
+    <view
+      category="microbat.category"
+      class="microbat.views.PathView"
+      icon="icons/path_mark.png"
+      id="microbat.evalView.pathView"
+      name="Debugging Plan"
+      restorable="true">
+    </view>
+    <category
+      id="microbat.evalCategory"
+      name="Evaluation">
+    </category>
+    <view
+      category="microbat.evalCategory"
+      class="microbat.evaluation.views.BeforeTraceView"
+      icon="icons/before.png"
+      id="microbat.evalView.beforeTraceView"
+      name="Before Trace"
+      restorable="true">
+    </view>
+    <view
+      category="microbat.evalCategory"
+      class="microbat.evaluation.views.AfterTraceView"
+      icon="icons/after.ico"
+      id="microbat.evalView.afterTraceView"
+      name="After Trace"
+      restorable="true">
+    </view>
+    <view
+      category="microbat.category"
+      class="microbat.views.DebugPilotFeedbackView"
+      icon="icons/feedback.png"
+      id="microbat.view.debugPilotFeedback"
+      name="DebugPilot Feedback"
+      restorable="true">
+    </view>
+  </extension>
+  <extension
+    point="org.eclipse.ui.perspectives">
+    <perspective
+      class="microbat.perspectives.MicroBatPerspective"
+      icon="icons/microbat.png"
+      id="microbat.perspectives.MicroBatPerspective"
+      name="MicroBat">
+    </perspective>
+    <perspective
+      class="microbat.perspectives.ConcurrentPerspective"
+      icon="icons/concurrency.png"
+      id="microbat.perspectives.ConcurrentPerspective"
+      name="Concurrent">
+    </perspective>
+    <perspective
+      class="microbat.perspectives.DebugPilotPerspective"
+      icon="icons/play_debug_pilot.png"
+      id="microbat.debugpilotperspective"
+      name="DebugPilot">
+    </perspective>
+  </extension>
+  <extension
+    point="org.eclipse.ui.commands">
+    <command
+      defaultHandler="microbat.handler.StartDebugHandler"
+      id="microbat.command.startDebug"
+      name="Start Debugging">
+    </command>
+    <command
+      defaultHandler="microbat.evaluation.handler.EvaluationAllHandler"
+      id="microbat.command.evaluateAll"
+      name="Run Evaluation for All">
+    </command>
+    <command
+      defaultHandler="microbat.handler.UndoHandler"
+      id="microbat.command.undo"
+      name="Undo">
+    </command>
+    <command
+      defaultHandler="microbat.handler.SearchStepForwardHandler"
+      id="microbat.command.searchStepForward"
+      name="Search Step Forward">
+    </command>
+    <command
+      defaultHandler="microbat.handler.SearchStepBackwardHandler"
+      id="microbat.command.searchStepBackward"
+      name="Search Step Backward">
+    </command>
+    <command
+      defaultHandler="microbat.evaluation.handler.EvaluationTestCaseHandler"
+      id="microbat.command.evaluationTestCase"
+      name="Run Evaluation for Test Case">
+    </command>
+    <command
+      defaultHandler="microbat.evaluation.handler.EvaluationTrialHandler"
+      id="microbat.command.evaluateTrial"
+      name="Run Evaluation for Trial">
+    </command>
+    <command
+      defaultHandler="microbat.test.handler.RunTestHandler"
+      id="microbat.command.runTest"
+      name="Run Test">
+    </command>
+    <command
+      defaultHandler="microbat.handler.TransformLibHandler"
+      id="microbat.command.transformRTJar"
+      name="Transform JDK Library">
+    </command>
+    <command
+      defaultHandler="microbat.handler.StoreTraceHandler"
+      id="microbat.command.StoreTrace"
+      name="Store Trace">
+    </command>
+    <command
+      defaultHandler="microbat.handler.TraceRestoreHandler"
+      id="microbat.command.RestoreTrace"
+      name="Restore Trace">
+    </command>
+    <command
+      defaultHandler="microbat.handler.TestHandler"
+      id="microbat.testing"
+      name="Testing Microbat">
+    </command>
+    <command
+      defaultHandler="microbat.handler.DebugPilotHandler"
+      id="microbat.debugpilot"
+      name="Debug Pilot">
+    </command>
+    <command
+      defaultHandler="microbat.handler.StopDebugPilotHandler"
+      id="microbat.stopdebugpilot"
+      name="Stop Debug Pilot">
+    </command>
+    <command
+      defaultHandler="microbat.handler.GenerateTraceHandler"
+      id="microbat.generateTraceCommand"
+      name="Debug As DebugPilot">
+    </command>
+    <command
+      defaultHandler="microbat.handler.RecovAllDependencyHandler"
+      id="microbat.allDependencyRecovery"
+      name="Recover All Data Dependency">
+    </command>
+  </extension>
+  <extension
+    point="org.eclipse.ui.menus">
+    <menuContribution
+      allPopups="false"
+      locationURI="menu:org.eclipse.ui.main.menu">
+      <menu
+        label="MicroBat">
+        <command
+          commandId="microbat.command.startDebug"
+          icon="icons/microbat.png"
+          label="Start Debug"
+          style="push">
+        </command>
+        <command
+          commandId="microbat.command.undo"
+          icon="icons/undo.png"
+          label="Undo Your Debug Operation"
+          style="push">
+        </command>
+        <menu
+          label="Run Evaluation">
+          <command
+            commandId="microbat.command.evaluateAll"
+            icon="icons/evaluation.png"
+            label="All"
+            style="push">
+          </command>
+          <command
+            commandId="microbat.command.evaluationTestCase"
+            icon="icons/evaluation.png"
+            label="Test Case"
+            style="push">
+          </command>
+          <command
+            commandId="microbat.command.evaluateTrial"
+            icon="icons/evaluation.png"
+            label="Trial"
+            style="push">
+          </command>
+        </menu>
+        <command
+          commandId="microbat.command.runTest"
+          icon="icons/evaluation.png"
+          label="Run Test"
+          style="push">
+        </command>
+        <command
+          commandId="microbat.command.transformRTJar"
+          label="Transform JDK Library"
+          style="push">
+        </command>
+        <command
+          commandId="microbat.command.StoreTrace"
+          label="Store Trace"
+          style="push">
+        </command>
+        <command
+          commandId="microbat.command.RestoreTrace"
+          label="Restore Trace"
+          style="push">
+        </command>
+      </menu>
+    </menuContribution>
+    <menuContribution
+      allPopups="false"
+      locationURI="toolbar:org.eclipse.ui.main.toolbar">
+      <toolbar
+        id="microbat.toolbar.startDebug">
+        <command
+          commandId="microbat.command.startDebug"
+          icon="icons/microbat.png"
+          label="Start Debug"
+          style="push">
+        </command>
+      </toolbar>
+      <toolbar
+        id="microbat.toolbar.allDependencyRecovery">
+        <command
+          commandId="microbat.allDependencyRecovery"
+          icon="icons/path_mark.png"
+          label="Recover All Data Dependency"
+          style="push">
+        </command>
+      </toolbar>
+    </menuContribution>
+    <menuContribution
+      allPopups="false"
+      locationURI="toolbar:org.eclipse.ui.main.toolbar">
+      <toolbar
+        id="microbat.toolbar.undo">
+        <command
+          commandId="microbat.command.undo"
+          icon="icons/undo.png"
+          label="Undo Your Debug Operation"
+          style="push"
+          tooltip="undo your previous debugging operation">
+        </command>
+      </toolbar>
+    </menuContribution>
+    <menuContribution
+      allPopups="false"
+      locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
+      <command
+        commandId="microbat.command.searchStepBackward"
+        icon="icons/up.png"
+        label="Search Step Backward"
+        style="push"
+        tooltip="search the nearest trace step with regard to current step">
+      </command>
+    </menuContribution>
+    <menuContribution
+      allPopups="false"
+      locationURI="popup:#AbstractTextEditorRulerContext?after=additions">
+      <command
+        commandId="microbat.command.searchStepForward"
+        icon="icons/down.png"
+        label="Search Step Forward"
+        style="push"
+        tooltip="search the nearest trace step with regard to current step">
+      </command>
+    </menuContribution>
+    <menuContribution
+      locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+      <menu
+        id="microbat.menus.sampleMenu"
+        label="Sample Menu"
+        mnemonic="M">
+        <command
+          commandId="microbat.commands.sampleCommand"
+          id="microbat.menus.sampleCommand"
+          mnemonic="S">
+        </command>
+      </menu>
+    </menuContribution>
+    <menuContribution
+      locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+      <toolbar
+        id="microbat.toolbars.sampleToolbar">
+        <command
+          commandId="microbat.commands.sampleCommand"
+          icon="icons/sample.png"
+          id="microbat.toolbars.sampleCommand"
+          tooltip="Say hello world">
+        </command>
+      </toolbar>
+    </menuContribution>
+    <menuContribution
+      locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+      <menu
+        id="microbat.menus.sampleMenu"
+        label="Sample Menu"
+        mnemonic="M">
+        <command
+          commandId="microbat.commands.sampleCommand"
+          id="microbat.menus.sampleCommand"
+          mnemonic="S">
+        </command>
+      </menu>
+    </menuContribution>
+    <menuContribution
+      locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+      <toolbar
+        id="microbat.toolbars.sampleToolbar">
+        <command
+          commandId="microbat.commands.sampleCommand"
+          icon="icons/sample.png"
+          id="microbat.toolbars.sampleCommand"
+          tooltip="Say hello world">
+        </command>
+      </toolbar>
+    </menuContribution>
+    <menuContribution
+      locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+      <menu
+        id="microbat.menus.sampleMenu"
+        label="Sample Menu"
+        mnemonic="M">
+        <command
+          commandId="microbat.commands.sampleCommand"
+          id="microbat.menus.sampleCommand"
+          mnemonic="S">
+        </command>
+      </menu>
+    </menuContribution>
+    <menuContribution
+      locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+      <toolbar
+        id="microbat.toolbars.sampleToolbar">
+        <command
+          commandId="microbat.commands.sampleCommand"
+          icon="icons/sample.png"
+          id="microbat.toolbars.sampleCommand"
+          tooltip="Say hello world">
+        </command>
+      </toolbar>
+    </menuContribution>
+    <menuContribution
+      allPopups="false"
+      locationURI="popup:org.eclipse.ui.popup.any">
+      <command
+        commandId="microbat.generateTraceCommand"
+        icon="icons/microbat.png"
+        style="push">
+      </command>
+    </menuContribution>
+  </extension>
+  <extension
+    point="org.eclipse.ui.editors.markerAnnotationSpecification">
+    <specification
+      annotationImageProvider="microbat.views.StepImageProvider"
+      annotationType="microbat.specification.step"
+      colorPreferenceKey="inspected_step_color"
+      colorPreferenceValue="127,255,212"
+      contributesToHeader="true"
+      highlightPreferenceKey="inspected_step_highlight"
+      highlightPreferenceValue="true"
+      includeOnPreferencePage="true"
+      label="StepAnnotation"
+      overviewRulerPreferenceKey="inspected_step_overview"
+      overviewRulerPreferenceValue="true"
+      textPreferenceKey="inspected_step_text"
+      textPreferenceValue="true"
+      verticalRulerPreferenceKey="inspected_step_vertical"
+      verticalRulerPreferenceValue="false">
+    </specification>
+  </extension>
+  <extension
+    point="org.eclipse.ui.preferencePages">
+    <page
+      class="microbat.preference.MicrobatPreference"
+      id="microbat.preference"
+      name="Microbat Debugging">
+    </page>
+    <page
+      category="microbat.preference"
+      class="microbat.preference.DatabasePreference"
+      id="microbat.preference.database"
+      name="Database">
+    </page>
+    <page
+      category="microbat.preference"
+      class="microbat.preference.AnalysisScopePreference"
+      id="microbat.preference.analysisScope"
+      name="Analysis Scope">
+    </page>
+    <page
+      category="microbat.preference"
+      class="microbat.preference.ExecutionRangePreference"
+      id="microbat.preference.executionRange"
+      name="Execution Range">
+    </page>
+    <page
+      category="microbat.preference"
+      class="microbat.preference.DebugPilotPreference"
+      id="microbat.preference.debugpilot"
+      name="Debug Pilot Setting">
+    </page>
+    <page
+      category="microbat.preference"
+      class="microbat.preference.TraceRecovPreference"
+      id="microbat.preference.tracerecov"
+      name="Trace Recov Setting">
+    </page>
+  </extension>
+  <extension
+    point="org.eclipse.ui.editors.annotationTypes">
+    <type
+      name="microbat.specification.step">
+    </type>
+  </extension>
+  <extension
+    point="org.eclipse.ui.preferencePages">
+  </extension>
+
+
+  <extension
+    point="org.eclipse.ui.commands">
+    <command
+      defaultHandler="tregression.handler.RunGPTInContextLearningHandler"
+      id="tregression.command.rungptincontextlearning"
+      name="Run GPT In Context Learning">
+    </command>
+  </extension>
 
 </plugin>
