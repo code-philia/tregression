@@ -7,10 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import microbat.Activator;
 import microbat.model.trace.Trace;
 import microbat.preference.AnalysisScopePreference;
-import microbat.preference.TraceRecovPreference;
 import microbat.recommendation.DebugState;
 import microbat.recommendation.UserFeedback;
 import microbat.util.Settings;

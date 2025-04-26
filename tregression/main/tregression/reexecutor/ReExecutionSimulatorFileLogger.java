@@ -17,7 +17,7 @@ import microbat.codeanalysis.runtime.Condition;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.VarValue;
-import microbat.preference.TraceRecovPreference;
+import microbat.preference.RecovSlicingPreference;
 import microbat.tracerecov.TraceRecovUtils;
 import microbat.tracerecov.varskeleton.VarSkeletonBuilder;
 import microbat.tracerecov.varskeleton.VariableSkeleton;
@@ -28,7 +28,7 @@ public class ReExecutionSimulatorFileLogger {
 	
 	public ReExecutionSimulatorFileLogger() {
         String aliasFileName = "aliases.txt";
-        this.aliasFilePath = Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.VAR_EXPAND_FILE_PATH)
+        this.aliasFilePath = Activator.getDefault().getPreferenceStore().getString(RecovSlicingPreference.INCONTEXT_FILE_PATH)
                 + File.separator + aliasFileName;
 	}
 	

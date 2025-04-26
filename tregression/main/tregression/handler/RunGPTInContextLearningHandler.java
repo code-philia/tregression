@@ -11,7 +11,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.slf4j.Logger;
 
-import microbat.incontextlearning.InContextLearning.InContextLearningType;
+import microbat.tracerecov.autoprompt.incontextlearning.InContextLearning.InContextLearningType;
 import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
 import tregression.incontextlearning.InContextLearningImpl;
 
@@ -24,17 +24,20 @@ public class RunGPTInContextLearningHandler extends AbstractHandler {
             @Override
             protected IStatus run(IProgressMonitor monitor) {
                 try {
-                    String sampleCode = readResourceString("/run_sample/sample_code.java");
-                    String sampleImport = readResourceString("/run_sample/sample_import.java");
-                    int sampleLineIdx = Integer.parseInt(readResourceString("/run_sample/sample_idx.txt").trim());
+                    String sampleCode = readResourceString("../../resources/run_sample/sample_code.java");
+                    String sampleImport = readResourceString("../../resources/run_sample/sample_import.java");
+                    int sampleLineIdx = Integer.parseInt(readResourceString("../../resources/run_sample/sample_idx.txt").trim());
+                    String sampleTargetVar = readResourceString("../../resources/run_sample/sample_target_var.txt");
+                    String sampleTargetValue = readResourceString("../../resources/run_sample/sample_target_value.txt");
                     InContextLearningImpl learning = new InContextLearningImpl(true);
                     learning.setExecutionSimulator(ExecutionSimulatorFactory.getExecutionSimulator());
                     learning.executeInContextLearning(
                             sampleImport,
                             sampleCode,
                             sampleLineIdx,
-                            InContextLearningType.ALIAS_INFERENCE,
-                            InContextLearningImpl.defaultToString());
+                            sampleTargetVar,
+                            sampleTargetValue,
+                            InContextLearningType.ALIAS_INFERENCE, InContextLearningImpl.defaultToString());
                 } catch (Exception e) {
                     log.error("Failed to run GPT in context learning", e);
                     return Status.CANCEL_STATUS;

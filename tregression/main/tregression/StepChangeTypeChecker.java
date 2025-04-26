@@ -15,7 +15,7 @@ import microbat.model.value.VirtualValue;
 import microbat.model.variable.ArrayElementVar;
 import microbat.model.variable.Variable;
 import microbat.model.variable.VirtualVar;
-import microbat.preference.TraceRecovPreference;
+import microbat.preference.RecovSlicingPreference;
 import microbat.tracerecov.TraceRecovUtils;
 import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
@@ -73,7 +73,7 @@ public class StepChangeTypeChecker {
 			List<Pair<VarValue, VarValue>> wrongVariableList = 
 					checkWrongVariable(isOnBeforeTrace, step, matchedStep, pairList, matcher);
 			
-			if(Activator.getDefault().getPreferenceStore().getString(TraceRecovPreference.ENABLE_LLM) == "true") {
+			if(Activator.getDefault().getPreferenceStore().getString(RecovSlicingPreference.ENABLE_LLM).equals("true")) {
 				List<Pair<VarValue, VarValue>> expandedWrongVariableList = 
 						checkExpansion(wrongVariableList, buggyTrace, correctTrace, isOnBeforeTrace, matchedStep, step, pairList, matcher);
 				
@@ -148,23 +148,16 @@ public class StepChangeTypeChecker {
 				}
 
 				if (deadEndOnBothTraces || shouldExpandBasedOnChangeTypes || expandedEarier) {
-					ExecutionSimulator simulator;
-					boolean isCollectingPrompt = Activator.getDefault().getPreferenceStore()
-							.getString(TraceRecovPreference.COLLECT_PROMPT).equals("true");
-					if (isCollectingPrompt) {
-						simulator = new ExecutionSimulatorForPromptCollection();
-					} else {
-						simulator = ExecutionSimulatorFactory.getExecutionSimulator();
-					}
+					ExecutionSimulator simulator = ExecutionSimulatorFactory.getExecutionSimulator();
 
 					try {
-						String responseOnBuggy = simulator.expandVariable(readVar1, currentStep, null);
+						String responseOnBuggy = simulator.expandVariable(readVar1, currentStep, null, null);
 						readVar1.setExpanded(true);
 
 						String preValue = TraceRecovUtils.processInputStringForLLM(readVar1.getStringValue());
 						Pair<String, String> valueResponse = Pair.of(preValue, responseOnBuggy);
 
-						simulator.expandVariable(readVar2, matchedStep, valueResponse);
+						simulator.expandVariable(readVar2, matchedStep, valueResponse, null);
 						readVar2.setExpanded(true);
 						
 						List<Pair<VarValue, VarValue>> diffList = diffVarValue(isOnBeforeTrace, readVar1, readVar2, deadEndOnBothTraces);
