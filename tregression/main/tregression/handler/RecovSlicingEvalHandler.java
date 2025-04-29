@@ -139,9 +139,15 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 		JAVA_HOME = config.getJdkConfig().getJavaHome();
 		JAVA_HOME = ExecuteWithConfig.resolvePath(JAVA_HOME);
+		config.getJdkConfig().setJavaHome(JAVA_HOME);
+
 		javac = JAVA_HOME + File.separator + "bin" + File.separator + "javac";
 		sliceDatasetPath = config.getDatasetFolder();
 		sliceDatasetPath = ExecuteWithConfig.resolvePath(sliceDatasetPath);
+
+		String inContextLearningPath = config.getInContextLearningPath();
+		inContextLearningPath = ExecuteWithConfig.resolvePath(inContextLearningPath);
+		config.setInContextLearningPath(inContextLearningPath);
 
 		INSTRUMENTATION_JAR_PATH = MicroBatUtil.getAgentLib();
 
@@ -152,8 +158,11 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		enableAliasInfer = config.isEnableAliasInference();
 
 		boolean isGeneratedDataset = config.isGeneratedDataset();
-		boolean isMultiFile = sliceDatasetPath.contains("multi_files");
+		// boolean isMultiFile = sliceDatasetPath.contains("multi_files");
+		boolean isMultiFile = true;
 		isReexecution = config.isEnableReExecution();
+
+		config.setToGlobal();
 
 		String bugsToRun = "";
 
@@ -364,7 +373,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								}
 
 								// write result
-								System.out.println("writing results...");
+								// System.out.println("writing results...");
 								StringBuilder result = new StringBuilder();
 								if (isMultiFile) {
 									result.append(fileContainingCriterion + ",");
@@ -394,6 +403,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								try {
 									File resultFile = new File(sliceDatasetPath + File.separator
 											+ getResultFolderName() + File.separator + className + ".txt");
+									log.info("Writing result to: {}", resultFile.getAbsolutePath());
 									FileWriter resultWriter = new FileWriter(resultFile, true);
 									resultWriter.append(result.toString());
 									resultWriter.close();
