@@ -145,6 +145,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		sliceDatasetPath = config.getDatasetFolder();
 		sliceDatasetPath = ExecuteWithConfig.resolvePath(sliceDatasetPath);
 
+		config.setDumpGptPath(ExecuteWithConfig.resolvePath(config.getDumpGptPath()));
+
 		String inContextLearningPath = config.getInContextLearningPath();
 		inContextLearningPath = ExecuteWithConfig.resolvePath(inContextLearningPath);
 		config.setInContextLearningPath(inContextLearningPath);
@@ -581,7 +583,19 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			buildFolder.mkdir();
 		}
 		command.add(binPath);
-		command.add(folder.getPath() + File.separator + "*.java");
+
+		List<String> sourceFiles = new ArrayList<>();
+		for (File f: folder.listFiles()) {
+			if (f.isFile() && f.getName().endsWith(".java")) {
+				sourceFiles.add(f.getPath());
+			}
+		}
+
+		for(String sourceFile : sourceFiles) {
+			command.add(sourceFile);
+		}
+
+		// command.add(folder.getPath() + File.separator + "*.java");
 		runCommand(command);
 	}
 
@@ -612,12 +626,16 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 			}
 
 			if (exitCode != 0) {
-				System.out.println(readStderr.getOutput());
-				throw new CompilationFailureException("Command line failed: " + cmdline);
+				// System.out.println(readStderr.getOutput());
+				// throw new CompilationFailureException("Command line failed: " + cmdline);
+				String stdout = readStdout.getOutput();
+				String stderr = readStderr.getOutput();
+				log.error("Command line failed: {}. STDOUT: {}. STDERR: {}", cmdline, stdout, stderr);
 			}
 		} catch (IOException | InterruptedException e) {
 			String msg = "Failed to compile source file: " + cmdline.get(cmdline.size() -
 					1);
+			log.error(msg, e);
 			throw new RuntimeException(msg, e);
 		} finally {
 			executor.shutdown();
