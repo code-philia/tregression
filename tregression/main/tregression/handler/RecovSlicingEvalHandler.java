@@ -90,6 +90,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	public static final String RE_EXECUTION_FOLDER = "RQ1_re_execution";
 	public static final String DEPENDENCY_FILE = "dependencies.txt";
 	public static final String INFO_JSON_NAME = "info.json";
+	public static final String OUTPUT_ERROR_FILE = "output_error.md";
 
 	private String srcDirName;
 	private String binDirName;
@@ -99,6 +100,8 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	private AppJavaClassPath appClassPath;
 	private ExecutionSimulator executionSimulator;
 	private TraceRecoverer traceRecoverer;
+
+	private String outputFolderOverride;
 
 	private ExecuteWithConfig<TraceRecovRunConfig> executeWithConfig = new ExecuteWithConfig<>(
 			TraceRecovRunConfig.class, "Run Trace Recovery Slicing", this::executeCommand);
@@ -133,6 +136,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	private boolean isGuava;
 	private boolean enableIncontextLearning;
 	private boolean enableAliasInfer;
+	private Set<String> onlyRun;
 
 	private void executeCommand(TraceRecovRunConfig config) {
 		Gson gson = new Gson();
@@ -140,6 +144,16 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		JAVA_HOME = config.getJdkConfig().getJavaHome();
 		JAVA_HOME = ExecuteWithConfig.resolvePath(JAVA_HOME);
 		config.getJdkConfig().setJavaHome(JAVA_HOME);
+
+		outputFolderOverride = config.getResultFolderName();
+		if(config.getOnlyRun() == null) {
+			onlyRun = null;
+		} else {
+			onlyRun = new HashSet<>();
+			for(String s : config.getOnlyRun()) {
+				onlyRun.add(s);
+			}
+		}
 
 		javac = JAVA_HOME + File.separator + "bin" + File.separator + "javac";
 		sliceDatasetPath = config.getDatasetFolder();
@@ -237,12 +251,21 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 						}
 					}
 
+					String fileName = file.getName();
+
+					if(onlyRun != null && !onlyRun.contains(fileName)) {
+						continue;
+					}
+
 					if (idsToSkip.contains(id) || compilationErrors.contains(className)
 							|| runtimeErrors.contains(className) || processedFiles.contains(className)
 							|| (!classesToRun.isEmpty() && !classesToRun.contains(className))
 							|| classesToSkip.contains(className)) {
 						continue;
 					}
+
+					File errorFile = new File(sliceDatasetPath + File.separator
+							+ OUTPUT_ERROR_FILE);
 
 					try {
 						System.out.println("compiling " + file.getName() + " ...");
@@ -403,6 +426,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 								result.append(System.lineSeparator());
 
 								try {
+									File slicePathFolder = new File(sliceDatasetPath + File.separator
+											+ getResultFolderName());
+									slicePathFolder.mkdirs();
+
 									File resultFile = new File(sliceDatasetPath + File.separator
 											+ getResultFolderName() + File.separator + className + ".txt");
 									log.info("Writing result to: {}", resultFile.getAbsolutePath());
@@ -753,6 +780,10 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	}
 
 	private String getResultFolderName() {
+		if(outputFolderOverride != null) {
+			return outputFolderOverride;
+		}
+
 		if (isReexecution) {
 			return RE_EXECUTION_FOLDER;
 		}

@@ -330,18 +330,18 @@
           style="push">
         </command>
         <command
+          commandId="tregression.setbaseloc"
+          icon="icons/icon-1-folder.png"
+          style="push">
+        </command>
+        <command
           commandId="tregression.RecovSlicingEval"
-          icon="icons/slice.png"
+          icon="icons/icon-2-run.png"
           style="push">
         </command>
         <command
           commandId="tregression.testrunconfig"
           icon="icons/slice.png"
-          style="push">
-        </command>
-        <command
-          commandId="tregression.setbaseloc"
-          icon="icons/collect.png"
           style="push">
         </command>
         <command
