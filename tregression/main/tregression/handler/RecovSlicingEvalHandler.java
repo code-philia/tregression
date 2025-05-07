@@ -43,6 +43,7 @@ import microbat.model.value.VarValue;
 import microbat.preference.MicrobatPreference;
 import microbat.preference.RecovSlicingPreference;
 import microbat.runconfigs.ExecuteWithConfig;
+import microbat.runconfigs.ExecutionInfo;
 import microbat.runconfigs.TraceRecovRunConfig;
 import microbat.tracerecov.TraceRecoverer;
 import microbat.tracerecov.autoprompt.incontextlearning.CompilationFailureException;
@@ -138,31 +139,37 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	private boolean enableAliasInfer;
 	private Set<String> onlyRun;
 
-	private void executeCommand(TraceRecovRunConfig config) {
+	private void executeCommand(ExecutionInfo<TraceRecovRunConfig> exeinfo) {
+		new RecovSlicingEvalRunner().execute(exeinfo);
+	}
+
+	private void executeCommand2(ExecutionInfo<TraceRecovRunConfig> exeinfo) {
+		TraceRecovRunConfig config = exeinfo.getConfig();
+
 		Gson gson = new Gson();
 
 		JAVA_HOME = config.getJdkConfig().getJavaHome();
-		JAVA_HOME = ExecuteWithConfig.resolvePath(JAVA_HOME);
+		JAVA_HOME = exeinfo.resolvePath(JAVA_HOME);
 		config.getJdkConfig().setJavaHome(JAVA_HOME);
 
 		outputFolderOverride = config.getResultFolderName();
-		if(config.getOnlyRun() == null) {
+		if (config.getOnlyRun() == null) {
 			onlyRun = null;
 		} else {
 			onlyRun = new HashSet<>();
-			for(String s : config.getOnlyRun()) {
+			for (String s : config.getOnlyRun()) {
 				onlyRun.add(s);
 			}
 		}
 
 		javac = JAVA_HOME + File.separator + "bin" + File.separator + "javac";
 		sliceDatasetPath = config.getDatasetFolder();
-		sliceDatasetPath = ExecuteWithConfig.resolvePath(sliceDatasetPath);
+		sliceDatasetPath = exeinfo.resolvePath(sliceDatasetPath);
 
-		config.setDumpGptPath(ExecuteWithConfig.resolvePath(config.getDumpGptPath()));
+		config.setDumpGptPath(exeinfo.resolvePath(config.getDumpGptPath()));
 
 		String inContextLearningPath = config.getInContextLearningPath();
-		inContextLearningPath = ExecuteWithConfig.resolvePath(inContextLearningPath);
+		inContextLearningPath = exeinfo.resolvePath(inContextLearningPath);
 		config.setInContextLearningPath(inContextLearningPath);
 
 		INSTRUMENTATION_JAR_PATH = MicroBatUtil.getAgentLib();
@@ -253,7 +260,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 
 					String fileName = file.getName();
 
-					if(onlyRun != null && !onlyRun.contains(fileName)) {
+					if (onlyRun != null && !onlyRun.contains(fileName)) {
 						continue;
 					}
 
@@ -612,13 +619,13 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 		command.add(binPath);
 
 		List<String> sourceFiles = new ArrayList<>();
-		for (File f: folder.listFiles()) {
+		for (File f : folder.listFiles()) {
 			if (f.isFile() && f.getName().endsWith(".java")) {
 				sourceFiles.add(f.getPath());
 			}
 		}
 
-		for(String sourceFile : sourceFiles) {
+		for (String sourceFile : sourceFiles) {
 			command.add(sourceFile);
 		}
 
@@ -780,7 +787,7 @@ public class RecovSlicingEvalHandler extends AbstractHandler {
 	}
 
 	private String getResultFolderName() {
-		if(outputFolderOverride != null) {
+		if (outputFolderOverride != null) {
 			return outputFolderOverride;
 		}
 
