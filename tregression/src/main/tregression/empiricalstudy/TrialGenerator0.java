@@ -4,9 +4,22 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.Stack;
 
+import microbat.codeanalysis.runtime.InstrumentationExecutor;
+import microbat.handler.CancelThread;
+import microbat.instrumentation.instr.aggreplay.TimeoutThread;
+import microbat.instrumentation.output.RunningInfo;
+import microbat.model.trace.ConcurrentTrace;
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.preference.AnalysisScopePreference;
@@ -22,11 +35,16 @@ import tregression.empiricalstudy.solutionpattern.PatternIdentifier;
 import tregression.io.RegressionRecorder;
 import tregression.model.PairList;
 import tregression.model.StepOperationTuple;
+import tregression.model.TraceNodePair;
 import tregression.separatesnapshots.AppClassPathInitializer;
+import tregression.separatesnapshots.BuggyRnRTraceCollector;
+import tregression.separatesnapshots.BuggyTraceCollector;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.separatesnapshots.RunningResult;
 import tregression.separatesnapshots.TraceCollector0;
 import tregression.tracematch.ControlPathBasedTraceMatcher;
+import tregression.util.ConcurrentTraceMatcher;
+import tregression.views.ConcurrentVisualiser;
 import tregression.views.Visualizer;
 
 public class TrialGenerator0 {
@@ -38,13 +56,21 @@ public class TrialGenerator0 {
 	public static final int OVER_LONG_INSTRUMENTATION_METHOD = 5;
 	public static final int EXPECTED_STEP_NOT_MET = 6;
 	public static final int UNDETERMINISTIC = 7;
+	public static final int NOT_MULTI_THREAD = 8;
+	public static final int NO_TRACE = 9;
 
 	private RunningResult cachedBuggyRS;
 	private RunningResult cachedCorrectRS;
 
 	private DiffMatcher cachedDiffMatcher;
 	private PairList cachedPairList;
-
+	private List<PairList> cachedPairLists;
+	private CancelThread cancelThread = null;
+	
+	public void setCancelThread(CancelThread cThread) {
+		this.cancelThread = cThread;
+	}
+	
 	public static String getProblemType(int type) {
 		switch (type) {
 		case OVER_LONG:
@@ -61,11 +87,128 @@ public class TrialGenerator0 {
 			return "expected steps are not met";
 		case UNDETERMINISTIC:
 			return "this is undeterministic testcase";
+		case NOT_MULTI_THREAD:
+			return "this is not multi threaded";
+		case NO_TRACE:
+			return "main trace has no recording";
 		default:
 			break;
 		}
 		return "I don't know";
 	}
+	
+
+	public List<EmpiricalTrial> findConcurrent(String buggyPath, String fixPath, boolean isReuse, boolean useSliceBreaker,
+			boolean enableRandom, int breakLimit, boolean requireVisualization, ProjectConfig config, String testcase) {
+		List<TestCase> tcList;
+		EmpiricalTrial trial = null;
+		TestCase workingTC = null;
+		LinkedList<EmpiricalTrial> result = new LinkedList<>();
+		try {
+			tcList = retrieveD4jFailingTestCase(buggyPath);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return new LinkedList<>();
+		}
+		
+		if(testcase!=null){
+			tcList = filterSpecificTestCase(testcase, tcList);
+		}
+		
+		for (TestCase tc : tcList) {
+			if (cancelThread != null && cancelThread.stopped) break;
+			System.out.println("#####working on test case " + tc.testClass + "#" + tc.testMethod);
+			workingTC = tc;
+			SingleTimer timer = SingleTimer.start("generateTrial");
+
+			List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
+			List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
+			try {	
+				InstrumentationExecutor executor = TraceCollector0.generateExecutor(buggyPath, tc, config, true, includedClassNames, excludedClassNames, true);
+				executor.runPrecheck(null, Settings.stepLimit);
+				
+				trial = EmpiricalTrial.createDumpTrial("");
+				trial.setTestcase(tc.getName());
+				trial.setMultiThread(executor.getPrecheckInfo().getThreadNum() > 1);
+				result.add(trial);
+			} catch (Exception e) {
+				trial = EmpiricalTrial.createDumpTrial("Runtime exception occurs " + e);
+				trial.setTestcase(workingTC.testClass + "::" + workingTC.testMethod);
+				trial.setExecutionTime(timer.getExecutionTime());
+				result.add(trial);
+				e.printStackTrace();
+			}
+			
+//				if(!trial.isDump()){
+//					break;
+//				}
+		}
+
+		
+
+//		if (trial == null) {
+//			trial = EmpiricalTrial.createDumpTrial("runtime exception occurs");
+//			trial.setTestcase(workingTC.testClass + "::" + workingTC.testMethod);
+//		}
+//		List<EmpiricalTrial> list = new ArrayList<>();
+//		list.add(trial);
+		return result;
+	}
+	
+
+	public List<EmpiricalTrial> generateTrialsConcurrent(String buggyPath, String fixPath, boolean isReuse, boolean useSliceBreaker,
+			boolean enableRandom, int breakLimit, boolean requireVisualization, ProjectConfig config, String testcase) {
+		List<TestCase> tcList;
+		EmpiricalTrial trial = null;
+		TestCase workingTC = null;
+		LinkedList<EmpiricalTrial> result = new LinkedList<>();
+		try {
+			tcList = retrieveD4jFailingTestCase(buggyPath);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return new LinkedList<>();
+		}
+		
+		if(testcase!=null){
+			tcList = filterSpecificTestCase(testcase, tcList);
+		}
+		
+		for (TestCase tc : tcList) {
+			if (cancelThread != null && cancelThread.stopped) break;
+			System.out.println("#####working on test case " + tc.testClass + "#" + tc.testMethod);
+			workingTC = tc;
+			SingleTimer timer = SingleTimer.start("generateTrial");
+			try {
+				trial = analyzeConcurrentTestCase(buggyPath, fixPath, isReuse,
+						tc, config, requireVisualization, true, useSliceBreaker, enableRandom, breakLimit);
+				trial.setExecutionTime(timer.getExecutionTime());
+				result.add(trial);
+			} catch (Exception e) {
+				trial = EmpiricalTrial.createDumpTrial("Runtime exception occurs " + e);
+				trial.setTestcase(workingTC.testClass + "::" + workingTC.testMethod);
+				trial.setExecutionTime(timer.getExecutionTime());
+				result.add(trial);
+				e.printStackTrace();
+			}
+			
+//				if(!trial.isDump()){
+//					break;
+//				}
+		}
+
+		
+
+//		if (trial == null) {
+//			trial = EmpiricalTrial.createDumpTrial("runtime exception occurs");
+//			trial.setTestcase(workingTC.testClass + "::" + workingTC.testMethod);
+//		}
+//		List<EmpiricalTrial> list = new ArrayList<>();
+//		list.add(trial);
+		return result;
+	}
+	
 
 	public List<EmpiricalTrial> generateTrials(String buggyPath, String fixPath, boolean isReuse, boolean useSliceBreaker,
 			boolean enableRandom, int breakLimit, boolean requireVisualization, 
@@ -88,7 +231,7 @@ public class TrialGenerator0 {
 				trial = analyzeTestCase(buggyPath, fixPath, isReuse, allowMultiThread,
 						tc, config, requireVisualization, true, useSliceBreaker, enableRandom, breakLimit);
 				if(!trial.isDump()){
-					break;					
+					break;
 				}
 			}
 
@@ -173,10 +316,63 @@ public class TrialGenerator0 {
 		System.currentTimeMillis();
 	}
 	
-	private EmpiricalTrial analyzeTestCase(String buggyPath, String fixPath, boolean isReuse, boolean allowMultiThread, 
+	/**
+	 * 
+	 * @param traces The list of traces to check for dead lock
+	 * @return The set of threads that are involved in the deadlock.
+	 */
+	private Set<Long> hasDeadlock(List<Trace> traces) {
+		HashMap<Long, Long> waitingForMap  = new HashMap<Long, Long>();
+		HashSet<Long> visited = new HashSet<>();
+		HashMap<Long, Long> lockedOnMap = new HashMap<Long, Long>();
+		for (Trace trace : traces) {
+			for (Long object : trace.getAcquiredLocks()) {
+				lockedOnMap.put(object, trace.getThreadId());
+			}
+		}
+		for (Trace trace : traces) {
+			if (lockedOnMap.containsKey(trace.getAcquiringLock())) {
+				waitingForMap.put(trace.getThreadId(), lockedOnMap.get(trace.getAcquiringLock()));
+			}
+		}
+		long cycleNode = -1L;
+		for (Trace trace : traces) {
+			if (visited.contains(trace.getThreadId())) continue;
+			long currentNode = trace.getThreadId();
+			while (true) {
+				if (visited.contains(currentNode)) {
+					// detected a cycle.
+					cycleNode = currentNode;
+					break;
+				}
+				visited.add(currentNode);
+				if (!waitingForMap.containsKey(currentNode)) {
+					break;
+				}
+				currentNode = waitingForMap.get(currentNode);
+			}
+			if (cycleNode != -1) break;
+		}
+		// no cycles found
+		if (cycleNode == -1) return Collections.emptySet();
+		HashSet<Long> cycleNodes = new HashSet<Long>();
+		long currentNode = cycleNode;
+		while (true) {
+			if (cycleNodes.contains(currentNode)) break;
+			cycleNodes.add(currentNode);
+			currentNode = waitingForMap.get(currentNode);
+		}
+		
+		return cycleNodes;
+	}
+	
+	/**
+	 * Used to run erased on concurrent program
+	 */
+	private EmpiricalTrial analyzeConcurrentTestCase(String buggyPath, String fixPath, boolean isReuse, 
 			TestCase tc, ProjectConfig config, boolean requireVisualization, 
 			boolean isRunInTestCaseMode, boolean useSliceBreaker, boolean enableRandom, int breakLimit) throws SimulationFailException {
-		TraceCollector0 buggyCollector = new TraceCollector0(true);
+		TraceCollector0 buggyCollector = new BuggyTraceCollector(100);
 		TraceCollector0 correctCollector = new TraceCollector0(false);
 		long time1 = 0;
 		long time2 = 0;
@@ -186,9 +382,11 @@ public class TrialGenerator0 {
 
 		DiffMatcher diffMatcher = null;
 		PairList pairList = null;
+		
+		List<PairList> basePairLists = null;
 
 		int matchTime = -1;
-		if (cachedBuggyRS != null && cachedCorrectRS != null && isReuse) {
+		if (cachedBuggyRS != null && cachedCorrectRS != null && cachedPairList != null && isReuse) {
 			buggyRS = cachedBuggyRS;
 			correctRs = cachedCorrectRS;
 
@@ -209,7 +407,269 @@ public class TrialGenerator0 {
 
 			diffMatcher = cachedDiffMatcher;
 			pairList = cachedPairList;
+			EmpiricalTrial trial = simulateDebuggingWithCatchedObjects(buggyRS.getRunningTrace(), 
+					correctRs.getRunningTrace(), pairList, diffMatcher, requireVisualization,
+					useSliceBreaker, enableRandom, breakLimit);
+			return trial;
+		} else {
+			int trialLimit = 10;
+			int trialNum = 0;
+			boolean isDataFlowComplete = false;
+			EmpiricalTrial trial = null;
+			List<String> includedClassNames = AnalysisScopePreference.getIncludedLibList();
+			List<String> excludedClassNames = AnalysisScopePreference.getExcludedLibList();
 			
+			while(!isDataFlowComplete && trialNum<trialLimit){
+				trialNum++;
+				
+				Settings.compilationUnitMap.clear();
+				Settings.iCompilationUnitMap.clear();
+				buggyRS = buggyCollector.run(buggyPath, tc, config, isRunInTestCaseMode, true, includedClassNames, excludedClassNames);
+//				buggyRS = buggyCollector.runForceMultithreaded(buggyPath, tc, config, isRunInTestCaseMode, includedClassNames, excludedClassNames);
+				if (buggyRS.getRunningType() != NORMAL) {
+					trial = EmpiricalTrial.createDumpTrial(getProblemType(buggyRS.getRunningType()));
+					trial.setTestcase(tc.testClass + "#" + tc.testMethod);
+					return trial;
+				}
+
+				Settings.compilationUnitMap.clear();
+				Settings.iCompilationUnitMap.clear();
+				correctRs = correctCollector.runForceMultithreaded(fixPath, tc, config, isRunInTestCaseMode, includedClassNames, excludedClassNames);
+				if (correctRs.getRunningType() != NORMAL) {
+					trial = EmpiricalTrial.createDumpTrial(getProblemType(correctRs.getRunningType()));
+					trial.setTestcase(tc.toString());
+					return trial;
+				}
+
+				List<Trace> buggyTraces = buggyRS.getRunningInfo().getTraceList();
+				List<Trace> correctTraces = correctRs.getRunningInfo().getTraceList();
+				
+				AppJavaClassPath buggyAppJavaClassPath = buggyRS.getRunningInfo().getMainTrace().getAppJavaClassPath();
+				AppJavaClassPath correctAppJavaClassPath = correctRs.getRunningInfo().getMainTrace().getAppJavaClassPath();
+				for (Trace buggyTrace : buggyTraces) {
+					if (buggyTrace.getAppJavaClassPath() == null) {
+						buggyTrace.setAppJavaClassPath(buggyAppJavaClassPath);
+					}
+				}
+				for (Trace correctTrace : correctTraces) {
+					if (correctTrace.getAppJavaClassPath() == null) {
+						correctTrace.setAppJavaClassPath(correctAppJavaClassPath);
+					}
+				}
+				boolean isTimeout = buggyRS.getRunningInfo().getProgramMsg().equals(TimeoutThread.TIMEOUT_MSG);
+				boolean isCorrectTimeout = correctRs.getRunningInfo().getProgramMsg().equals(TimeoutThread.TIMEOUT_MSG);
+				
+				Set<Long> deadLockThreads = new HashSet<Long>();
+				if (isTimeout) {
+					deadLockThreads = hasDeadlock(buggyTraces);
+				}
+				
+				Map<Long, Long> threadIdMap = new HashMap<>();
+				if (buggyRS != null && correctRs != null) {
+					cachedBuggyRS = buggyRS;
+					cachedCorrectRS = correctRs;
+
+					System.out.println("start matching trace..., buggy trace length: " + buggyRS.getRunningTrace().size()
+							+ ", correct trace length: " + correctRs.getRunningTrace().size());
+					time1 = System.currentTimeMillis();
+					diffMatcher = new DiffMatcher(config.srcSourceFolder, config.srcTestFolder, buggyPath, fixPath);
+					diffMatcher.matchCode();
+
+					threadIdMap = new ConcurrentTraceMatcher(diffMatcher).matchTraces(buggyTraces, correctTraces);
+					ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
+					basePairLists = traceMatcher.matchConcurrentTraceNodePair(buggyTraces, correctTraces, diffMatcher, threadIdMap);
+					LinkedList<TraceNodePair> pairs = new LinkedList<>();
+					for (PairList pList : basePairLists) {
+						pairs.addAll(pList.getPairList());
+					}
+					pairList = new PairList(pairs);
+					
+					time2 = System.currentTimeMillis();
+					matchTime = (int) (time2 - time1);
+					System.out.println("finish matching trace, taking " + matchTime + "ms");
+					System.out.println("Finish matching concurrent trace");
+					cachedDiffMatcher = diffMatcher;
+					cachedPairLists = basePairLists;
+					cachedPairList = pairList;
+				}
+				
+				System.out.println("Wrong traces");
+				
+				for (Trace trace : buggyTraces) {
+					if (trace.getInnerThreadId() == null) {
+						System.out.println("null");
+						continue;
+					}
+					System.out.println(trace.getInnerThreadId().printRootListNode());
+				}
+				
+				System.out.println("Correct traces");
+				for (Trace trace : correctTraces) {
+					if (trace.getInnerThreadId() == null) {
+						System.out.println("null");
+						continue;
+					}
+					System.out.println(trace.getInnerThreadId().printRootListNode());
+				}
+				for (Trace trace : buggyTraces) {
+					if (trace.getAppJavaClassPath() == null) {
+						System.out.println("Null app java path");
+						throw new RuntimeException("missing app java path");
+					}
+				}
+				for (Trace trace : correctTraces) {
+					if (trace.getAppJavaClassPath() == null) {
+						throw new RuntimeException("Missing app java path");
+					}
+				}
+				
+				ConcurrentTrace buggyTrace = ConcurrentTrace.fromTimeStampOrder(buggyTraces);
+				ConcurrentTrace correctTrace = ConcurrentTrace.fromTimeStampOrder(correctTraces);
+				
+				
+				if (requireVisualization) {
+					ConcurrentVisualiser visualizer = 
+							new ConcurrentVisualiser(correctTraces, buggyTraces, buggyTrace, correctTrace, pairList, diffMatcher);
+					visualizer.visualise();
+				}
+				
+				RootCauseFinder rootcauseFinder = new RootCauseFinder();
+				rootcauseFinder.setRootCauseBasedOnDefects4JConc(basePairLists, diffMatcher, buggyTraces, correctTraces);
+				
+				
+				
+				
+				
+				ConcurrentSimulator simulator = new ConcurrentSimulator(useSliceBreaker, enableRandom, breakLimit);
+				
+				simulator.prepareConc(buggyTraces, correctTraces, pairList, threadIdMap, diffMatcher);
+				if (!simulator.isMultiThread()) {
+					EmpiricalTrial trial0 = EmpiricalTrial.createDumpTrial("is not multi thread");
+					trial0.setTestcase(tc.getName());
+					trial0.setBugType(NOT_MULTI_THREAD);
+					return trial0;
+				}
+				if(rootcauseFinder.getRealRootCaseList().isEmpty()) {
+					trial = EmpiricalTrial.createDumpTrial("cannot find real root cause");
+					StepOperationTuple tuple = new StepOperationTuple(simulator.getObservedFault(), 
+							new UserFeedback(UserFeedback.UNCLEAR), simulator.getObservedFault(), DebugState.UNCLEAR);
+					trial.getCheckList().add(tuple);
+					return trial;
+				}
+				
+				if(simulator.getObservedFault()==null){
+					trial = EmpiricalTrial.createDumpTrial("cannot find observable fault");
+					return trial;
+				}
+
+				rootcauseFinder.checkRootCauseConc(simulator.getObservedFault(), buggyTrace, correctTrace, pairList, diffMatcher);
+				TraceNode rootCause = rootcauseFinder.retrieveRootCause(pairList, diffMatcher, buggyTrace, correctTrace);
+				
+				if(rootCause==null){
+					
+					System.out.println("[Search Lib Class] Cannot find the root cause, I am searching for library classes...");
+					
+					List<TraceNode> buggySteps = rootcauseFinder.getStopStepsOnBuggyTrace();
+					List<TraceNode> correctSteps = rootcauseFinder.getStopStepsOnCorrectTrace();
+					
+					List<String> newIncludedClassNames = new ArrayList<>();
+
+					List<TraceNode> convertedBuggySteps = ConcurrentTraceNode.convert(buggySteps);
+					List<TraceNode> convertedConcurrentSteps = ConcurrentTraceNode.convert(correctSteps);
+					List<TraceNode> convertedRegressionNodes = ConcurrentTraceNode.convert(rootcauseFinder.getRegressionNodeList());
+					List<TraceNode> convertedCorrectNodeList = ConcurrentTraceNode.convert(rootcauseFinder.getCorrectNodeList());
+					
+					
+					List<String> newIncludedBuggyClassNames = RegressionUtil.identifyIncludedClassNames(convertedBuggySteps, buggyRS.getPrecheckInfo(), convertedRegressionNodes);
+					List<String> newIncludedCorrectClassNames = RegressionUtil.identifyIncludedClassNames(convertedConcurrentSteps, correctRs.getPrecheckInfo(), convertedCorrectNodeList);
+					
+					newIncludedClassNames.addAll(newIncludedBuggyClassNames);
+					newIncludedClassNames.addAll(newIncludedCorrectClassNames);
+					boolean includedClassChanged = false;
+					for(String name: newIncludedClassNames){
+						if(!includedClassNames.contains(name)){
+							includedClassNames.add(name);
+							includedClassChanged = true;
+						}
+					}
+					
+					if(!includedClassChanged) {
+						trialNum = trialLimit + 1;
+					}
+					else {
+						continue;						
+					}
+				}
+				
+				isDataFlowComplete = true;
+				
+				System.out.println("start simulating debugging...");
+				time1 = System.currentTimeMillis();
+				List<EmpiricalTrial> trials0 = simulator.detectMutatedBug(buggyTrace, correctTrace, diffMatcher, 0);
+				time2 = System.currentTimeMillis();
+				int simulationTime = (int) (time2 - time1);
+				System.out.println("finish simulating debugging, taking " + simulationTime / 1000 + "s");
+				
+				for (EmpiricalTrial t : trials0) {
+					t.setTestcase(tc.testClass + "#" + tc.testMethod);
+					t.setTraceCollectionTime(buggyTrace.getConstructTime() + correctTrace.getConstructTime());
+					t.setTraceMatchTime(matchTime);
+					t.setBuggyTrace(buggyTrace);
+					t.setFixedTrace(correctTrace);
+					t.setPairList(pairList);
+					t.setDiffMatcher(diffMatcher);
+					t.setDeadLock(deadLockThreads.size() > 0);
+					PatternIdentifier identifier = new PatternIdentifier();
+					identifier.identifyPattern(t);
+				}
+
+				trial = trials0.get(0);
+				return trial;
+			}
+
+		}
+
+		return null;
+		
+	}
+	
+	
+	private EmpiricalTrial analyzeTestCase(String buggyPath, String fixPath, boolean isReuse, boolean allowMultiThread, 
+			TestCase tc, ProjectConfig config, boolean requireVisualization, 
+			boolean isRunInTestCaseMode, boolean useSliceBreaker, boolean enableRandom, int breakLimit) throws SimulationFailException {
+		TraceCollector0 buggyCollector = new TraceCollector0(true);
+		TraceCollector0 correctCollector = new TraceCollector0(false);
+		long time1 = 0;
+		long time2 = 0;
+
+		RunningResult buggyRS = null;
+		RunningResult correctRs = null;
+
+		DiffMatcher diffMatcher = null;
+		PairList pairList = null;
+
+		int matchTime = -1;
+		if (cachedBuggyRS != null && cachedCorrectRS != null && cachedPairList != null && isReuse) {
+			buggyRS = cachedBuggyRS;
+			correctRs = cachedCorrectRS;
+
+//			System.out.println("start matching trace..., buggy trace length: " + buggyRS.getRunningTrace().size()
+//					+ ", correct trace length: " + correctRs.getRunningTrace().size());
+//			time1 = System.currentTimeMillis();
+//			diffMatcher = new DiffMatcher(config.srcSourceFolder, config.srcTestFolder, buggyPath, fixPath);
+//			diffMatcher.matchCode();
+//
+//			ControlPathBasedTraceMatcher traceMatcher = new ControlPathBasedTraceMatcher();
+//			pairList = traceMatcher.matchTraceNodePair(buggyRS.getRunningTrace(), correctRs.getRunningTrace(),
+//					diffMatcher);
+//			time2 = System.currentTimeMillis();
+//			matchTime = (int) (time2 - time1);
+//			System.out.println("finish matching trace, taking " + matchTime + "ms");
+//			cachedDiffMatcher = diffMatcher;
+//			cachedPairList = pairList;
+
+			diffMatcher = cachedDiffMatcher;
+			pairList = cachedPairList;
 			EmpiricalTrial trial = simulateDebuggingWithCatchedObjects(buggyRS.getRunningTrace(), 
 					correctRs.getRunningTrace(), pairList, diffMatcher, requireVisualization,
 					useSliceBreaker, enableRandom, breakLimit);
@@ -259,7 +719,7 @@ public class TrialGenerator0 {
 					time2 = System.currentTimeMillis();
 					matchTime = (int) (time2 - time1);
 					System.out.println("finish matching trace, taking " + matchTime + "ms");
-
+					System.out.println("Finish matching concurrent trace");
 					cachedDiffMatcher = diffMatcher;
 					cachedPairList = pairList;
 				}
@@ -277,12 +737,11 @@ public class TrialGenerator0 {
 				
 				Simulator simulator = new Simulator(useSliceBreaker, enableRandom, breakLimit);
 				simulator.prepare(buggyTrace, correctTrace, pairList, diffMatcher);
-				if(rootcauseFinder.getRealRootCaseList().isEmpty()){
+				if(rootcauseFinder.getRealRootCaseList().isEmpty()) {
 					trial = EmpiricalTrial.createDumpTrial("cannot find real root cause");
 					StepOperationTuple tuple = new StepOperationTuple(simulator.getObservedFault(), 
 							new UserFeedback(UserFeedback.UNCLEAR), simulator.getObservedFault(), DebugState.UNCLEAR);
 					trial.getCheckList().add(tuple);
-					
 					return trial;
 				}
 				

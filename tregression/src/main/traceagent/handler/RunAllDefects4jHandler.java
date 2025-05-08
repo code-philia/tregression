@@ -4,6 +4,8 @@
 package traceagent.handler;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -17,6 +19,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.osgi.service.debug.DebugTrace;
 
 import experiment.utils.report.ExperimentReportComparisonReporter;
 import experiment.utils.report.rules.TextComparisonRule;
@@ -33,6 +36,7 @@ import traceagent.report.BugCaseTrial;
 import traceagent.report.BugCaseTrial.TraceTrial;
 import tregression.empiricalstudy.TestCase;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
+import tregression.empiricalstudy.config.ProjectConfig;
 import tregression.handler.PathConfiguration;
 import tregression.separatesnapshots.AppClassPathInitializer;
 
@@ -41,13 +45,62 @@ import tregression.separatesnapshots.AppClassPathInitializer;
  *
  */
 public class RunAllDefects4jHandler  extends AbstractHandler {
+	FileOutputStream fos = null;
+	boolean handlerStopped = false;
 
+	/**
+	 * Used to check if the job is canceled
+	 * @author Gabau
+	 *
+	 */
+	private class CancelThread extends Thread {
+		public boolean stopped = false;
+		IProgressMonitor monitor;
+		InstrumentationExecutor executor;
+		public CancelThread(IProgressMonitor monitor,
+				InstrumentationExecutor executor) {
+			this.setName("Cancel thread");
+			this.monitor = monitor;
+			this.executor = executor;
+			this.setDaemon(true);
+		}
+		
+		@Override
+		public void run() {
+			while (!stopped) {
+				if (monitor.isCanceled()) {
+					executor.interrupt();
+					stopped = true;
+					break;
+				}
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+		
+		public void stopMonitoring() {
+			this.stopped = true;
+			handlerStopped = true;
+		}
+		
+	}
+	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
+		try {
+			fos = new FileOutputStream(new File("K:\\output6.txt"));
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		Job job = new Job("Run Trace Agent On Defects4j") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				String reportFile = "Agent_Defect4j.xlsx";
+				String reportFile = "K:\\Agent_Defect4j.xlsx";
 				try {
 					runAll(reportFile, monitor);
 					System.out.println("Complete!");
@@ -72,11 +125,15 @@ public class RunAllDefects4jHandler  extends AbstractHandler {
 	}
 
 	protected void runAll(String reportFile, IProgressMonitor monitor) throws Exception {
-		String[] projects = {"Chart", "Closure", "Lang", "Math", "Mockito", "Time"};
-		int[] bugNum = {26, 133, 65, 106, 38, 27};
+		//String[] projects = {"Chart", "Closure", "Lang", "Math", "Mockito", "Time"};
+		//int[] bugNum = {26, 133, 65, 106, 38, 27};
+		String[] projects = {"Csv"};
+		int[] bugNum = {16};
+		
 		AgentDefects4jReport report = new AgentDefects4jReport(new File(reportFile));
 		TestcaseFilter filter = new TestcaseFilter(false); 
 		for (int i = 0; i < projects.length; i++) {
+			if (handlerStopped) return;
 			String project = projects[i];
 			if (monitor.isCanceled()) {
 				return;
@@ -86,7 +143,7 @@ public class RunAllDefects4jHandler  extends AbstractHandler {
 					return;
 				}
 				System.out.println("working on the " + j + "th bug of " + project + " project.");
-				Defects4jProjectConfig d4jConfig = Defects4jProjectConfig.getConfig(project, String.valueOf(j));
+				ProjectConfig d4jConfig = Defects4jProjectConfig.getConfig(project, String.valueOf(j));
 				try {
 					runSingleBug(d4jConfig, report, null, filter, monitor);
 				} catch (Exception e) {
@@ -96,7 +153,7 @@ public class RunAllDefects4jHandler  extends AbstractHandler {
 		}
 	}
 
-	void runSingleBug(Defects4jProjectConfig config, AgentDefects4jReport report, List<TestCase> tcs,
+	void runSingleBug(ProjectConfig config, AgentDefects4jReport report, List<TestCase> tcs,
 			TestcaseFilter filter, IProgressMonitor monitor)
 			throws IOException {
 		String projectName = config.projectName;
@@ -116,11 +173,13 @@ public class RunAllDefects4jHandler  extends AbstractHandler {
 			SingleTimer timer = SingleTimer.start("run buggy test");
 			if (!filter.filter(projectName, bugID, tc.getName(), true)) {
 				TraceTrial bugTrace = run(buggyPath, tc, config, includeLibs, excludeLibs, true);
+				if (bugTrace == null) continue;
 				trial.setBugTrace(bugTrace);
 			}
 			timer.startNewTask("run correct test");
 			if (!filter.filter(projectName, bugID, tc.getName(), false)) {
 				TraceTrial correctTrace = run(fixPath, tc, config, includeLibs, excludeLibs, false);
+				if (correctTrace == null) continue;
 				trial.setFixedTrace(correctTrace);
 			}
 			
@@ -128,7 +187,7 @@ public class RunAllDefects4jHandler  extends AbstractHandler {
 		}
 	}
 	
-	public TraceTrial run(String workingDir, TestCase tc, Defects4jProjectConfig config, List<String> includeLibs,
+	public TraceTrial run(String workingDir, TestCase tc, ProjectConfig config, List<String> includeLibs,
 			List<String> excludeLibs, boolean isBuggy) {
 		SingleTimer timer = SingleTimer.start(String.format("run %s test", isBuggy ? "buggy" : "correct"));
 		AppJavaClassPath appClassPath = AppClassPathInitializer.initialize(workingDir, tc, config);
@@ -140,10 +199,19 @@ public class RunAllDefects4jHandler  extends AbstractHandler {
 		
 		RunningInfo info = null;
 		try {
-			info = executor.run();
+			info = executor.runCounter();
+			PreCheckInformation pci = executor.getPrecheckInfo();
+			if (pci.getThreadNum() > 1) {
+				String toWrite = config.projectName + config.regressionID + "\n";
+				fos.write(toWrite.getBytes());
+			}
 		} catch (StepLimitException e) {
 			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		if (info == null) return null;
 		PreCheckInformation precheckInfo = executor.getPrecheckInfo();
 		return new TraceTrial(workingDir, precheckInfo, info, timer.getExecutionTime(), isBuggy);
 	}

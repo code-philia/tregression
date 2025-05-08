@@ -24,6 +24,13 @@ public class RunningResult {
 	public RunningResult() {
 	}
 	
+	public boolean hasPassedTest() {
+		if (runningInfo == null) {
+			return false;
+		}
+		return runningInfo.hasPassedTest();
+	}
+	
 	public RunningResult(Trace runningTrace, List<BreakPoint> executedStatements, ExecutionStatementCollector checker, 
 			PreCheckInformation precheckInfo,
 			AppJavaClassPath appClassPath) {

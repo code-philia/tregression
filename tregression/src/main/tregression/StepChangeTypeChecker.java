@@ -3,6 +3,7 @@ package tregression;
 import java.util.ArrayList;
 import java.util.List;
 
+import microbat.model.trace.ConcurrentTraceNode;
 import microbat.model.trace.Trace;
 import microbat.model.trace.TraceNode;
 import microbat.model.value.ReferenceValue;
@@ -67,6 +68,10 @@ public class StepChangeTypeChecker {
 			}
 		}
 
+	}
+	
+	public StepChangeType getType(ConcurrentTraceNode step, boolean isOnBeforeTrace, PairList pairList, DiffMatcher matcher) {
+		return getType(step.getInitialTraceNode(), isOnBeforeTrace, pairList, matcher);
 	}
 	
 	/**

@@ -24,6 +24,8 @@ public enum Header {
 	
 	EXCEPTION ("exception"),
 	MULTI_THREAD ("multi thread"),
+	IS_DEADLOCK ("is deadlock"),
+	IS_TIMEOUT ("is timeout"),
 	
 	BREAK_TO_BUG ("break to bug"),
 

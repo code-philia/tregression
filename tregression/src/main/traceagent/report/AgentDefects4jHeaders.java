@@ -24,6 +24,8 @@ public enum AgentDefects4jHeaders implements ExcelHeader {
 	LOADED_CLASSES,
 	PRECHECK_STEP_NUM,
 	RUN_STEP_NUM,
+	IS_DEADLOCK,
+	IS_TIMEOUT,
 	PROGRAM_MSG,
 	SUMMARY;
 	
