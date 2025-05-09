@@ -225,6 +225,8 @@ public class RecovSlicingEvalRunner {
 
     private void executeFile(File file) {
         try {
+            ExecutionSimulator.dumpTaskName(file.getAbsolutePath());
+
             String className = isGeneratedDataset ? file.getName()
                     : file.getName().substring(0, file.getName().lastIndexOf('.'));
 
@@ -277,6 +279,7 @@ public class RecovSlicingEvalRunner {
             int criterionCounter = 1;
 
             List<ResultItem> resultItems = new ArrayList<>();
+            List<String> criticleVarPredictions = new ArrayList<>();
 
             while (criterionCounter < steps.size()) {
                 TraceNode slicingCriterion = steps.get(criterionCounter);
@@ -309,6 +312,7 @@ public class RecovSlicingEvalRunner {
                 if (!isReexecution) {
                     criticalRootVarName = executionSimulator.getCriticalVar(slicingCriterion,
                             criticalVar);
+                    criticleVarPredictions.add(criticalRootVarName);
                 }
 
                 for (VarValue v : readVars) {
@@ -441,11 +445,25 @@ public class RecovSlicingEvalRunner {
                     + getResultFolderName() + File.separator + className + ".json");
             log.info("Writing result to: {}", resultFile.getAbsolutePath());
             FileWriter resultWriter = new FileWriter(resultFile);
-            resultWriter.append(gson.toJson(resultItems));
+
+            AllResults allResults = new AllResults();
+            allResults.setPredictedCriticalVar(criticleVarPredictions);
+            allResults.setResults(resultItems);
+
+            resultWriter.append(gson.toJson(allResults));
             resultWriter.close();
         } catch (Exception e) {
             writeErrorFile(file, e);
         }
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class AllResults {
+        private List<String> predictedCriticalVar;
+        private List<ResultItem> results;
     }
 
     @Getter
