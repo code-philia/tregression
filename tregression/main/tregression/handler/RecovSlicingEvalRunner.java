@@ -312,7 +312,6 @@ public class RecovSlicingEvalRunner {
                 if (!isReexecution) {
                     criticalRootVarName = executionSimulator.getCriticalVar(slicingCriterion,
                             criticalVar);
-                    criticleVarPredictions.add(criticalRootVarName);
                 }
 
                 for (VarValue v : readVars) {
@@ -339,6 +338,7 @@ public class RecovSlicingEvalRunner {
                     if (!isReexecution) {
                         criticalFieldName = executionSimulator.getCriticalField(v, slicingCriterion,
                                 criticalVar);
+                        criticleVarPredictions.add(criticalRootVarName + "##" + criticalFieldName);
                     }
 
                     /*
