@@ -4,6 +4,7 @@ import org.eclipse.core.resources.ResourcesPlugin;
 
 import microbat.Activator;
 import microbat.preference.MicrobatPreference;
+import microbat.preference.RecovSlicingPreference;
 import sav.common.core.utils.StringUtils;
 import tregression.preference.TregressionPreference;
 
@@ -36,5 +37,12 @@ public enum CompatibilityLayerEclipse implements CompatibilityLayer {
     public String getBugId() {
         String id = Activator.getDefault().getPreferenceStore().getString(TregressionPreference.BUG_ID);
         return id;
+    }
+
+    @Override
+    public boolean isEnabledInContextLearning() {
+        String isEnableIncontextLearningStr = Activator.getDefault().getPreferenceStore()
+                .getString(RecovSlicingPreference.ENABLE_IN_CONTEXT_LEARNING);
+        return isEnableIncontextLearningStr != null && isEnableIncontextLearningStr.equals("true");
     }
 }

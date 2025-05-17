@@ -9,6 +9,8 @@ public interface CompatibilityLayer {
 
     public String getBugId();
 
+    public boolean isEnabledInContextLearning();
+
     public static CompatibilityLayer getDefaultCompatibilityLayer() {
         return CompatibilityLayerEclipse.INSTANCE;
     }
