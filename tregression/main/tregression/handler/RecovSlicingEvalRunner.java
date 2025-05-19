@@ -110,6 +110,8 @@ public class RecovSlicingEvalRunner {
     private Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
 
     public void execute(ExecutionInfo<TraceRecovRunConfig> exeinfo) {
+        MicroBatUtil.initJarFiles();
+
         TraceRecovRunConfig config = exeinfo.getConfig();
 
         config.getJdkConfig().setJavaHome(exeinfo.resolvePath(config.getJdkConfig().getJavaHome()));
