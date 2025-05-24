@@ -656,7 +656,7 @@ public class RecovSlicingEvalRunner {
         String binPath = buildPath + File.separator + projectName;
         File buildFolder = new File(binPath);
         if (!buildFolder.exists()) {
-            buildFolder.mkdir();
+            buildFolder.mkdirs();
         }
         command.add(binPath);
 
