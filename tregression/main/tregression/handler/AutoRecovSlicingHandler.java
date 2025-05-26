@@ -7,6 +7,7 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.IStartup;
+import org.eclipse.ui.PlatformUI;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
