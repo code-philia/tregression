@@ -844,4 +844,8 @@
     </command>
   </extension>
 
+<extension point="org.eclipse.ui.startup">
+    <startup class="tregression.handler.AutoRecovSlicingHandler"/>
+</extension>
+
 </plugin>
