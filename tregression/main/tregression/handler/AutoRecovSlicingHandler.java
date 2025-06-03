@@ -7,7 +7,6 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.ui.IStartup;
-import org.eclipse.ui.PlatformUI;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -18,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import microbat.MicrobatConsole;
 import microbat.runconfigs.ExecutionInfo;
 import microbat.runconfigs.TraceRecovRunConfig;
+import tregression.rpc.RPC;
 
 @Slf4j
 public class AutoRecovSlicingHandler implements IStartup {
@@ -25,7 +25,7 @@ public class AutoRecovSlicingHandler implements IStartup {
 
     @Getter
     @Setter
-    private static class AutoRecovSlicingInfo {
+    public static class AutoRecovSlicingInfo {
         private String taskName;
         private String descriptionFilePath;
         private String configFilePath;
@@ -76,6 +76,8 @@ public class AutoRecovSlicingHandler implements IStartup {
 
     @Override
     public void earlyStartup() {
+        new RPC().init();
+
         String env = System.getenv("AUTO_RECOV_SLICING_INFO");
         if (env == null || env.isEmpty()) {
             log.info("AUTO_RECOV_SLICING_INFO not set, skipping auto recovery slicing");

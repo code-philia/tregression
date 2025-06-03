@@ -16,6 +16,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -81,6 +82,19 @@ public class RecovSlicingEvalRunner {
     public static final String INFO_JSON_NAME = "info.json";
     public static final String OUTPUT_ERROR_FILE = "output_error.md";
 
+    @Getter
+    private CountDownLatch finished;
+
+    @Getter
+    private volatile FinishedList finishedList;
+
+    @Getter
+    @AllArgsConstructor
+    public static class FinishedList {
+        private final String name;
+        private final FinishedList next;
+    }
+
     private String srcDirName;
     private String binDirName;
     private String traceDirName;
@@ -109,7 +123,20 @@ public class RecovSlicingEvalRunner {
 
     private Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
 
+    public RecovSlicingEvalRunner() {
+        this.finished = new CountDownLatch(1);
+        this.finishedList = new FinishedList(null, null);
+    }
+
     public void execute(ExecutionInfo<TraceRecovRunConfig> exeinfo) {
+        try {
+            executeInner(exeinfo);
+        } finally {
+            finished.countDown();
+        }
+    }
+
+    public void executeInner(ExecutionInfo<TraceRecovRunConfig> exeinfo) {
         MicroBatUtil.initJarFiles();
 
         TraceRecovRunConfig config = exeinfo.getConfig();
@@ -183,16 +210,21 @@ public class RecovSlicingEvalRunner {
                         continue;
                     }
 
-                    String className = isGeneratedDataset ? file.getName()
-                            : file.getName().substring(0, file.getName().lastIndexOf('.'));
-                    File resultFile = new File(sliceDatasetPath + File.separator
-                            + getResultFolderName() + File.separator + className + ".txt");
-                    if (resultFile.exists()) {
-                        log.info("Already processed file: {}", fileName);
-                        continue;
+                    try {
+                        String className = isGeneratedDataset ? file.getName()
+                                : file.getName().substring(0, file.getName().lastIndexOf('.'));
+                        File resultFile = new File(sliceDatasetPath + File.separator
+                                + getResultFolderName() + File.separator + className + ".txt");
+                        if (resultFile.exists()) {
+                            log.info("Already processed file: {}", fileName);
+                            continue;
+                        }
+
+                        executeFile(file);
+                    } finally {
+                        this.finishedList = new FinishedList(fileName, this.finishedList);
                     }
 
-                    executeFile(file);
                 }
             }
         } else {

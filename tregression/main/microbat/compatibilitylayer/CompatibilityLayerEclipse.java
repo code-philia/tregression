@@ -1,6 +1,8 @@
 package microbat.compatibilitylayer;
 
 import org.eclipse.core.resources.ResourcesPlugin;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.ui.PlatformUI;
 
 import microbat.Activator;
 import microbat.preference.MicrobatPreference;
@@ -44,5 +46,12 @@ public enum CompatibilityLayerEclipse implements CompatibilityLayer {
         String isEnableIncontextLearningStr = Activator.getDefault().getPreferenceStore()
                 .getString(RecovSlicingPreference.ENABLE_IN_CONTEXT_LEARNING);
         return isEnableIncontextLearningStr != null && isEnableIncontextLearningStr.equals("true");
+    }
+
+    @Override
+    public void exit() {
+        Display.getDefault().asyncExec(() -> {
+            PlatformUI.getWorkbench().close();
+        });
     }
 }

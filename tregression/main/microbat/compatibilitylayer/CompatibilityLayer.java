@@ -11,6 +11,8 @@ public interface CompatibilityLayer {
 
     public boolean isEnabledInContextLearning();
 
+    public void exit();
+
     public static CompatibilityLayer getDefaultCompatibilityLayer() {
         return CompatibilityLayerEclipse.INSTANCE;
     }
