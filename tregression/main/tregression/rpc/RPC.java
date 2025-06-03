@@ -13,6 +13,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.scalasbt.ipcsocket.UnixDomainServerSocket;
 
 import com.google.gson.Gson;
@@ -22,6 +26,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import microbat.compatibilitylayer.CompatibilityLayer;
 import microbat.runconfigs.ExecutionInfo;
@@ -126,7 +131,6 @@ public class RPC {
             String line = reader.readLine();
             RPCRequest request = gson.fromJson(line, RPCRequest.class);
             log.info("Received request: {} from {}.", request, client.getRemoteSocketAddress());
-            processRequest(request);
             RPCResponse response = processRequest(request);
             String responseJson = gson.toJson(response);
             log.info("Sending response: {} to {}.", response, client.getRemoteSocketAddress());
@@ -187,10 +191,13 @@ public class RPC {
     }
 
     private RPCResponse processRequestRunRecovSlicing(RPCRequest request) throws Exception {
-        if (runner != null && runner.getFinished().getCount() != 0) {
-            return new RPCResponse("error", "A recovery slicing task is already running.");
+        log.info("Processing request to run recovery slicing: {}", request);
+        synchronized (this) {
+            if (runner != null && runner.getFinished().getCount() != 0) {
+                return new RPCResponse("error", "A recovery slicing task is already running.");
+            }
+            runner = new RecovSlicingEvalRunner();
         }
-        runner = new RecovSlicingEvalRunner();
 
         AutoRecovSlicingInfo info = gson.fromJson(request.getConfig(), AutoRecovSlicingInfo.class);
         ExecutionInfo<TraceRecovRunConfig> executionInfo = new ExecutionInfo<>();
@@ -207,7 +214,20 @@ public class RPC {
         executionInfo.setConfig(config);
 
         log.info("Starting auto recovery slicing task: {}", gson.toJson(config));
-        new RecovSlicingEvalRunner().execute(executionInfo);
+
+        Job job = new Job(info.getTaskName()) {
+            @Override
+            protected IStatus run(IProgressMonitor monitor) {
+                try {
+                    RPC.this.runner.execute(executionInfo);
+                    return Status.OK_STATUS;
+                } catch (Exception e) {
+                    log.error("Error during auto recovery slicing", e);
+                    return new Status(IStatus.ERROR, "tregression", "Error during auto recovery slicing", e);
+                }
+            }
+        };
+        job.schedule();
 
         return new RPCResponse("success", "");
     }
@@ -258,6 +278,7 @@ public class RPC {
 
     @Getter
     @Setter
+    @ToString
     @NoArgsConstructor
     @AllArgsConstructor
     public static class RPCRequest {
@@ -267,6 +288,7 @@ public class RPC {
 
     @Getter
     @Setter
+    @ToString
     @NoArgsConstructor
     @AllArgsConstructor
     public static class RPCResponse {
