@@ -362,7 +362,7 @@ public class RecovSlicingEvalRunner {
                      * 2. Variable Expansion
                      */
                     if (!isReexecution) {
-                        executionSimulator.expandVariable(v, slicingCriterion, null, null);
+                        executionSimulator.expandVariable(v, slicingCriterion, null, null, criticalVar);
                     }
 
                     /*
@@ -387,7 +387,7 @@ public class RecovSlicingEvalRunner {
                                 continue;
                             }
                             criticalVarValue = targetVar;
-                            traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v);
+                            traceRecoverer.recoverDataDependency(slicingCriterion, targetVar, v, criticalVar);
                         }
                         TraceNode dataDominator = trace.findProducer(targetVar, slicingCriterion);
                         if (dataDominator != null) {
