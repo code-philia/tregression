@@ -49,6 +49,7 @@ import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
 import microbat.util.MicroBatUtil;
 import sav.strategies.dto.AppJavaClassPath;
+import tregression.aliastracking.HeapObjects;
 import tregression.empiricalstudy.TestCase;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
