@@ -10,6 +10,13 @@ import microbat.model.trace.TraceNode;
 import microbat.model.value.ArrayValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
+import tregression.aliastracking.ast.Expr;
+import tregression.aliastracking.ast.HeapAddr;
+import tregression.aliastracking.ast.HeapAddrHeapId;
+import tregression.aliastracking.ast.HeapAddrPtrValue;
+import tregression.aliastracking.ast.Ptr;
+import tregression.aliastracking.ast.PtrField;
+import tregression.aliastracking.ast.PtrVar;
 
 @Slf4j
 @Getter
@@ -84,6 +91,65 @@ public class HeapObjects {
         // }
         // ReferenceValue refValue = (ReferenceValue) value;
         // String heapId = refValue.getAliasVarID();
+    }
 
+    public HeapPtr findPtrByVarId(String varId) {
+        if (!variablePtrs.containsKey(varId)) {
+            variablePtrs.put(varId, HeapPtr.newEmpty());
+        }
+        return variablePtrs.get(varId);
+    }
+
+    public HeapObject findHeapObjectById(String heapId) {
+        if (heapId == null || heapId.isEmpty() || heapId.equals("-1")) {
+            return nullObject;
+        }
+        if (!heapIdMapping.containsKey(heapId)) {
+            HeapObject newObject = HeapObject.createWithHeapId(heapId);
+            heapIdMapping.put(heapId, newObject);
+        }
+        return heapIdMapping.get(heapId);
+    }
+
+    public HeapPtr findPtr(Ptr ptr, int stepId) {
+        if (ptr instanceof PtrVar) {
+            PtrVar ptrVar = (PtrVar) ptr;
+            return findPtrByVarId(ptrVar.getVarId());
+        } else if (ptr instanceof PtrField) {
+            PtrField ptrField = (PtrField) ptr;
+            HeapObject obj = findHeapObject(ptrField.getMemAddr(), stepId);
+            return obj.resolveField(ptrField.getFieldId());
+        } else {
+            throw new IllegalArgumentException("Unsupported Ptr type: " + ptr.getClass().getName());
+        }
+    }
+
+    public HeapObject findHeapObject(HeapAddr addr, int stepId) {
+        if (addr instanceof HeapAddrHeapId) {
+            HeapAddrHeapId heapAddrHeapId = (HeapAddrHeapId) addr;
+            return findHeapObjectById(heapAddrHeapId.getHeapId());
+        } else if (addr instanceof HeapAddrPtrValue) {
+            HeapAddrPtrValue heapAddrPtrValue = (HeapAddrPtrValue) addr;
+            HeapPtr ptr = findPtr(heapAddrPtrValue.getPtr(), stepId);
+            return ptr.resolveValue(this, stepId);
+        } else {
+            throw new IllegalArgumentException("Unsupported HeapAddr type: " + addr.getClass().getName());
+        }
+    }
+
+    public void addAssignment(Expr expr, int stepId) {
+        HeapPtr ptr = findPtr(expr.getLeft(), stepId);
+        HeapObject value = findHeapObject(expr.getRight(), stepId);
+        ptr.addAssignment(stepId, value);
+    }
+
+    public boolean isAlias(Ptr left, Ptr right, int stepId) {
+        HeapObject leftObject = findHeapObject(new HeapAddrPtrValue(left), stepId);
+        HeapObject rightObject = findHeapObject(new HeapAddrPtrValue(right), stepId);
+        return leftObject == rightObject;
+    }
+
+    public HeapObject createAnonymousObject() {
+        return HeapObject.createAnonymousObject();
     }
 }
