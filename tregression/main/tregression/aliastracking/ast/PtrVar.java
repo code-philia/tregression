@@ -11,4 +11,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PtrVar extends Ptr {
     private String varId;
+
+    @Override
+    public String toString() {
+        return "VAR{" + varId + "}";
+    }
 }

@@ -12,4 +12,9 @@ import lombok.Setter;
 public class PtrField extends Ptr {
     private HeapAddr memAddr;
     private String fieldId;
+
+    @Override
+    public String toString() {
+        return memAddr.toString() + "." + fieldId;
+    }
 }

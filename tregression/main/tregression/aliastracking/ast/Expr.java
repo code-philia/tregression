@@ -35,4 +35,9 @@ public class Expr {
     public Expr readFromJson(String json) {
         return gson.fromJson(json, Expr.class);
     }
+
+    @Override
+    public String toString() {
+        return left.toString() + " = " + right.toString();
+    }
 }

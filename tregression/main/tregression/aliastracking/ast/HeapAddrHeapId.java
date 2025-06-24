@@ -11,4 +11,9 @@ import lombok.Setter;
 @AllArgsConstructor
 public class HeapAddrHeapId extends HeapAddr {
     private String heapId;
+
+    @Override
+    public String toString() {
+        return "HEAP{" + heapId + "}";
+    }
 }

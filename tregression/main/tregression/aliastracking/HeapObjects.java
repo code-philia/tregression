@@ -1,5 +1,6 @@
 package tregression.aliastracking;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -34,7 +35,7 @@ public class HeapObjects {
 
     private void printVarInfo(VarValue var, String prefix) {
         String res = String.format(
-                "%s: %s. ID: %s. Alias: %s. (value_type: %s, var_type: %s) (Type: %s)",
+                "%s: %s. ID: %s. Alias: %s.",
                 prefix, var.getVarName(),
                 var.getVarID(),
                 var.getAliasVarID(),
@@ -55,35 +56,66 @@ public class HeapObjects {
             Collection<VarValue> writtenVariables = node.getWrittenVariables();
             for (VarValue var : readVariables) {
                 printVarInfo(var, "  Read");
-                recordVariable(var.getVarID(), var, node.getOrder(), false);
+                recordVariable(new PtrVar(var.getVarID()), var, node.getOrder(), false);
             }
             for (VarValue var : writtenVariables) {
                 printVarInfo(var, "  Written");
-                recordVariable(var.getVarID(), var, node.getOrder(), true);
+                recordVariable(new PtrVar(var.getVarID()), var, node.getOrder(), true);
+            }
+
+            if (node.isCallingAPI()) {
+                String invokingMethod = node.getInvokingMethod();
+                String[] invokedMethods = invokingMethod.split("%");
+                List<String> unrecorded = new ArrayList<>();
+
+                List<TraceNode> children = node.getInvocationChildren();
+                String expandedMethod = null;
+                if (children != null && !children.isEmpty()) {
+                    expandedMethod = children.get(0).getMethodSign();
+                }
+                for (String m : invokedMethods) {
+                    if (m == null || m.isEmpty()) {
+                        continue;
+                    }
+                    if (!m.equals(traceNodes)) {
+                        unrecorded.add(m);
+                    }
+                }
+
+                for (String m : unrecorded) {
+                    System.out.println("  Invoking: " + m);
+                }
+
             }
         }
     }
 
-    public HeapPtr recordVariable(String variableName, VarValue value, int stepId, boolean isWritten) {
-        if (!variablePtrs.containsKey(variableName)) {
-            createVarPtr(variableName, value, stepId);
+    public void recordVariable(Ptr ptr, VarValue value, int stepId, boolean isWritten) {
+        if (value instanceof ReferenceValue) {
+            ReferenceValue refValue = (ReferenceValue) value;
+            String heapId = refValue.getAliasVarID();
+            HeapAddr addr = new HeapAddrHeapId(heapId);
+            Expr expr = new Expr(ptr, addr);
+            addAssignment(expr, stepId);
+
+            for (VarValue child : refValue.getChildren()) {
+                recordVariable(new PtrField(addr, child.getVarName()), child, stepId, isWritten);
+            }
+        } else if (value instanceof ArrayValue) {
+            ArrayValue arrValue = (ArrayValue) value;
+            String heapId = arrValue.getAliasVarID();
+            HeapAddr addr = new HeapAddrHeapId(heapId);
+            Expr expr = new Expr(ptr, addr);
+            addAssignment(expr, stepId);
+
+            for (VarValue child : arrValue.getChildren()) {
+                recordVariable(new PtrField(addr, child.getVarName()), child, stepId, isWritten);
+            }
         }
-        return variablePtrs.get(variableName);
     }
 
     public HeapPtr getVariablePtr(String variableName) {
         return variablePtrs.get(variableName);
-    }
-
-    private void createVarPtr(String variableName, VarValue value, int stepId) {
-        String heapId = value.getAliasVarID();
-
-        if (value instanceof ReferenceValue) {
-        } else if (value instanceof ArrayValue) {
-        } else {
-            log.warn("Variable {} is not a ReferenceValue, cannot create HeapPtr",
-                    variableName);
-        }
     }
 
     public HeapPtr findPtrByVarId(String varId) {
@@ -131,6 +163,7 @@ public class HeapObjects {
     }
 
     public void addAssignment(Expr expr, int stepId) {
+        System.out.println("  Assign: " + expr);
         HeapPtr ptr = findPtr(expr.getLeft(), stepId);
         HeapObject value = findHeapObject(expr.getRight(), stepId);
         ptr.addAssignment(stepId, value);
