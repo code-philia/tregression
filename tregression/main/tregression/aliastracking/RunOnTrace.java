@@ -10,15 +10,21 @@ import microbat.model.trace.TraceNode;
 @Slf4j
 public class RunOnTrace {
     public static void main(String[] args) {
-        if (args.length < 1) {
+        if (args.length < 2) {
             log.error("Please provide the path to the trace file as an argument.");
             return;
         }
 
         String traceFilePath = args[0];
+        String sourceFileName = args[1];
+
         RunningInfo info = RunningInfo.readFromFile(traceFilePath);
         Trace trace = info.getMainTrace();
         List<TraceNode> steps = trace.getExecutionList();
+        for (TraceNode step : steps) {
+            step.getBreakPoint().setFullJavaFilePath(sourceFileName);
+        }
+
         HeapObjects heapObjects = new HeapObjects();
         heapObjects.processTrace(steps);
     }
