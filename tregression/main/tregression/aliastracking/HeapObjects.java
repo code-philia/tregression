@@ -79,18 +79,11 @@ public class HeapObjects {
         String heapId = value.getAliasVarID();
 
         if (value instanceof ReferenceValue) {
-
         } else if (value instanceof ArrayValue) {
-
         } else {
             log.warn("Variable {} is not a ReferenceValue, cannot create HeapPtr",
                     variableName);
         }
-
-        // if (!(value instanceof ReferenceValue)) {
-        // }
-        // ReferenceValue refValue = (ReferenceValue) value;
-        // String heapId = refValue.getAliasVarID();
     }
 
     public HeapPtr findPtrByVarId(String varId) {
