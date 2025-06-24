@@ -38,7 +38,10 @@ Bundle-ClassPath: lib/poi-3.11-20141221.jar,
  lib/plexus-utils-3.2.1.jar,
  lib/maven-invoker-3.2.0.jar,
  lib/maven-shared-utils-3.3.4.jar,
- lib/json-20220924.jar
+ lib/json-20220924.jar,
+ lib/jackson-annotations-2.15.2.jar,
+ lib/jackson-core-2.15.2.jar,
+ lib/jackson-databind-2.15.2.jar
 Export-Package: tregression,
  tregression.empiricalstudy,
  tregression.empiricalstudy.solutionpattern,

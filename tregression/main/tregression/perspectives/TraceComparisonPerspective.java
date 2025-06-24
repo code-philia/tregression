@@ -8,6 +8,9 @@ import org.eclipse.ui.console.IConsoleConstants;
 import tregression.views.BuggyTraceView;
 import tregression.views.CorrectTraceView;
 import tregression.views.StepPropertyView;
+import tregression.views.AnalysisReportView;
+import tregression.views.DecisionView;
+import tregression.views.DecisionListView;
 
 public class TraceComparisonPerspective implements IPerspectiveFactory {
 
@@ -41,6 +44,9 @@ public class TraceComparisonPerspective implements IPerspectiveFactory {
 						0.8f,
 						factory.getEditorArea());
 		topRight.addView(CorrectTraceView.ID); 
+		topRight.addView(AnalysisReportView.ID);
+		topRight.addView(DecisionView.ID);
+		topRight.addView(DecisionListView.ID);
 		
 		IFolderLayout bottom =
 			factory.createFolder(

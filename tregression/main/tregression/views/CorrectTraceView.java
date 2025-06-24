@@ -22,6 +22,9 @@ import tregression.model.TraceNodePair;
 import tregression.separatesnapshots.DiffMatcher;
 import tregression.separatesnapshots.diff.FilePairWithDiff;
 
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Composite;
+
 public class CorrectTraceView extends TregressionTraceView {
 
 	public static final String ID = "tregression.evalView.correctTraceView";

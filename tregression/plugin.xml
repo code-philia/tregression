@@ -29,6 +29,26 @@
              name="Run for Separate Versions">
        </command>
        <command
+             defaultHandler="tregression.handler.PilotHandler"
+             id="tregression.command.runPilot"
+             name="Run Pilot">
+       </command>
+       <command
+             defaultHandler="tregression.handler.PilotStepHandler"
+             id="tregression.command.runPilotStep"
+             name="Step Pilot">
+       </command>
+       <command
+             defaultHandler="tregression.handler.PilotRetryHandler"
+             id="tregression.command.runPilotRetry"
+             name="Retry Pilot Step">
+       </command>
+       <command
+             defaultHandler="tregression.handler.PilotTerminateHandler"
+             id="tregression.command.terminatePilot"
+             name="Terminate Pilot">
+       </command>
+       <command
              defaultHandler="tregression.handler.AllDefects4jHandler"
              id="tregression.command.runAllDefects4jProjects"
              name="Run All Defects4j Projects">
@@ -159,6 +179,30 @@
             name="Step Properties"
             restorable="true">
       </view>
+      <view
+            category="tregression.category"
+            class="tregression.views.AnalysisReportView"
+            icon="icons/feedback.png"
+            id="tregression.evalView.analysisReportView"
+            name="Recommendation Explanation"
+            restorable="true">
+      </view>
+      <view
+            category="tregression.category"
+            class="tregression.views.DecisionView"
+            icon="icons/tree.png"
+            id="tregression.evalView.decisionView"
+            name="Debugging Plan"
+            restorable="true">
+      </view>
+      <view
+            category="tregression.category"
+            class="tregression.views.DecisionListView"
+            icon="icons/question_mark.png"
+            id="tregression.evalView.decisionListView"
+            name="Decision Options"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">
@@ -197,6 +241,30 @@
                   commandId="tregression.command.runSeparateVersions"
                   icon="icons/trace_comparison.png"
                   label="Run for Separate Versions"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.command.runPilot"
+                  icon="icons/debug.png"
+                  label="Run Pilot"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.command.runPilotStep"
+                  icon="icons/step.png"
+                  label="Step Pilot"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.command.runPilotRetry"
+                  icon="icons/back.png"
+                  label="Retry Pilot Step"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.command.terminatePilot"
+                  icon="icons/terminate.png"
+                  label="Terminate Pilot"
                   style="push">
             </command>
             <command
@@ -241,6 +309,30 @@
                   style="push">
             </command>
             <command
+                  commandId="tregression.command.runPilot"
+                  icon="icons/debug.png"
+                  label="Run Pilot"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.command.runPilotStep"
+                  icon="icons/step.png"
+                  label="Step Pilot"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.command.runPilotRetry"
+                  icon="icons/back.png"
+                  label="Retry Pilot Step"
+                  style="push">
+            </command>
+            <command
+                  commandId="tregression.command.terminatePilot"
+                  icon="icons/terminate.png"
+                  label="Terminate Pilot"
+                  style="push">
+            </command>
+            <command
                   commandId="tregression.command.retrieveRegression"
                   icon="icons/recover.png"
                   label="Recover Trace"
@@ -278,7 +370,7 @@
             extensions=".java"
             icon="icons/compare.png"
             id="tregression.editor.compare"
-            name="Compare">
+            name="Code Viewer">
       </editor>
    </extension>
    <extension

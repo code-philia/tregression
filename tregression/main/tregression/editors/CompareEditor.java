@@ -81,7 +81,7 @@ public class CompareEditor extends EditorPart {
         
         setSite(site);
         setInput(input);
-        setPartName("Compare");
+        setPartName("Code Viewer");
     }
 	
 	
@@ -104,7 +104,51 @@ public class CompareEditor extends EditorPart {
 		sourceText = generateText(sashForm, input.getSourceFilePath(), input.getMatcher(), true);
 		targetText = generateText(sashForm, input.getTargetFilePath(), input.getMatcher(), false);
 		
-		sashForm.setWeights(new int[]{50, 50});
+		// sashForm.setWeights(new int[]{50, 50});
+		sashForm.setWeights(new int[]{100, 0});
+	}
+	
+	public void highlightBuggyBlock(TraceNode node, String filePath, int startLine, int endLine, double inconsistency) {
+	    List<StyleRange> ranges = new ArrayList<>();
+
+	    // 根据 inconsistency 计算红色背景色（RGB）
+	    inconsistency = Math.max(0.0, Math.min(1.0, inconsistency));  // Clamp
+	    int red = 255;
+	    int green = (int)(240 - (240 - 179) * inconsistency);
+	    int blue  = (int)(240 - (240 - 179) * inconsistency);
+	    if (inconsistency == -1) {
+	    	red = 255;
+	    	green = 255;
+	    	blue = 255;
+	    }
+	    Color backgroundColor = new Color(Display.getCurrent(), red, green, blue);
+
+	    for (int i = startLine; i <= endLine; i++) {
+	        StyleRange range = new StyleRange();
+	        range.start = getOffsetAtLineSafe(sourceText, i - 1);
+	        range.length = getOffsetAtLineSafe(sourceText, i) - range.start;
+	        range.background = backgroundColor;
+	        range.fontStyle = SWT.BOLD;
+	        ranges.add(range);
+	    }
+
+	    if (node != null) {
+	        adjustTextForSelectedNode(node, sourceText, ranges);
+	    }
+
+	    StyleRange[] rangeArray = sortList(ranges);
+	    appendLineStyle(sourceText, rangeArray);
+	    sourceText.redraw();
+	}
+
+
+	private int getOffsetAtLineSafe(StyledText text, int line) {
+	    try {
+	        return text.getOffsetAtLine(line);
+	    } catch (IllegalArgumentException e) {
+	        // 若行超出范围，返回文本末尾
+	        return text.getCharCount();
+	    }
 	}
 
 	public void highLight(TraceNode node) {

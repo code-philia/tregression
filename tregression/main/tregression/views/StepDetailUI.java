@@ -5,6 +5,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import java.io.FileWriter;
+import java.io.IOException;
+
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IMenuListener;
@@ -682,7 +685,9 @@ public class StepDetailUI {
 			sortVars(node.getReadVariables());
 			
 			createWrittenVariableContent(node.getWrittenVariables(), changeType);
-			createReadVariableContect(node.getReadVariables(), changeType);	
+			createReadVariableContect(node.getReadVariables(), changeType);
+
+        	// writeNodeInfoToFile(node, "E:/workplace/details/data.txt");
 		}
 		else{
 			//createStateContent(null);
@@ -699,6 +704,17 @@ public class StepDetailUI {
 			this.dataButton.setSelection(true);
 		}
 		
+	}
+
+	private void writeNodeInfoToFile(TraceNode node, String filePath) {
+    	try (FileWriter writer = new FileWriter(filePath, true)) {
+        	writer.write("Node Information:\n");
+        	writer.write("Written Variables: " + node.getWrittenVariables().toString() + "\n");
+        	writer.write("Read Variables: " + node.getReadVariables().toString() + "\n");
+        	writer.write("\n");
+    	} catch (IOException e) {
+        	e.printStackTrace();
+    	}
 	}
 
 }

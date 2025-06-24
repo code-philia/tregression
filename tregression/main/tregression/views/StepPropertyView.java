@@ -39,7 +39,7 @@ public class StepPropertyView extends ViewPart {
 		createScrolledComposite(sashForm, BuggyTraceView.ID);
 		createScrolledComposite(sashForm, CorrectTraceView.ID);
 
-		sashForm.setWeights(new int[]{50, 50});
+		sashForm.setWeights(new int[]{100, 0});
 	}
 	
 	private void createScrolledComposite(SashForm sashForm, String viewID){
