@@ -1,6 +1,6 @@
 package tregression.aliastracking;
 
-import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 
 import lombok.Getter;
@@ -8,13 +8,20 @@ import lombok.Getter;
 @Getter
 public class HeapObject {
     private String heapId;
-    private String className;
-    private boolean isArray;
-    private int arrayLength;
+    private Map<String, HeapObjectField> fields;
 
-    private int mergedStep;
-    private HeapObject mergedTo;
+    private HeapObject() {
+        heapId = "null";
+        fields = new HashMap<>();
+    }
 
-    private List<HeapObjectField> fields;
-    private Map<String, HeapObjectField> fieldMap;
+    public static HeapObject createNullObject() {
+        HeapObject nullObject = new HeapObject();
+        nullObject.heapId = "null";
+        return nullObject;
+    }
+
+    public boolean isNull() {
+        return heapId.equals("null");
+    }
 }

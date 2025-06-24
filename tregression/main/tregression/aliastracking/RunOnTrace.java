@@ -19,7 +19,7 @@ public class RunOnTrace {
         RunningInfo info = RunningInfo.readFromFile(traceFilePath);
         Trace trace = info.getMainTrace();
         List<TraceNode> steps = trace.getExecutionList();
-        HeapObjects heapObjects = new HeapObjects(null);
+        HeapObjects heapObjects = new HeapObjects();
         heapObjects.processTrace(steps);
     }
 }

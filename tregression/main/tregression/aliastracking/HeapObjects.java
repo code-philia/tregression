@@ -7,6 +7,7 @@ import java.util.List;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import microbat.model.trace.TraceNode;
+import microbat.model.value.ArrayValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
 
@@ -15,22 +16,24 @@ import microbat.model.value.VarValue;
 public class HeapObjects {
     private HashMap<String, HeapPtr> variablePtrs;
     private HashMap<String, HeapObject> heapIdMapping;
-    private InstanceClassInfoGetter infoGetter;
+    private HeapObject nullObject;
 
-    public HeapObjects(InstanceClassInfoGetter classInfoGetter) {
+    public HeapObjects() {
         variablePtrs = new HashMap<>();
         heapIdMapping = new HashMap<>();
-        infoGetter = classInfoGetter;
+
+        nullObject = HeapObject.createNullObject();
     }
 
     private void printVarInfo(VarValue var, String prefix) {
         String res = String.format(
-                "%s: %s. ID: %s. Alias: %s. (value_type: %s, var_type: %s)",
+                "%s: %s. ID: %s. Alias: %s. (value_type: %s, var_type: %s) (Type: %s)",
                 prefix, var.getVarName(),
                 var.getVarID(),
                 var.getAliasVarID(),
                 var.getClass().getSimpleName(),
-                var.getVariable().getClass().getSimpleName());
+                var.getVariable().getClass().getSimpleName(),
+                var.getVariable().getType());
         System.out.println(res);
         for (VarValue child : var.getChildren()) {
             String prefix_child = "  " + prefix;
@@ -40,24 +43,21 @@ public class HeapObjects {
 
     public void processTrace(List<TraceNode> traceNodes) {
         for (TraceNode node : traceNodes) {
-            int order = node.getOrder();
-            if (order >= 10) {
-                break;
-            }
-            // log.info("Trace: {}.", order);
-            System.out.println("Trace: " + order + ".");
+            System.out.println("Trace: " + node + ".");
             Collection<VarValue> readVariables = node.getReadVariables();
             Collection<VarValue> writtenVariables = node.getWrittenVariables();
             for (VarValue var : readVariables) {
                 printVarInfo(var, "  Read");
+                recordVariable(var.getVarID(), var, node.getOrder(), false);
             }
             for (VarValue var : writtenVariables) {
                 printVarInfo(var, "  Written");
+                recordVariable(var.getVarID(), var, node.getOrder(), true);
             }
         }
     }
 
-    public HeapPtr recordVariable(String variableName, VarValue value, int stepId) {
+    public HeapPtr recordVariable(String variableName, VarValue value, int stepId, boolean isWritten) {
         if (!variablePtrs.containsKey(variableName)) {
             createVarPtr(variableName, value, stepId);
         }
@@ -69,13 +69,21 @@ public class HeapObjects {
     }
 
     private void createVarPtr(String variableName, VarValue value, int stepId) {
-        if (!(value instanceof ReferenceValue)) {
-            log.warn("Variable {} is not a ReferenceValue, cannot create HeapPtr", variableName);
-            return;
+        String heapId = value.getAliasVarID();
+
+        if (value instanceof ReferenceValue) {
+
+        } else if (value instanceof ArrayValue) {
+
+        } else {
+            log.warn("Variable {} is not a ReferenceValue, cannot create HeapPtr",
+                    variableName);
         }
-        ReferenceValue refValue = (ReferenceValue) value;
-        long heapId = refValue.getUniqueID();
-        String heapIdStr = String.valueOf(heapId);
+
+        // if (!(value instanceof ReferenceValue)) {
+        // }
+        // ReferenceValue refValue = (ReferenceValue) value;
+        // String heapId = refValue.getAliasVarID();
 
     }
 }
