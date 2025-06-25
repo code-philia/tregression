@@ -41,9 +41,10 @@ public class JarVersionReader {
                     VERSION = mainAttrs.getValue("Git-Metadata");
                 }
 
-                String[] splits = VERSION.split("#~#");
+                String[] splits = VERSION.split("__VERSION_SPLIT");
                 if (splits.length != 6) {
                     log.error("Invalid version format: {}", VERSION);
+                    log.error("Splits length: {}", splits.length);
                     VERSION = "unknown";
                 } else {
                     PARENT_COMMIT = splits[0];

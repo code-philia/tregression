@@ -36,20 +36,17 @@ def runCommand(List<String> command) {
 
 def generateGitMetadata() {
     def commitTregression = runCommand(['git', '-C', 'tregression', 'rev-parse', 'HEAD'])
-    runCommand(['git', '-C', 'tregression', 'add', '-N', '.'])
     def diffTregression = runCommand(['git', '-C', 'tregression', '--no-pager', 'diff', 'HEAD', '--name-only'])
     def commitMicrobat = runCommand(['git', '-C', 'microbat', 'rev-parse', 'HEAD'])
-    runCommand(['git', '-C', 'microbat', 'add', '-N', '.'])
     def diffMicrobat = runCommand(['git', '-C', 'microbat', '--no-pager', 'diff', 'HEAD', '--name-only'])
     def commitParent = runCommand(['git', '-C', '.', 'rev-parse', 'HEAD'])
-    runCommand(['git', '-C', '.', 'add', '-N', '.'])
     def diffParent = runCommand(['git', '-C', '.', '--no-pager', 'diff', 'HEAD', '--name-only'])
 
     diffParent = diffParent.replaceAll('\r?\n', '\\\\n').take(8192)
     diffMicrobat = diffMicrobat.replaceAll('\r?\n', '\\\\n').take(8192)
     diffTregression = diffTregression.replaceAll('\r?\n', '\\\\n').take(8192)
 
-    def metadata = "${commitParent}#~#${commitMicrobat}#~#${commitTregression}#~#${diffParent}#~#${diffMicrobat}#~#${diffTregression}"
+    def metadata = "${commitParent}__VERSION_SPLIT${commitMicrobat}__VERSION_SPLIT${commitTregression}__VERSION_SPLIT${diffParent}__VERSION_SPLIT${diffMicrobat}__VERSION_SPLIT${diffTregression}"
     return metadata.replaceAll('\r?\n', '\\\\n').take(65535)
 }
 
