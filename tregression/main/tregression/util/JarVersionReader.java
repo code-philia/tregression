@@ -41,7 +41,7 @@ public class JarVersionReader {
                     VERSION = mainAttrs.getValue("Git-Metadata");
                 }
 
-                String[] splits = VERSION.split("__VERSION_SPLIT");
+                String[] splits = VERSION.split("__VERSION_SPLIT", -1);
                 if (splits.length != 6) {
                     log.error("Invalid version format: {}", VERSION);
                     log.error("Splits length: {}", splits.length);
