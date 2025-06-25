@@ -45,7 +45,11 @@ def generateGitMetadata() {
     runCommand(['git', '-C', '.', 'add', '-N', '.'])
     def diffParent = runCommand(['git', '-C', '.', '--no-pager', 'diff', 'HEAD', '--name-only'])
 
-    def metadata = "${commitParent}##${commitMicrobat}##${commitTregression}##${diffParent}##${diffMicrobat}##${diffTregression}"
+    diffParent = diffParent.replaceAll('\r?\n', '\\\\n').take(8192)
+    diffMicrobat = diffMicrobat.replaceAll('\r?\n', '\\\\n').take(8192)
+    diffTregression = diffTregression.replaceAll('\r?\n', '\\\\n').take(8192)
+
+    def metadata = "${commitParent}#~#${commitMicrobat}#~#${commitTregression}#~#${diffParent}#~#${diffMicrobat}#~#${diffTregression}"
     return metadata.replaceAll('\r?\n', '\\\\n').take(65535)
 }
 

@@ -10,6 +10,9 @@ import java.io.Reader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -49,7 +52,6 @@ import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
 import microbat.util.MicroBatUtil;
 import sav.strategies.dto.AppJavaClassPath;
-import tregression.aliastracking.HeapObjects;
 import tregression.empiricalstudy.TestCase;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
@@ -57,6 +59,7 @@ import tregression.model.PairList;
 import tregression.preference.TregressionPreference;
 import tregression.separatesnapshots.AppClassPathInitializer;
 import tregression.separatesnapshots.DiffMatcher;
+import tregression.util.JarVersionReader;
 import tregression.views.BuggyTraceView;
 import tregression.views.TregressionViews;
 
@@ -137,6 +140,25 @@ public class RecovSlicingEvalRunner {
         }
     }
 
+    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss-SSS")
+            .withZone(ZoneId.systemDefault());
+
+    public void exportingTregressionVersionInfo() {
+        String timestamp = FORMATTER.format(Instant.now());
+        String outputFile = sliceDatasetPath + File.separator
+                + getResultFolderName() + File.separator + timestamp + "-version";
+        String outputFolder = sliceDatasetPath + File.separator
+                + getResultFolderName();
+        File folder = new File(outputFolder);
+        folder.mkdirs();
+        try (FileWriter writer = new FileWriter(outputFile)) {
+            writer.write(JarVersionReader.buildVersionString());
+        } catch (IOException e) {
+            log.error("Failed to write version info", e);
+            throw new RuntimeException("Failed to write version info", e);
+        }
+    }
+
     public void executeInner(ExecutionInfo<TraceRecovRunConfig> exeinfo) {
         MicroBatUtil.initJarFiles();
 
@@ -166,6 +188,8 @@ public class RecovSlicingEvalRunner {
         srcDirName = sliceDatasetPath + File.separator + SRC_FOLDER;
         binDirName = sliceDatasetPath + File.separator + BIN_FOLDER;
         traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
+
+        exportingTregressionVersionInfo();
 
         try {
             File errorFile = new File(sliceDatasetPath + File.separator
