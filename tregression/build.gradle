@@ -25,6 +25,30 @@ application {
     mainClass = 'dummy.DummyMain'
 }
 
+def runCommand(List<String> command) {
+    def process = new ProcessBuilder(command)
+            .redirectErrorStream(true)
+            .start()
+    def output = new StringWriter()
+    process.waitForProcessOutput(output, System.err)
+    return output.toString().trim()
+}
+
+def generateGitMetadata() {
+    def commitTregression = runCommand(['git', '-C', 'tregression', 'rev-parse', 'HEAD'])
+    runCommand(['git', '-C', 'tregression', 'add', '-N', '.'])
+    def diffTregression = runCommand(['git', '-C', 'tregression', '--no-pager', 'diff', 'HEAD', '--name-only'])
+    def commitMicrobat = runCommand(['git', '-C', 'microbat', 'rev-parse', 'HEAD'])
+    runCommand(['git', '-C', 'microbat', 'add', '-N', '.'])
+    def diffMicrobat = runCommand(['git', '-C', 'microbat', '--no-pager', 'diff', 'HEAD', '--name-only'])
+    def commitParent = runCommand(['git', '-C', '.', 'rev-parse', 'HEAD'])
+    runCommand(['git', '-C', '.', 'add', '-N', '.'])
+    def diffParent = runCommand(['git', '-C', '.', '--no-pager', 'diff', 'HEAD', '--name-only'])
+
+    def metadata = "${commitParent}##${commitMicrobat}##${commitTregression}##${diffParent}##${diffMicrobat}##${diffTregression}"
+    return metadata.replaceAll('\r?\n', '\\\\n').take(65535)
+}
+
 tasks.jar {
     manifest {
         attributes["Bundle-Name"] = "tracerecov-projs-tracerecov"
@@ -34,6 +58,7 @@ tasks.jar {
         attributes["Bundle-ActivationPolicy"] = "lazy"
         attributes["Bundle-ClassPath"] = "."
         attributes["Require-Bundle"] = "org.eclipse.ui, org.eclipse.core.runtime, org.eclipse.ui.console, org.eclipse.jdt.ui, org.eclipse.core.resources;bundle-version=\"3.8.101\", org.eclipse.debug.core;bundle-version=\"3.8.0\", org.eclipse.jdt.debug;bundle-version=\"3.8.0\", org.eclipse.ui.editors, org.eclipse.jdt.core;bundle-version=\"3.9.2\", org.eclipse.jface.text;bundle-version=\"3.8.101\", org.junit, org.eclipse.e4.core.commands;bundle-version=\"0.11.0\", org.eclipse.ui.workbench, org.eclipse.ui.ide;bundle-version=\"3.11.0\", org.eclipse.jdt.launching;bundle-version=\"3.8.0\""
+        attributes["Git-Metadata"] = generateGitMetadata()
     }
 }
 
