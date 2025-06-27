@@ -29,7 +29,7 @@ public class HeapPtr {
         if (lastAssign == null) {
             HeapObject obj = heap.createAnonymousObject();
             lastAssign = new HeapPtrAssign(-1, obj);
-            assignments.addFirst(lastAssign);
+            // assignments.addFirst(lastAssign);
         }
         return lastAssign.getHeapObject();
     }
