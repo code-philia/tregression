@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class PtrFieldNotResolved {
+public class PtrFieldNotResolved extends Ptr {
     private HeapAddr memAddr;
     private Ptr fieldToResolve;
 

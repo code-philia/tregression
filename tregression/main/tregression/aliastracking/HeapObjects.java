@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -16,6 +17,7 @@ import org.eclipse.jdt.core.dom.ChildPropertyDescriptor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.junit.internal.runners.statements.Fail;
 import org.objectweb.asm.Type;
 
 import lombok.AllArgsConstructor;
@@ -353,6 +355,29 @@ public class HeapObjects {
         HeapPtr ptr = findPtr(expr.getLeft(), stepId);
         HeapObject value = findHeapObject(expr.getRight(), stepId);
         ptr.addAssignment(stepId, value);
+    }
+
+    public void addAssignmentWithUnresolved(Expr expr, int stepId, TraceNode node, Map<String, String> varNameMapping)
+            throws FailedToResolveException {
+    }
+
+    public Ptr findPtrWithUnresolved(Ptr ptr, int stepId, TraceNode node, Map<String, String> varNameMapping)
+            throws FailedToResolveException {
+        return null;
+    }
+
+    public Ptr findPtrOnTrace(Ptr ptr, int stepId, TraceNode node, Map<String, String> varNameMapping) {
+        return null;
+    }
+
+    public HeapAddr findHeapObjectWithUnresolved(HeapAddr addr, int stepId, TraceNode node,
+            Map<String, String> varNameMapping) {
+        return null;
+    }
+
+    public HeapAddr findHeapObjectOnTrace(HeapAddr addr, int stepId, TraceNode node,
+            Map<String, String> varNameMapping) {
+        return null;
     }
 
     public boolean isAlias(Ptr left, Ptr right, int stepId) {
