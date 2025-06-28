@@ -1,5 +1,8 @@
 package tregression.aliastracking;
 
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -17,8 +20,9 @@ import org.eclipse.jdt.core.dom.ChildPropertyDescriptor;
 import org.eclipse.jdt.core.dom.ClassInstanceCreation;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.junit.internal.runners.statements.Fail;
 import org.objectweb.asm.Type;
+
+import com.google.gson.Gson;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,42 +34,108 @@ import microbat.model.value.ArrayValue;
 import microbat.model.value.ReferenceValue;
 import microbat.model.value.VarValue;
 import microbat.tracerecov.TraceRecovUtils;
+import microbat.tracerecov.TraceRecoverer.AliasInferencer;
 import tregression.aliastracking.ast.Expr;
 import tregression.aliastracking.ast.HeapAddr;
 import tregression.aliastracking.ast.HeapAddrHeapId;
 import tregression.aliastracking.ast.HeapAddrPtrValue;
 import tregression.aliastracking.ast.Ptr;
 import tregression.aliastracking.ast.PtrField;
+import tregression.aliastracking.ast.PtrFieldNotResolved;
 import tregression.aliastracking.ast.PtrVar;
+import tregression.aliastracking.ast.PtrVarNotResolved;
 
 @Slf4j
 @Getter
-public class HeapObjects {
+public class HeapObjects implements AliasInferencer {
     private HashMap<String, HeapPtr> variablePtrs;
     private HashMap<String, HeapObject> heapIdMapping;
     private HeapObject nullObject;
 
-    public HeapObjects() {
+    private String requestUrl;
+    private Gson gson;
+
+    public HeapObjects(String requestUrl) {
         variablePtrs = new HashMap<>();
         heapIdMapping = new HashMap<>();
 
         nullObject = HeapObject.createNullObject();
+
+        this.requestUrl = requestUrl;
+        this.gson = new Gson();
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class MethodRequest {
+        private String className;
+        private String methodName;
+        private String methodSign;
+        private String thisName;
+        private List<String> args;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class MethodResponse {
+        private List<Expr> result;
+        private String error;
+    }
+
+    private List<Expr> requestMethod(String className, String methodName, String methodSign, List<String> args,
+            String thisName) {
+
+        MethodRequest request = new MethodRequest(className, methodName, methodSign, thisName, args);
+        String requestBody = gson.toJson(request);
+        try {
+            HttpURLConnection conn = (HttpURLConnection) new URL(requestUrl).openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setDoOutput(true);
+            conn.getOutputStream().write(requestBody.getBytes("UTF-8"));
+            conn.connect();
+            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                throw new IOException("Failed to connect to the server: " + requestUrl + ". Response code: "
+                        + conn.getResponseCode());
+            }
+            StringBuilder response = new StringBuilder();
+            try (var reader = new java.io.BufferedReader(
+                    new java.io.InputStreamReader(conn.getInputStream(), "UTF-8"))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    response.append(line);
+                }
+            }
+            MethodResponse responseObj = Expr.getGson().fromJson(response.toString(), MethodResponse.class);
+            if (responseObj.getError() != null) {
+                throw new RuntimeException("Error from server: " + responseObj.getError());
+            }
+            log.info("Request: {} {} {} {} {}. Response: {}",
+                    className, methodName, methodSign, thisName, args, responseObj.getResult());
+            return responseObj.getResult();
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to connect to the server: " + requestUrl, e);
+        }
     }
 
     private void printVarInfo(VarValue var, String prefix) {
-        String res = String.format(
-                "%s: %s. ID: %s. Alias: %s.",
-                prefix, var.getVarName(),
-                var.getVarID(),
-                var.getAliasVarID(),
-                var.getClass().getSimpleName(),
-                var.getVariable().getClass().getSimpleName(),
-                var.getVariable().getType());
+        // String res = String.format(
+        // "%s: %s. ID: %s. Alias: %s.",
+        // prefix, var.getVarName(),
+        // var.getVarID(),
+        // var.getAliasVarID(),
+        // var.getClass().getSimpleName(),
+        // var.getVariable().getClass().getSimpleName(),
+        // var.getVariable().getType());
         // System.out.println(res);
-        for (VarValue child : var.getChildren()) {
-            String prefix_child = "  " + prefix;
-            printVarInfo(child, prefix_child);
-        }
+        // for (VarValue child : var.getChildren()) {
+        // String prefix_child = " " + prefix;
+        // printVarInfo(child, prefix_child);
+        // }
     }
 
     public List<Expression> findInvokingChildren(ASTNode node) {
@@ -175,7 +245,7 @@ public class HeapObjects {
         }
     }
 
-    public void parseInvoking(String code, List<String> signatures) {
+    public List<InvokingInfo> parseInvoking(String code, List<String> signatures) {
         try {
             @SuppressWarnings("deprecation")
             ASTParser parser = ASTParser.newParser(AST.JLS8);
@@ -218,13 +288,12 @@ public class HeapObjects {
                 }
             }
 
-            // for (InvokingInfo info : matchedInvokingInfos) {
-            // System.out.println(" Matched Invoking: " + info);
-            // }
-
+            return matchedInvokingInfos;
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        return null;
     }
 
     public void processTrace(List<TraceNode> traceNodes) {
@@ -271,10 +340,27 @@ public class HeapObjects {
                     }
                 }
                 if (!unrecorded.isEmpty()) {
-                    parseInvoking(sourceCode, unrecorded);
+                    List<InvokingInfo> infos = parseInvoking(sourceCode, unrecorded);
+                    if (infos != null) {
+                        for (InvokingInfo info : infos) {
+                            try {
+                                List<Expr> exprs = requestMethod(info.getClassName(), info.getMethodName(),
+                                        info.getSignature(),
+                                        info.getArguments(), info.getObject());
+
+                                for (Expr expr : exprs) {
+                                    try {
+                                        addAssignmentWithUnresolved(expr, node.getOrder(), node);
+                                    } catch (FailedToResolveException e) {
+                                    }
+                                }
+                            } catch (Exception e) {
+                                log.error("Failed to process invoking info: " + info, e);
+                            }
+                        }
+                    }
                 }
             }
-
         }
     }
 
@@ -351,33 +437,133 @@ public class HeapObjects {
     }
 
     public void addAssignment(Expr expr, int stepId) {
-        // System.out.println(" Assign: " + expr);
+        System.out.println(" Assign: " + expr);
         HeapPtr ptr = findPtr(expr.getLeft(), stepId);
         HeapObject value = findHeapObject(expr.getRight(), stepId);
         ptr.addAssignment(stepId, value);
     }
 
-    public void addAssignmentWithUnresolved(Expr expr, int stepId, TraceNode node, Map<String, String> varNameMapping)
+    public void addAssignmentWithUnresolved(Expr expr, int stepId, TraceNode node)
             throws FailedToResolveException {
+        Ptr left = findPtrWithUnresolved(expr.getLeft(), stepId, node);
+        HeapAddr right = findHeapObjectWithUnresolved(expr.getRight(), stepId, node);
+        Expr resolvedExpr = new Expr(left, right);
+        addAssignment(resolvedExpr, stepId);
     }
 
-    public Ptr findPtrWithUnresolved(Ptr ptr, int stepId, TraceNode node, Map<String, String> varNameMapping)
+    public Ptr findPtrWithUnresolved(Ptr ptr, int stepId, TraceNode node)
             throws FailedToResolveException {
-        return null;
+        try {
+            return findPtrOnTrace(ptr, stepId, node);
+        } catch (FailedToResolveException e) {
+        }
+
+        if (ptr instanceof PtrField) {
+            PtrField ptrField = (PtrField) ptr;
+            HeapAddr resolved = findHeapObjectOnTrace(ptrField.getMemAddr(), stepId, node);
+            return new PtrField(resolved, ptrField.getFieldId());
+        } else if (ptr instanceof PtrFieldNotResolved) {
+            PtrFieldNotResolved ptrFieldNotResolved = (PtrFieldNotResolved) ptr;
+            HeapAddr resolved = findHeapObjectWithUnresolved(ptrFieldNotResolved.getMemAddr(), stepId, node);
+            VarValue resolvedExpr = findPtrVarOnTrace(ptrFieldNotResolved.getMemAddr(), stepId, node);
+            String value = resolvedExpr.getStringValue();
+            String fieldName = "[" + value + "]";
+            return new PtrField(resolved, fieldName);
+        } else if (ptr instanceof PtrVar) {
+            return ptr;
+        } else if (ptr instanceof PtrVarNotResolved) {
+            return findPtrOnTrace(ptr, stepId, node);
+        }
+
+        throw new FailedToResolveException("Failed to resolve Ptr: " + ptr);
     }
 
-    public Ptr findPtrOnTrace(Ptr ptr, int stepId, TraceNode node, Map<String, String> varNameMapping) {
-        return null;
+    public VarValue findPtrVarOnTrace(HeapAddr addr, int stepId, TraceNode node) throws FailedToResolveException {
+        if (addr instanceof HeapAddrHeapId) {
+            throw new FailedToResolveException("HeapAddrHeapId cannot be resolved on trace: " + addr);
+        } else if (addr instanceof HeapAddrPtrValue) {
+            return findPtrVarOnTrace(((HeapAddrPtrValue) addr).getPtr(), stepId, node);
+        } else {
+            throw new IllegalStateException("Unsupported HeapAddr type: " + addr.getClass().getName());
+        }
     }
 
-    public HeapAddr findHeapObjectWithUnresolved(HeapAddr addr, int stepId, TraceNode node,
-            Map<String, String> varNameMapping) {
-        return null;
+    public VarValue findPtrVarOnTrace(Ptr ptr, int stepId, TraceNode node) throws FailedToResolveException {
+        if (ptr instanceof PtrField) {
+            PtrField ptrField = (PtrField) ptr;
+            VarValue resolved = findPtrVarOnTrace(ptrField.getMemAddr(), stepId, node);
+            VarValue result = null;
+            for (VarValue child : resolved.getChildren()) {
+                if (child.getVarName().equals(ptrField.getFieldId())) {
+                    result = child;
+                    break;
+                }
+            }
+            if (result != null) {
+                return result;
+            }
+            throw new FailedToResolveException("Field not found in resolved variable: " + ptrField);
+        } else if (ptr instanceof PtrFieldNotResolved) {
+            throw new FailedToResolveException("PtrFieldNotResolved cannot be resolved on trace: " + ptr);
+        } else if (ptr instanceof PtrVar) {
+            throw new FailedToResolveException("PtrVar cannot be resolved on trace: " + ptr);
+        } else if (ptr instanceof PtrVarNotResolved) {
+            PtrVarNotResolved ptrVarNotResolved = (PtrVarNotResolved) ptr;
+            String varName = ptrVarNotResolved.getVarName();
+            VarValue matched = null;
+            for (VarValue var : node.getReadVariables()) {
+                if (var.getVarName().equals(varName)) {
+                    matched = var;
+                    break;
+                }
+            }
+            if (matched != null) {
+                return matched;
+            }
+            throw new FailedToResolveException("Variable not found in read variables: " + varName);
+        } else {
+            throw new IllegalStateException("Unsupported Ptr type: " + ptr.getClass().getName());
+        }
     }
 
-    public HeapAddr findHeapObjectOnTrace(HeapAddr addr, int stepId, TraceNode node,
-            Map<String, String> varNameMapping) {
-        return null;
+    public Ptr findPtrOnTrace(Ptr ptr, int stepId, TraceNode node)
+            throws FailedToResolveException {
+        if (ptr instanceof PtrVar) {
+            return ptr;
+        } else if (ptr instanceof PtrFieldNotResolved) {
+            throw new FailedToResolveException(
+                    "PtrFieldNotResolved cannot be resolved on trace: " + ptr);
+        } else if (ptr instanceof PtrVarNotResolved || ptr instanceof PtrField) {
+            VarValue resolved = findPtrVarOnTrace(ptr, stepId, node);
+            return new PtrVar(resolved.getVarID());
+        } else {
+            throw new IllegalStateException("Unsupported Ptr type: " + ptr.getClass().getName());
+        }
+    }
+
+    public HeapAddr findHeapObjectWithUnresolved(HeapAddr addr, int stepId, TraceNode node)
+            throws FailedToResolveException {
+        if (addr instanceof HeapAddrHeapId) {
+            return addr;
+        } else if (addr instanceof HeapAddrPtrValue) {
+            HeapAddrPtrValue heapAddrPtrValue = (HeapAddrPtrValue) addr;
+            VarValue resolvedVar = findPtrVarOnTrace(heapAddrPtrValue.getPtr(), stepId, node);
+            return new HeapAddrHeapId(resolvedVar.getAliasVarID());
+        } else {
+            throw new IllegalStateException("Unsupported HeapAddr type: " + addr.getClass().getName());
+        }
+    }
+
+    public HeapAddr findHeapObjectOnTrace(HeapAddr addr, int stepId, TraceNode node) throws FailedToResolveException {
+        if (addr instanceof HeapAddrHeapId) {
+            return addr;
+        } else if (addr instanceof HeapAddrPtrValue) {
+            HeapAddrPtrValue heapAddrPtrValue = (HeapAddrPtrValue) addr;
+            VarValue resolvedVar = findPtrVarOnTrace(heapAddrPtrValue.getPtr(), stepId, node);
+            return new HeapAddrHeapId(resolvedVar.getAliasVarID());
+        } else {
+            throw new IllegalStateException("Unsupported HeapAddr type: " + addr.getClass().getName());
+        }
     }
 
     public boolean isAlias(Ptr left, Ptr right, int stepId) {
@@ -388,5 +574,78 @@ public class HeapObjects {
 
     public HeapObject createAnonymousObject() {
         return HeapObject.createAnonymousObject();
+    }
+
+    @Override
+    public Map<VarValue, VarValue> inferAliasBetween(TraceNode slicingCreteria, TraceNode targetLine) {
+        List<VarValuePtrPair> slicingPairs = getVarValuePtrPairs(slicingCreteria, true);
+        List<VarValuePtrPair> targetPairs = getVarValuePtrPairs(targetLine, false);
+
+        Map<VarValue, VarValue> aliasMap = new HashMap<>();
+        for (VarValuePtrPair slicingPair : slicingPairs) {
+            for (VarValuePtrPair targetPair : targetPairs) {
+                if (isAlias(slicingPair.ptr, targetPair.ptr, targetLine.getOrder())) {
+                    aliasMap.put(slicingPair.varValue, targetPair.varValue);
+                }
+            }
+        }
+        return aliasMap;
+    }
+
+    @Getter
+    @Setter
+    @NoArgsConstructor
+    @AllArgsConstructor
+    private static class VarValuePtrPair {
+        private VarValue varValue;
+        private Ptr ptr;
+    }
+
+    private List<VarValuePtrPair> getVarValuePtrPairs(TraceNode node, boolean shouldHaveAlias) {
+        List<VarValuePtrPair> result = new ArrayList<>();
+        for (VarValue var : node.getReadVariables()) {
+            getVarPtrPairsRoot(var, result, shouldHaveAlias);
+        }
+        for (VarValue var : node.getWrittenVariables()) {
+            getVarPtrPairsRoot(var, result, shouldHaveAlias);
+        }
+        return result;
+    }
+
+    private void getVarPtrPairsRoot(VarValue var, List<VarValuePtrPair> result, boolean shouldHaveAlias) {
+        if (!(var instanceof ReferenceValue || var instanceof ArrayValue)) {
+            return;
+        }
+        String heapId = var.getAliasVarID();
+        boolean hasAlias = heapId != null && !heapId.isEmpty() && !heapId.equals("-1");
+        Ptr ptr = new PtrVar(var.getVarID());
+
+        if (hasAlias == shouldHaveAlias) {
+            VarValuePtrPair pair = new VarValuePtrPair(var, ptr);
+            result.add(pair);
+        }
+
+        for (VarValue child : var.getChildren()) {
+            getVarPtrPairsRecur(child, ptr, result, shouldHaveAlias);
+        }
+    }
+
+    private void getVarPtrPairsRecur(VarValue var, Ptr currentPtr, List<VarValuePtrPair> result,
+            boolean shouldHaveAlias) {
+        if (!(var instanceof ReferenceValue || var instanceof ArrayValue)) {
+            return;
+        }
+        String heapId = var.getAliasVarID();
+        boolean hasAlias = heapId != null && !heapId.isEmpty() && !heapId.equals("-1");
+        Ptr ptr = new PtrField(new HeapAddrPtrValue(currentPtr), var.getVarName());
+
+        if (hasAlias == shouldHaveAlias) {
+            VarValuePtrPair pair = new VarValuePtrPair(var, ptr);
+            result.add(pair);
+        }
+
+        for (VarValue child : var.getChildren()) {
+            getVarPtrPairsRecur(child, ptr, result, shouldHaveAlias);
+        }
     }
 }

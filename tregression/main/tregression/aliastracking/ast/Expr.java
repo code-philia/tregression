@@ -17,11 +17,14 @@ public class Expr {
     private Ptr left;
     private HeapAddr right;
 
+    @Getter
     private static final Gson gson;
     static {
         RuntimeTypeAdapterFactory<Ptr> ptrAdapter = RuntimeTypeAdapterFactory.of(Ptr.class, "type")
                 .registerSubtype(PtrField.class, "field")
-                .registerSubtype(PtrVar.class, "var");
+                .registerSubtype(PtrVar.class, "var")
+                .registerSubtype(PtrFieldNotResolved.class, "fieldnotresolved")
+                .registerSubtype(PtrVarNotResolved.class, "varnotresolved");
         RuntimeTypeAdapterFactory<HeapAddr> heapAddrAdapter = RuntimeTypeAdapterFactory.of(HeapAddr.class, "type")
                 .registerSubtype(HeapAddrHeapId.class, "heapid")
                 .registerSubtype(HeapAddrPtrValue.class, "ptrvalue");
@@ -32,7 +35,7 @@ public class Expr {
                 .create();
     }
 
-    public Expr readFromJson(String json) {
+    public static Expr readFromJson(String json) {
         return gson.fromJson(json, Expr.class);
     }
 

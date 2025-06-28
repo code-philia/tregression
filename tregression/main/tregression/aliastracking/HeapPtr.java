@@ -1,13 +1,12 @@
 package tregression.aliastracking;
 
 import java.util.ArrayList;
-import java.util.List;
 
 import lombok.Getter;
 
 @Getter
 public class HeapPtr {
-    private List<HeapPtrAssign> assignments;
+    private ArrayList<HeapPtrAssign> assignments;
 
     public HeapPtr() {
         assignments = new ArrayList<>();
@@ -29,7 +28,7 @@ public class HeapPtr {
         if (lastAssign == null) {
             HeapObject obj = heap.createAnonymousObject();
             lastAssign = new HeapPtrAssign(-1, obj);
-            // assignments.addFirst(lastAssign);
+            assignments.add(0, lastAssign);
         }
         return lastAssign.getHeapObject();
     }

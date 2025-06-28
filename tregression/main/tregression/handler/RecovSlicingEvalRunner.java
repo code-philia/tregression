@@ -52,6 +52,7 @@ import microbat.tracerecov.executionsimulator.ExecutionSimulator;
 import microbat.tracerecov.executionsimulator.ExecutionSimulatorFactory;
 import microbat.util.MicroBatUtil;
 import sav.strategies.dto.AppJavaClassPath;
+import tregression.aliastracking.HeapObjects;
 import tregression.empiricalstudy.TestCase;
 import tregression.empiricalstudy.config.Defects4jProjectConfig;
 import tregression.empiricalstudy.config.ProjectConfig;
@@ -123,6 +124,8 @@ public class RecovSlicingEvalRunner {
     private boolean isGeneratedDataset;
     private boolean isMultiFile;
 
+    private String processMethodUrl;
+
     private FileWriter errorWriter;
 
     private Gson gson = new GsonBuilder().serializeNulls().setPrettyPrinting().create();
@@ -188,6 +191,8 @@ public class RecovSlicingEvalRunner {
         srcDirName = sliceDatasetPath + File.separator + SRC_FOLDER;
         binDirName = sliceDatasetPath + File.separator + BIN_FOLDER;
         traceDirName = sliceDatasetPath + File.separator + TRACE_FOLDER;
+
+        processMethodUrl = config.getMethodProcessUrl();
 
         exportingTregressionVersionInfo();
 
@@ -334,6 +339,10 @@ public class RecovSlicingEvalRunner {
             System.out.println("dynamic slicing...");
             List<TraceNode> steps = trace.getExecutionList();
             Set<Integer> visitedLines = new HashSet<>();
+
+            HeapObjects objects = new HeapObjects(processMethodUrl);
+            objects.processTrace(steps);
+            traceRecoverer.setAliasInferencer(objects);
 
             int criterionCounter = 1;
 

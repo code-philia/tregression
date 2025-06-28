@@ -25,7 +25,19 @@ public class RunOnTrace {
             step.getBreakPoint().setFullJavaFilePath(sourceFileName);
         }
 
-        HeapObjects heapObjects = new HeapObjects();
+        HeapObjects heapObjects = new HeapObjects("http://127.0.0.1:3322/process");
         heapObjects.processTrace(steps);
+
+        // StringBuilder sb = new StringBuilder();
+        // try (BufferedReader reader = new BufferedReader(new FileReader(args[0]))) {
+        // String line;
+        // while ((line = reader.readLine()) != null) {
+        // sb.append(line);
+        // }
+        // } catch (Exception e) {
+        // log.error("Error reading file", e);
+        // }
+
+        // log.info("Result: {}", Expr.readFromJson(sb.toString()));
     }
 }

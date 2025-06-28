@@ -11,7 +11,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PtrFieldNotResolved extends Ptr {
     private HeapAddr memAddr;
-    private Ptr fieldToResolve;
+    private HeapAddr fieldToResolve;
 
     @Override
     public String toString() {
