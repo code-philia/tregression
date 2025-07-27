@@ -341,8 +341,8 @@ public class RecovSlicingEvalRunner {
             Set<Integer> visitedLines = new HashSet<>();
 
             HeapObjects objects = new HeapObjects(processMethodUrl);
-            objects.processTrace(steps);
-            traceRecoverer.setAliasInferencer(objects);
+            // objects.processTrace(steps);
+            // traceRecoverer.setAliasInferencer(objects);
 
             int criterionCounter = 1;
 
