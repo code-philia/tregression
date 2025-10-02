@@ -140,6 +140,14 @@ public class RecovSlicingEvalRunner {
             executeInner(exeinfo);
         } finally {
             finished.countDown();
+            try {
+                if(ExecutionSimulator.defInfWriter != null) {
+                    ExecutionSimulator.defInfWriter.close();
+                    ExecutionSimulator.defInfWriter = null;
+                }
+            } catch (IOException e) {
+                log.error("Failed to close defInfWriter", e);
+            }
         }
     }
 
@@ -166,6 +174,18 @@ public class RecovSlicingEvalRunner {
         MicroBatUtil.initJarFiles();
 
         TraceRecovRunConfig config = exeinfo.getConfig();
+
+        if (config.getDumpDefInf() != null) {
+            try {
+                ExecutionSimulator.defInfWriter = new FileWriter(config.getDumpDefInf(), true);
+                ExecutionSimulator.defInfWriter.write("{\"___new___\": \"\"}\n");
+                ExecutionSimulator.defInfWriter.flush();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            ExecutionSimulator.defInfWriter = null;
+        }
 
         config.getJdkConfig().setJavaHome(exeinfo.resolvePath(config.getJdkConfig().getJavaHome()));
         config.setDatasetFolder(exeinfo.resolvePath(config.getDatasetFolder()));
@@ -304,6 +324,8 @@ public class RecovSlicingEvalRunner {
                 try (Reader r = new FileReader(
                         file.toPath().resolve(INFO_JSON_NAME).toFile())) {
                     info = gson.fromJson(r, GeneratedDataInfo.class);
+                    ExecutionSimulator.targetFileName = info.getWrite_file();
+                    ExecutionSimulator.targetLineNumber = info.getWrite_idx();
                     criticalVar = info.getName();
                 }
 
