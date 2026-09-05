@@ -63,6 +63,7 @@ import tregression.separatesnapshots.DiffMatcher;
 import tregression.util.JarVersionReader;
 import tregression.views.BuggyTraceView;
 import tregression.views.TregressionViews;
+import microbat.tracerecov.executionsimulator.InstanceJsonlLogger;
 
 @Slf4j
 public class RecovSlicingEvalRunner {
@@ -139,6 +140,7 @@ public class RecovSlicingEvalRunner {
         try {
             executeInner(exeinfo);
         } finally {
+            InstanceJsonlLogger.closeCurrent();
             finished.countDown();
             try {
                 if(ExecutionSimulator.defInfWriter != null) {
@@ -308,11 +310,22 @@ public class RecovSlicingEvalRunner {
     }
 
     private void executeFile(File file) {
+        String className = isGeneratedDataset ? file.getName()
+                : file.getName().substring(0, file.getName().lastIndexOf('.'));
+        String logPath = sliceDatasetPath + File.separator + "instance_logs"
+                + File.separator + className + ".jsonl";
+        InstanceJsonlLogger logger = InstanceJsonlLogger.begin(logPath, file.getName());
+        if (logger != null) {
+            logger.event("instance_metadata", InstanceJsonlLogger.details("sourceFile", file.getAbsolutePath(),
+                    "className", className, "isGeneratedDataset", isGeneratedDataset,
+                    "isReexecution", isReexecution, "isJunit", isJunit));
+        }
         try {
+            long compileStart = System.currentTimeMillis();
+            if (logger != null) {
+                logger.event("module_start", InstanceJsonlLogger.details("module", "compile"));
+            }
             ExecutionSimulator.dumpTaskName(file.getAbsolutePath());
-
-            String className = isGeneratedDataset ? file.getName()
-                    : file.getName().substring(0, file.getName().lastIndexOf('.'));
 
             GeneratedDataInfo info = null;
 
@@ -341,12 +354,21 @@ public class RecovSlicingEvalRunner {
             } else {
                 compileFile(file, binDirName);
             }
+            if (logger != null) {
+                logger.event("module_end", InstanceJsonlLogger.details("module", "compile", "success", true));
+                logger.event("module_timing", InstanceJsonlLogger.details("module", "compile",
+                        "durationMs", System.currentTimeMillis() - compileStart));
+            }
 
             List<String> dependencies = null;
             if (isReexecution) {
                 dependencies = readDependencies(file.getPath());
             }
 
+            long traceStart = System.currentTimeMillis();
+            if (logger != null) {
+                logger.event("module_start", InstanceJsonlLogger.details("module", "trace_collection"));
+            }
             System.out.println("collecting trace...");
             if (isJunit) {
                 initializeAppClassPathJunitTest(className, METHOD_NAME);
@@ -357,7 +379,16 @@ public class RecovSlicingEvalRunner {
             }
             Trace trace = runTarget(dependencies);
             visualizeTrace(trace);
+            if (logger != null) {
+                logger.event("module_end", InstanceJsonlLogger.details("module", "trace_collection",
+                        "success", true, "traceSize", trace == null ? null : trace.size(),
+                        "durationMs", System.currentTimeMillis() - traceStart));
+            }
 
+            long slicingStart = System.currentTimeMillis();
+            if (logger != null) {
+                logger.event("module_start", InstanceJsonlLogger.details("module", "dynamic_slicing"));
+            }
             System.out.println("dynamic slicing...");
             List<TraceNode> steps = trace.getExecutionList();
             Set<Integer> visitedLines = new HashSet<>();
@@ -542,8 +573,24 @@ public class RecovSlicingEvalRunner {
 
             resultWriter.append(gson.toJson(allResults));
             resultWriter.close();
+            if (logger != null) {
+                logger.event("module_end", InstanceJsonlLogger.details("module", "dynamic_slicing",
+                        "success", true, "resultCount", resultItems.size(),
+                        "durationMs", System.currentTimeMillis() - slicingStart,
+                        "resultTextFile", sliceDatasetPath + File.separator + getResultFolderName()
+                                + File.separator + className + ".txt",
+                        "resultJsonFile", resultFile.getAbsolutePath()));
+                logger.event("instance_end", InstanceJsonlLogger.details("success", true));
+            }
         } catch (Exception e) {
             writeErrorFile(file, e);
+            if (logger != null) {
+                logger.event("instance_error", InstanceJsonlLogger.details("success", false,
+                        "error", e.toString()));
+                logger.event("instance_end", InstanceJsonlLogger.details("success", false));
+            }
+        } finally {
+            InstanceJsonlLogger.closeCurrent();
         }
     }
 
